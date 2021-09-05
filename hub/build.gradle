@@ -50,7 +50,6 @@ dependencies {
     implementation project(':zigbee-common')
     implementation project(':zwave-common')
     implementation project(':zwave-zipgw')
-    implementation project(':cloud-integration-aws')
 
     implementation "org.codehaus.groovy:groovy-all:${groovyAllVersion}"
     implementation group: 'org.codehaus.groovy', name: 'groovy-dateutil', version: "${groovyAllVersion}"
