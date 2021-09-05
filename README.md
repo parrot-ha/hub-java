@@ -7,9 +7,10 @@ This project is under active development and will most likely see multiple break
 
 Requirements:
 - Java 11
-- Ember based zigbee stick (ie Nortek HUSBZB-1)
+- Ember based zigbee stick (ie Nortek HUSBZB-1) if you want to control zigbee devices
+- Z/IP Gateway and Z-Wave Bridge Controller stick (ie UZB-7) if you want to control z-wave devices
 
-## Compile:
+## Compile (requires JDK 11 and npm to be installed):
 1. Check out code to new directory.
 2. run ```npm install``` in hub/ui directory
 3. run ```./gradlew build``` in root directory
