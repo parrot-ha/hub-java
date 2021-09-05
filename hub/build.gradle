@@ -1,0 +1,121 @@
+plugins {
+    id 'hub.java-application-conventions'
+    id 'maven-publish'
+    id "com.github.node-gradle.node" version "2.2.4"
+}
+
+version "${projectVersion}"
+
+distributions {
+    main {
+        distributionBaseName = 'parrot-hub'
+    }
+}
+
+repositories {
+    // Use the plugin portal to apply community plugins in convention plugins.
+    mavenLocal()
+    gradlePluginPortal()
+    mavenCentral()
+}
+
+publishing {
+    publications {
+        maven(MavenPublication) {
+            groupId = 'com.parrotha'
+            from components.java
+        }
+    }
+}
+
+application {
+    // Define the main class for the application.
+    mainClass = 'com.parrotha.internal.Main'
+}
+
+startScripts {
+    unixStartScriptGenerator.template = resources.text.fromFile('customUnixStartScript.txt')
+    windowsStartScriptGenerator.template = resources.text.fromFile('customWindowsStartScript.txt')
+}
+
+sourceCompatibility = JavaVersion.VERSION_11
+
+dependencies {
+    implementation project(':core')
+    implementation project(':integration-common')
+    implementation project(':zigbee-integration')
+    implementation project(':lan-integration')
+    implementation project(':lutron-integration')
+    implementation project(':device-handlers')
+    implementation project(':zigbee-common')
+    implementation project(':zwave-common')
+    implementation project(':zwave-zipgw')
+    implementation project(':cloud-integration-aws')
+
+    implementation "org.codehaus.groovy:groovy-all:${groovyAllVersion}"
+    implementation group: 'org.codehaus.groovy', name: 'groovy-dateutil', version: "${groovyAllVersion}"
+
+    implementation 'io.javalin:javalin:3.13.3'
+    implementation "com.github.spullara.mustache.java:compiler:0.9.6"
+
+    //compile 'org.slf4j:slf4j-simple:1.7.30'
+    implementation "org.apache.logging.log4j:log4j-slf4j-impl:${log4jVersion}"
+    implementation group: 'org.apache.logging.log4j', name: 'log4j-api', version: "${log4jVersion}"
+    implementation group: 'org.apache.logging.log4j', name: 'log4j-core', version: "${log4jVersion}"
+    implementation 'org.apache.commons:commons-lang3:3.11'
+
+    implementation 'org.codehaus.groovy.modules.http-builder:http-builder:0.7.1'
+    implementation 'org.apache.httpcomponents:httpclient:4.5.13'
+
+    implementation 'commons-io:commons-io:2.8.0'
+    implementation 'org.yaml:snakeyaml:1.27'
+
+    implementation 'com.google.guava:guava:30.0-jre'
+
+    // used to calculate sunrise and sunset times.
+    implementation 'org.shredzone.commons:commons-suncalc:3.4'
+
+    // needed for scheduling
+    implementation 'org.quartz-scheduler:quartz:2.3.2'
+
+    // lets try hsqldb for now, probably switch to external mysql or other db later
+    implementation 'org.hsqldb:hsqldb:2.5.1'
+
+    // make jdbc easier
+    implementation 'org.jdbi:jdbi3-core:3.18.0'
+
+}
+
+node {
+    version = '14.15.3'
+    download = true
+    workDir = file("${project.projectDir}/.gradle/nodejs")
+    npmWorkDir = file("${project.projectDir}/.gradle/npm")
+}
+
+clean {
+    delete 'ui/dist/'
+}
+
+task npmBuildFrontend(type: NpmTask) {
+    workingDir = file("${project.projectDir}/ui")
+    args = ['run', 'build']
+}
+
+task copyFrontendBackend(type: Copy, dependsOn: "npmBuildFrontend") {
+    from "ui/dist/"
+    into "${projectDir}/build/resources/main/web"
+}
+
+assemble.dependsOn copyFrontendBackend
+
+// This task is used to run the system inside intellij
+task copyIntellijResources(type: Copy) {
+    from "ui/dist/"
+    into "${projectDir}/out/production/resources/web"
+}
+
+jar {
+    archiveBaseName = 'parrot-hub'
+}
+

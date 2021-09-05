@@ -1,0 +1,1174 @@
+- commandClass: Alarm
+  version: 1
+  value: 0x71
+  commands:
+    AlarmGet:
+      value: 0x04
+      payload:
+        - {name: alarmType, type: Short, data: 0, defaultValue: 0}
+    AlarmReport:
+      value: 0x05
+      payload:
+        - {name: alarmType, type: Short, data: 0, defaultValue: 0}
+        - {name: alarmLevel, type: Short, data: 1, defaultValue: 0}
+- commandClass: Alarm
+  version: 2
+  value: 0x71
+  commands:
+    AlarmGet:
+      extends: 1
+      overridePayload: true
+      payload:
+        - {name: alarmType, type: Short, data: 0, defaultValue: 0}
+        - {name: zwaveAlarmType, type: Short, data: 1, defaultValue: 0}
+      constants:
+        - { name: ZWAVE_ALARM_TYPE_RESERVED0, type: Short, value: 0 }
+        - { name: ZWAVE_ALARM_TYPE_SMOKE, type: Short, value: 1 }
+        - { name: ZWAVE_ALARM_TYPE_CO, type: Short, value: 2 }
+        - { name: ZWAVE_ALARM_TYPE_CO2, type: Short, value: 3 }
+        - { name: ZWAVE_ALARM_TYPE_HEAT, type: Short, value: 4 }
+        - { name: ZWAVE_ALARM_TYPE_WATER, type: Short, value: 5 }
+        - { name: ZWAVE_ALARM_TYPE_ACCESS_CONTROL, type: Short, value: 6 }
+        - { name: ZWAVE_ALARM_TYPE_BURGLAR, type: Short, value: 7 }
+        - { name: ZWAVE_ALARM_TYPE_POWER_MANAGEMENT, type: Short, value: 8 }
+        - { name: ZWAVE_ALARM_TYPE_SYSTEM, type: Short, value: 9 }
+        - { name: ZWAVE_ALARM_TYPE_EMERGENCY, type: Short, value: 10 }
+        - { name: ZWAVE_ALARM_TYPE_CLOCK, type: Short, value: 11 }
+        - { name: ZWAVE_ALARM_TYPE_FIRST, type: Short, value: 255 }
+    AlarmReport:
+      extends: 1
+      value: 0x05
+      overridePayload: true
+      payload:
+        - {name: alarmType, type: Short, data: 0, defaultValue: 0}
+        - {name: alarmLevel, type: Short, data: 1, defaultValue: 0}
+        - {name: zensorNetSourceNodeId, type: Short, data: 2, defaultValue: 0}
+        - {name: zwaveAlarmStatus, type: Short, data: 3, defaultValue: 0}
+        - {name: zwaveAlarmType, type: Short, data: 4, defaultValue: 0}
+        - {name: zwaveAlarmEvent, type: Short, data: 5, defaultValue: 0}
+        - {name: numberOfEventParameters, type: Short, data: 6, defaultValue: 0}
+        - {name: eventParameter, type: List<Short>, data: '7~RAW[(payload.size() - 1)]', defaultValue: null}
+      constants:
+        - { name: ZWAVE_ALARM_TYPE_RESERVED0, type: Short, value: 0 }
+        - { name: ZWAVE_ALARM_TYPE_SMOKE, type: Short, value: 1 }
+        - { name: ZWAVE_ALARM_TYPE_CO, type: Short, value: 2 }
+        - { name: ZWAVE_ALARM_TYPE_CO2, type: Short, value: 3 }
+        - { name: ZWAVE_ALARM_TYPE_HEAT, type: Short, value: 4 }
+        - { name: ZWAVE_ALARM_TYPE_WATER, type: Short, value: 5 }
+        - { name: ZWAVE_ALARM_TYPE_ACCESS_CONTROL, type: Short, value: 6 }
+        - { name: ZWAVE_ALARM_TYPE_BURGLAR, type: Short, value: 7 }
+        - { name: ZWAVE_ALARM_TYPE_POWER_MANAGEMENT, type: Short, value: 8 }
+        - { name: ZWAVE_ALARM_TYPE_SYSTEM, type: Short, value: 9 }
+        - { name: ZWAVE_ALARM_TYPE_EMERGENCY, type: Short, value: 10 }
+        - { name: ZWAVE_ALARM_TYPE_CLOCK, type: Short, value: 11 }
+        - { name: ZWAVE_ALARM_TYPE_FIRST, type: Short, value: 255 }
+    AlarmSet:
+      value: 0x06
+      payload:
+        - {name: zwaveAlarmType, type: Short, data: 0, defaultValue: 0}
+        - {name: zwaveAlarmStatus, type: Short, data: 1, defaultValue: 0}
+      constants:
+        - { name: ZWAVE_ALARM_TYPE_RESERVED0, type: Short, value: 0 }
+        - { name: ZWAVE_ALARM_TYPE_SMOKE, type: Short, value: 1 }
+        - { name: ZWAVE_ALARM_TYPE_CO, type: Short, value: 2 }
+        - { name: ZWAVE_ALARM_TYPE_CO2, type: Short, value: 3 }
+        - { name: ZWAVE_ALARM_TYPE_HEAT, type: Short, value: 4 }
+        - { name: ZWAVE_ALARM_TYPE_WATER, type: Short, value: 5 }
+        - { name: ZWAVE_ALARM_TYPE_ACCESS_CONTROL, type: Short, value: 6 }
+        - { name: ZWAVE_ALARM_TYPE_BURGLAR, type: Short, value: 7 }
+        - { name: ZWAVE_ALARM_TYPE_POWER_MANAGEMENT, type: Short, value: 8 }
+        - { name: ZWAVE_ALARM_TYPE_SYSTEM, type: Short, value: 9 }
+        - { name: ZWAVE_ALARM_TYPE_EMERGENCY, type: Short, value: 10 }
+        - { name: ZWAVE_ALARM_TYPE_CLOCK, type: Short, value: 11 }
+        - { name: ZWAVE_ALARM_TYPE_FIRST, type: Short, value: 255 }
+    AlarmTypeSupportedGet:
+      value: 0x07
+    AlarmTypeSupportedReport:
+      value: 0x08
+      manual: true # this command is coded manually due to complexity, do not auto generate it
+- commandClass: ApplicationStatus
+  version: 1
+  value: 0x22
+  commands:
+    ApplicationBusy:
+      value: 0x01
+      payload:
+        - {name: status, type: Short, data: 0, defaultValue: 0}
+        - {name: waitTime, type: Short, data: 1, defaultValue: null}
+      constants:
+        - { name: STATUS_TRY_AGAIN_LATER, type: Short, value: 0 }
+        - { name: STATUS_TRY_AGAIN_IN_WAIT_TIME_SECONDS, type: Short, value: 1 }
+        - { name: STATUS_REQUEST_QUEUED_EXECUTED_LATER, type: Short, value: 2 }
+    ApplicationRejectedRequest:
+      value: 0x02
+      payload:
+        - {name: status, type: Short, data: 0, defaultValue: 0}
+- commandClass: Association
+  version: 1
+  value: 0x85
+  commands:
+    AssociationSet:
+      value: 0x01
+      payload:
+        - {name: groupingIdentifier, type: Short, data: 0, defaultValue: 0}
+        - {name: nodeId, type: List<Short>, data: '1~RAW[(payload.size() - 1)]', defaultValue: null}
+    AssociationGet:
+      value: 0x02
+      payload:
+        - {name: groupingIdentifier, type: Short, data: 0, defaultValue: 0}
+    AssociationReport:
+      value: 0x03
+      payload:
+        - {name: groupingIdentifier, type: Short, data: 0, defaultValue: 0}
+        - {name: maxNodesSupported, type: Short, data: 1, defaultValue: 0}
+        - {name: reportsToFollow, type: Short, data: 2, defaultValue: 0}
+        - {name: nodeId, type: List<Short>, data: '3~RAW[(payload.size() - 1)]', defaultValue: null}
+    AssociationRemove:
+      value: 0x04
+      payload:
+        - {name: groupingIdentifier, type: Short, data: 0, defaultValue: 0}
+        - {name: nodeId, type: List<Short>, data: '1~RAW[(payload.size() - 1)]', defaultValue: null}
+    AssociationGroupingsGet:
+      value: 0x05
+      payload: []
+    AssociationGroupingsReport:
+      value: 0x06
+      payload:
+        - {name: supportedGroupings, type: Short, data: 0, defaultValue: 0}
+- commandClass: Association
+  version: 2
+  value: 0x85
+  commands:
+    AssociationSet:
+      extends: 1
+      overridePayload: false
+    AssociationGet:
+      extends: 1
+      overridePayload: false
+    AssociationReport:
+      extends: 1
+      overridePayload: false
+    AssociationRemove:
+      extends: 1
+      overridePayload: false
+    AssociationGroupingsGet:
+      extends: 1
+      overridePayload: false
+    AssociationGroupingsReport:
+      extends: 1
+      overridePayload: false
+    AssociationSpecificGroupGet:
+      value: 0x0B
+      payload: []
+    AssociationSpecificGroupReport:
+      value: 0x0C
+      payload:
+        - {name: group, type: Short, data: 0, defaultValue: 0}
+- commandClass: Association
+  version: 3
+  value: 0x85
+  commands:
+    AssociationSet:
+      extends: 2
+      overridePayload: false
+    AssociationGet:
+      extends: 2
+      overridePayload: false
+    AssociationReport:
+      extends: 2
+      overridePayload: false
+    AssociationRemove:
+      extends: 2
+      overridePayload: false
+    AssociationGroupingsGet:
+      extends: 2
+      overridePayload: false
+    AssociationGroupingsReport:
+      extends: 2
+      overridePayload: false
+    AssociationSpecificGroupGet:
+      extends: 2
+      overridePayload: false
+    AssociationSpecificGroupReport:
+      extends: 2
+      overridePayload: false
+- commandClass: Basic
+  version: 1
+  value: 0x20
+  commands:
+    BasicSet:
+      value: 0x01
+      payload:
+        - {name: value, type: Short, data: 0, defaultValue: 0}
+    BasicGet:
+      value: 0x02
+      payload: []
+    BasicReport:
+      value: 0x03
+      payload:
+        - {name: value, type: Short, data: 0, defaultValue: 0}
+- commandClass: Basic
+  version: 2
+  value: 0x20
+  commands:
+    BasicSet:
+      extends: 1
+      overridePayload: false
+    BasicGet:
+      extends: 1
+      overridePayload: false
+    BasicReport:
+      extends: 1
+      overridePayload: true
+      value: 0x03
+      payload:
+        - {name: value, type: Short, data: 0, defaultValue: 0}
+        - {name: targetValue, type: Short, data: 1, defaultValue: 0}
+        - {name: duration, type: Short, data: 2, defaultValue: 0}
+- commandClass: Battery
+  version: 1
+  value: 0x80
+  commands:
+    BatteryGet:
+      value: 0x02
+    BatteryReport:
+      value: 0x03
+      payload:
+        - {name: batteryLevel, type: Short, data: 0, defaultValue: 0}
+- commandClass: Configuration
+  version: 1
+  value: 0x70
+  commands:
+    ConfigurationSet:
+      value: 0x04
+      payload:
+        - {name: parameterNumber, type: Short, data: 0, defaultValue: 0}
+        - {name: defaultValue, type: Boolean, data: '1:7', defaultValue: false}
+        - {name: size, type: Short, data: '1:0~2', defaultValue: 0}
+        - {name: configurationValue, type: List<Short>, data: '2~RAW[(payload.size() - 1)]', defaultValue: null}
+      additionalImports: "import java.math.BigInteger;\n"
+      additionalMethods:
+        - "\n    public BigInteger getScaledConfigurationValue() {\n"
+        - "        //TODO: Implement\n"
+        - "        return null;\n"
+        - "    }\n"
+        - "\n    public void setScaledConfigurationValue(BigInteger value) {\n"
+        - "        //TODO: Implement\n"
+        - "    }\n"
+    ConfigurationGet:
+      value: 0x05
+      payload:
+        - {name: parameterNumber, type: Short, data: 0, defaultValue: 0}
+    ConfigurationReport:
+      value: 0x06
+      payload:
+        - {name: parameterNumber, type: Short, data: 0, defaultValue: 0}
+        - {name: size, type: Short, data: '1:0~2', defaultValue: 0}
+        - {name: configurationValue, type: List<Short>, data: '2~RAW[(payload.size() - 1)]', defaultValue: null}
+- commandClass: Configuration
+  version: 2
+  value: 0x70
+  commands:
+    ConfigurationSet:
+      extends: 1
+      overridePayload: false
+    ConfigurationGet:
+      extends: 1
+      overridePayload: false
+    ConfigurationReport:
+      extends: 1
+      overridePayload: false
+# TODO: include the rest of the Configuration version 2 command classes
+# ConfigurationBulkSet
+# ConfigurationBulkGet
+# ConfigurationBulkReport
+- commandClass: Crc16Encap
+  version: 1
+  value: 0x56
+  commands:
+    Crc16Encap:
+      value: 0x01
+      payload:
+        - {name: commandClass, type: Short, data: 0, defaultValue: 0}
+        - {name: command, type: Short, data: 1, defaultValue: 0}
+        - {name: data, type: List<Short>, data: '2~RAW[(payload.size() - 3)]', minPayloadSize: 4, defaultValue: null}
+        - {name: checksum, type: Integer, data: 'RAW[(payload.size() - 2)]~RAW[(payload.size() - 1)]', minBytes: 2, minPayloadSize: 3, defaultValue: 0}
+- commandClass: DoorLock
+  version: 1
+  value: 0x62
+  commands:
+    DoorLockOperationSet:
+      value: 0x01
+      payload:
+        - {name: doorLockMode, type: Short, data: 0, defaultValue: 0}
+      constants:
+        - { name: DOOR_LOCK_MODE_DOOR_UNSECURED, type: Short, value: 0 }
+        - { name: DOOR_LOCK_MODE_DOOR_UNSECURED_WITH_TIMEOUT, type: Short, value: 1 }
+        - { name: DOOR_LOCK_MODE_DOOR_UNSECURED_FOR_INSIDE_DOOR_HANDLES, type: Short, value: 16 }
+        - { name: DOOR_LOCK_MODE_DOOR_UNSECURED_FOR_INSIDE_DOOR_HANDLES_WITH_TIMEOUT, type: Short, value: 17 }
+        - { name: DOOR_LOCK_MODE_DOOR_UNSECURED_FOR_OUTSIDE_DOOR_HANDLES, type: Short, value: 32 }
+        - { name: DOOR_LOCK_MODE_DOOR_UNSECURED_FOR_OUTSIDE_DOOR_HANDLES_WITH_TIMEOUT, type: Short, value: 33 }
+        - { name: DOOR_LOCK_MODE_DOOR_SECURED, type: Short, value: 255 }
+    DoorLockOperationGet:
+      value: 0x02
+      payload: []
+    DoorLockOperationReport:
+      value: 0x03
+      payload:
+        - {name: doorLockMode, type: Short, data: 0, defaultValue: 0}
+        - {name: insideDoorHandlesMode, type: Short, data: '1:0~3', defaultValue: 0}
+        - {name: outsideDoorHandlesMode, type: Short, data: '1:4~7', defaultValue: 0}
+        - {name: doorCondition, type: Short, data: 2, defaultValue: 0}
+        - {name: lockTimeoutMinutes, type: Short, data: 3, defaultValue: 0}
+        - {name: lockTimeoutSeconds, type: Short, data: 4, defaultValue: 0}
+      constants:
+        - { name: DOOR_LOCK_MODE_DOOR_UNSECURED, type: Short, value: 0 }
+        - { name: DOOR_LOCK_MODE_DOOR_UNSECURED_WITH_TIMEOUT, type: Short, value: 1 }
+        - { name: DOOR_LOCK_MODE_DOOR_UNSECURED_FOR_INSIDE_DOOR_HANDLES, type: Short, value: 16 }
+        - { name: DOOR_LOCK_MODE_DOOR_UNSECURED_FOR_INSIDE_DOOR_HANDLES_WITH_TIMEOUT, type: Short, value: 17 }
+        - { name: DOOR_LOCK_MODE_DOOR_UNSECURED_FOR_OUTSIDE_DOOR_HANDLES, type: Short, value: 32 }
+        - { name: DOOR_LOCK_MODE_DOOR_UNSECURED_FOR_OUTSIDE_DOOR_HANDLES_WITH_TIMEOUT, type: Short, value: 33 }
+        - { name: DOOR_LOCK_MODE_DOOR_SECURED, type: Short, value: 255 }
+- commandClass: Hail
+  version: 1
+  value: 0x82
+  commands:
+    Hail:
+      value: 0x01
+      payload: []
+- commandClass: ManufacturerSpecific
+  version: 1
+  value: 0x72
+  commands:
+    ManufacturerSpecificGet:
+      value: 0x04
+      payload: []
+    ManufacturerSpecificReport:
+      value: 0x05
+      payload:
+        - {name: manufacturerId, type: Integer, data: 0~2, minPayloadSize: 1, minBytes: 2, defaultValue: 0}
+        - {name: productId, type: Integer, data: 2~4, minPayloadSize: 3, minBytes: 2, defaultValue: 0}
+        - {name: productTypeId, type: Integer, data: 4~6, minPayloadSize: 5, minBytes: 2, defaultValue: 0}
+- commandClass: ManufacturerSpecific
+  version: 2
+  value: 0x72
+  commands:
+    ManufacturerSpecificGet:
+      extends: 1
+      overridePayload: false
+    ManufacturerSpecificReport:
+      extends: 1
+      overridePayload: false
+    DeviceSpecificGet:
+      value: 0x06
+      payload:
+        - {name: deviceIdType, type: Short, data: 0:0~2, defaultValue: 0}
+      constants:
+        - { name: DEVICE_ID_TYPE_OEM, type: Short, value: 0 }
+        - { name: DEVICE_ID_TYPE_SERIAL_NUMBER, type: Short, value: 1 }
+        - { name: DEVICE_ID_TYPE_PSEUDO_RANDOM, type: Short, value: 2 }
+    DeviceSpecificReport:
+      value: 0x07
+      payload:
+        - {name: deviceIdType, type: Short, data: 0:0~2, defaultValue: 0}
+        - {name: deviceIdDataFormat, type: Short, data: '1:5~7', defaultValue: 0}
+        - {name: deviceIdDataLength, type: Short, data: '1:0~4', defaultValue: 0}
+        - {name: deviceIdData, type: List<Short>, data: '2~RAW[(deviceIdDataLength + 1)]', defaultValue: null}
+      constants:
+        - { name: DEVICE_ID_DATA_FORMAT_UTF8, type: Short, value: 0 }
+        - { name: DEVICE_ID_DATA_FORMAT_BINARY, type: Short, value: 1 }
+        - { name: DEVICE_ID_TYPE_OEM, type: Short, value: 0 }
+        - { name: DEVICE_ID_TYPE_SERIAL_NUMBER, type: Short, value: 1 }
+        - { name: DEVICE_ID_TYPE_PSEUDO_RANDOM, type: Short, value: 2 }
+- commandClass: NetworkManagementBasic
+  version: 1
+  value: 0x4D
+  commands:
+    LearnModeSet:
+      value: 0x01
+      payload:
+        - {name: seqNo, type: Short, data: 0, defaultValue: 0}
+        - {name: RESERVED, type: Short, data: 1, defaultValue: 0}
+        - {name: mode, type: Short, data: 2, defaultValue: 0}
+      constants:
+        - {name: ZW_SET_LEARN_MODE_DISABLE, type: Short, value: 0}
+        - {name: ZW_SET_LEARN_MODE_CLASSIC, type: Short, value: 1}
+        - {name: ZW_SET_LEARN_MODE_NWI, type: Short, value: 2}
+    LearnModeSetStatus:
+      value: 0x02
+      payload:
+        - {name: seqNo, type: Short, data: 0, defaultValue: 0}
+        - {name: status, type: Short, data: 1, defaultValue: 0}
+        - {name: RESERVED, type: Short, data: 2, defaultValue: 0}
+        - {name: newNodeId, type: Short, data: 3, defaultValue: 0}
+      constants:
+        - {name: LEARN_MODE_DONE, type: Short, value: 6}
+        - {name: LEARN_MODE_FAILED, type: Short, value: 7}
+        - {name: LEARN_MODE_SECURITY_FAILED, type: Short, value: 9}
+    NetworkUpdateRequest:
+      value: 0x03
+      payload:
+        - {name: seqNo, type: Short, data: 0, defaultValue: 0}
+    NetworkUpdateRequestStatus:
+      value: 0x04
+      payload:
+        - {name: seqNo, type: Short, data: 0, defaultValue: 0}
+        - {name: status, type: Short, data: 1, defaultValue: 0}
+      constants:
+        - {name: ZW_SUC_UPDATE_DONE, type: Short, value: 0}
+        - {name: ZW_SUC_UPDATE_ABORT, type: Short, value: 1}
+        - {name: ZW_SUC_UPDATE_WAIT, type: Short, value: 2}
+        - {name: ZW_SUC_UPDATE_DISABLED, type: Short, value: 3}
+        - {name: ZW_SUC_UPDATE_OVERFLOW, type: Short, value: 4}
+    NodeInformationSend:
+      value: 0x05
+      payload:
+        - {name: seqNo, type: Short, data: 0, defaultValue: 0}
+        - {name: RESERVED, type: Short, data: 1, defaultValue: 0}
+        - {name: destinationNodeId, type: Short, data: 2, defaultValue: 0}
+        - {name: txOptions, type: Short, data: 3, defaultValue: 0}
+      constants:
+        - {name: TRANSMIT_OPTION_NORMAL, type: Short, value: 0}
+        - {name: TRANSMIT_OPTION_ACK, type: Short, value: 1}
+        - {name: TRANSMIT_OPTION_LOW_POWER, type: Short, value: 2}
+        - {name: TRANSMIT_OPTION_NO_ROUTE, type: Short, value: 16}
+        - {name: TRANSMIT_OPTION_EXPLORE, type: Short, value: 32}
+    DefaultSet:
+      value: 0x06
+      payload:
+        - {name: seqNo, type: Short, data: 0, defaultValue: 0}
+    DefaultSetComplete:
+      value: 0x07
+      payload:
+        - {name: seqNo, type: Short, data: 0, defaultValue: 0}
+        - {name: status, type: Short, data: 1, defaultValue: 0}
+      constants:
+        - {name: DEFAULT_SET_DONE, type: Short, value: 6}
+        - {name: DEFAULT_SET_BUSY, type: Short, value: 7}
+- commandClass: NetworkManagementBasic
+  version: 2
+  value: 0x4D
+  commands:
+    LearnModeSet:
+      extends: 1
+      overridePayload: true
+      payload:
+        - {name: seqNo, type: Short, data: 0, defaultValue: 0}
+        - {name: returnInterviewStatus, type: Boolean, data: '1:0', defaultValue: false}
+        - {name: mode, type: Short, data: 2, defaultValue: 0}
+    LearnModeSetStatus:
+      extends: 1
+      overridePayload: true
+      payload:
+        - {name: seqNo, type: Short, data: 0, defaultValue: 0}
+        - {name: status, type: Short, data: 1, defaultValue: 0}
+        - {name: RESERVED, type: Short, data: 2, defaultValue: 0}
+        - {name: newNodeId, type: Short, data: 3, defaultValue: 0}
+        - {name: grantedKeys, type: Short, data: 4, defaultValue: 0}
+        - { name: kexFailType, type: Short, data: 5, defaultValue: 0 }
+        - { name: dsk, type: List<Short>, data: '6~22' }
+      constants:
+        - {name: LEARN_MODE_INTERVIEW_COMPLETED, type: Short, value: 10}
+        - { name: KEX_FAIL_KEX_KEY, type: Short, value: 1 }
+        - { name: KEX_FAIL_KEX_SCHEME, type: Short, value: 2 }
+        - { name: KEX_FAIL_KEX_CURVES, type: Short, value: 3 }
+        - { name: KEX_FAIL_DECRYPT, type: Short, value: 5 }
+        - { name: KEX_FAIL_CANCEL, type: Short, value: 6 }
+        - { name: KEX_FAIL_AUTH, type: Short, value: 7 }
+        - { name: KEX_FAIL_KEY_GET, type: Short, value: 8 }
+        - { name: KEX_FAIL_KEY_VERIFY, type: Short, value: 9 }
+        - { name: KEX_FAIL_KEY_REPORT, type: Short, value: 10 }
+    NetworkUpdateRequest:
+      extends: 1
+      overridePayload: false
+    NetworkUpdateRequestStatus:
+      extends: 1
+      overridePayload: false
+    NodeInformationSend:
+      extends: 1
+      overridePayload: false
+    DefaultSet:
+      extends: 1
+      overridePayload: false
+    DefaultSetComplete:
+      extends: 1
+      overridePayload: false
+    DSKGet:
+      value: 0x08
+      payload:
+        - { name: seqNo, type: Short, data: 0, defaultValue: 0 }
+        - { name: addMode, type: Boolean, data: '1:0', defaultValue: false }
+    DSKReport:
+      value: 0x09
+      payload:
+        - {name: seqNo, type: Short, data: 0, defaultValue: 0}
+        - { name: addMode, type: Boolean, data: '1:0', defaultValue: false }
+        - { name: dsk, type: List<Short>, data: '2~18' }
+- commandClass: NetworkManagementInclusion
+  version: 1
+  value: 0x34
+  commands:
+    NodeAdd:
+      value: 0x01
+      payload:
+        - {name: seqNo, type: Short, data: 0, defaultValue: 0}
+        - {name: RESERVED, type: Short, data: 1, defaultValue: 0}
+        - {name: mode, type: Short, data: 2, defaultValue: 0}
+        - {name: txOptions, type: Short, data: 3, defaultValue: 0}
+      constants:
+        - {name: ADD_NODE_ANY, type: Short, value: 1}
+        - {name: ADD_NODE_STOP, type: Short, value: 5}
+        - {name: TRANSMIT_OPTION_NONE, type: Short, value: 0}
+        - {name: TRANSMIT_OPTION_LOW_POWER, type: Short, value: 2}
+        - {name: TRANSMIT_OPTION_EXPLORE, type: Short, value: 32}
+    NodeAddStatus:
+      value: 0x02
+      payload:
+        - {name: seqNo, type: Short, data: 0, defaultValue: 0}
+        - {name: status, type: Short, data: 1, defaultValue: 0}
+        - {name: RESERVED, type: Short, data: 2, defaultValue: 0}
+        - {name: newNodeId, type: Short, data: 3, defaultValue: 0}
+        - {name: nodeInfoLength, type: Short, data: 4, defaultValue: 0}
+        - {name: listening, type: Boolean, data: '5:7', defaultValue: false}
+        - {name: capability, type: Short, data: '5:0~6', defaultValue: 0}
+        - {name: opt, type: Boolean, data: '6:7', defaultValue: false}
+        - {name: security, type: Short, data: '6:0~6', defaultValue: 0}
+        - {name: basicDeviceClass, type: Short, data: 7, defaultValue: 0}
+        - {name: genericDeviceClass, type: Short, data: 8, defaultValue: 0}
+        - {name: specificDeviceClass, type: Short, data: 9, defaultValue: 0}
+        - {name: commandClass, type: List<Short>, data: '10~RAW[(nodeInfoLength + 4)]', defaultValue: null}
+      constants:
+        - {name: ADD_NODE_STATUS_DONE, type: Short, value: 6}
+        - {name: ADD_NODE_STATUS_FAILED, type: Short, value: 7}
+        - {name: ADD_NODE_STATUS_SECURITY_FAILED, type: Short, value: 9}
+    NodeRemove:
+      value: 0x03
+      payload:
+        - { name: seqNo, type: Short, data: 0, defaultValue: 0 }
+        - { name: RESERVED, type: Short, data: 1, defaultValue: 0 }
+        - { name: mode, type: Short, data: 2, defaultValue: 0 }
+      constants:
+        - { name: REMOVE_NODE_ANY, type: Short, value: 1 }
+        - { name: REMOVE_NODE_STOP, type: Short, value: 5 }
+    NodeRemoveStatus:
+      value: 0x04
+      payload:
+        - { name: seqNo, type: Short, data: 0, defaultValue: 0 }
+        - { name: status, type: Short, data: 1, defaultValue: 0 }
+        - { name: nodeId, type: Short, data: 2, defaultValue: 0 }
+      constants:
+        - { name: REMOVE_NODE_STATUS_DONE, type: Short, value: 6 }
+        - { name: REMOVE_NODE_STATUS_FAILED, type: Short, value: 7 }
+- commandClass: NetworkManagementInclusion
+  version: 2
+  value: 0x34
+  commands:
+    NodeAdd:
+      extends: 1
+      overridePayload: false
+      constants:
+        - {name: ADD_NODE_ANY_S2, type: Short, value: 7}
+    NodeAddStatus:
+      extends: 1
+      overridePayload: true
+      payload:
+        - {name: seqNo, type: Short, data: 0, defaultValue: 0}
+        - {name: status, type: Short, data: 1, defaultValue: 0}
+        - {name: RESERVED, type: Short, data: 2, defaultValue: 0}
+        - {name: newNodeId, type: Short, data: 3, defaultValue: 0}
+        - {name: nodeInfoLength, type: Short, data: 4, defaultValue: 0}
+        - {name: listening, type: Boolean, data: '5:7', defaultValue: false}
+        - {name: capability, type: Short, data: '5:0~6', defaultValue: 0}
+        - {name: opt, type: Boolean, data: '6:7', defaultValue: false}
+        - {name: security, type: Short, data: '6:0~6', defaultValue: 0}
+        - {name: basicDeviceClass, type: Short, data: 7, defaultValue: 0}
+        - {name: genericDeviceClass, type: Short, data: 8, defaultValue: 0}
+        - {name: specificDeviceClass, type: Short, data: 9, defaultValue: 0}
+        - {name: commandClass, type: List<Short>, data: '10~RAW[(nodeInfoLength + 4)]', defaultValue: null}
+        - {name: grantedKeys, type: Short, data: 'RAW[(nodeInfoLength  + 4)]', defaultValue: 0}
+        - {name: kexFailType, type: Short, data: 'RAW[(nodeInfoLength + 5)]', defaultValue: 0}
+      constants:
+        - {name: KEX_FAIL_KEX_KEY, type: Short, value: 1}
+        - {name: KEX_FAIL_KEX_SCHEME, type: Short, value: 2}
+        - {name: KEX_FAIL_KEX_CURVES, type: Short, value: 3}
+        - {name: KEX_FAIL_DECRYPT, type: Short, value: 5}
+        - {name: KEX_FAIL_CANCEL, type: Short, value: 6}
+        - {name: KEX_FAIL_AUTH, type: Short, value: 7}
+        - {name: KEX_FAIL_KEY_GET, type: Short, value: 8}
+        - {name: KEX_FAIL_KEY_VERIFY, type: Short, value: 9}
+        - {name: KEX_FAIL_KEY_REPORT, type: Short, value: 10}
+    NodeRemove:
+      extends: 1
+      overridePayload: false
+    NodeRemoveStatus:
+      extends: 1
+      overridePayload: false
+- commandClass: NetworkManagementInclusion
+  version: 3
+  value: 0x34
+  commands:
+    NodeAdd:
+      extends: 2
+      overridePayload: false
+    NodeAddStatus:
+      extends: 2
+      overridePayload: true
+      payload:
+        - {name: seqNo, type: Short, data: 0, defaultValue: 0}
+        - {name: status, type: Short, data: 1, defaultValue: 0}
+        - {name: RESERVED, type: Short, data: 2, defaultValue: 0}
+        - {name: newNodeId, type: Short, data: 3, defaultValue: 0}
+        - {name: nodeInfoLength, type: Short, data: 4, defaultValue: 0}
+        - {name: listening, type: Boolean, data: '5:7', defaultValue: false}
+        - {name: capability, type: Short, data: '5:0~6', defaultValue: 0}
+        - {name: opt, type: Boolean, data: '6:7', defaultValue: false}
+        - {name: security, type: Short, data: '6:0~6', defaultValue: 0}
+        - {name: basicDeviceClass, type: Short, data: 7, defaultValue: 0}
+        - {name: genericDeviceClass, type: Short, data: 8, defaultValue: 0}
+        - {name: specificDeviceClass, type: Short, data: 9, defaultValue: 0}
+        - {name: commandClass, type: List<Short>, data: '10~RAW[(nodeInfoLength + 4)]', defaultValue: null}
+        - {name: grantedKeys, type: Short, data: 'RAW[(nodeInfoLength  + 4)]', defaultValue: 0}
+        - {name: kexFailType, type: Short, data: 'RAW[(nodeInfoLength + 5)]', defaultValue: 0}
+        - {name: dskLength, type: Short, data: 'RAW[(nodeInfoLength + 6)]:0~4', dataVarName: 'data16', defaultValue: 0}
+        - {name: dsk, type: List<Short>, data: 'RAW[(nodeInfoLength + 7)]~RAW[(dskLength + nodeInfoLength + 7)]'}
+    NodeRemove:
+      extends: 2
+      overridePayload: false
+    NodeRemoveStatus:
+      extends: 2
+      overridePayload: false
+- commandClass: NetworkManagementProxy
+  version: 1
+  value: 0x52
+  commands:
+    NodeListGet:
+      value: 0x01
+      payload:
+        - {name: seqNo, type: Short, data: 0, defaultValue: 0}
+    NodeListReport:
+      value: 0x02
+      payload:
+        - {name: seqNo, type: Short, data: 0, defaultValue: 0}
+        - {name: status, type: Short, data: 1, defaultValue: 0}
+        - {name: nodeListControllerId, type: Short, data: 2, defaultValue: 0}
+        - {name: nodeList, type: List<Short>, data: '3~32', defaultValue: null}
+      constants:
+        - {name: NODE_LIST_STATUS_LATEST, type: Short, value: 0}
+        - {name: NODE_LIST_STATUS_OUTDATED, type: Short, value: 1}
+    NodeInfoCachedGet:
+      value: 0x03
+      payload:
+        - { name: seqNo, type: Short, data: 0, defaultValue: 0 }
+        - { name: maxAge, type: Short, data: 1:0~3, defaultValue: 0 }
+        - { name: nodeId, type: Short, data: 2, defaultValue: 0 }
+    NodeInfoCachedReport:
+      value: 0x04
+      payload:
+        - {name: seqNo, type: Short, data: 0, defaultValue: 0}
+        - {name: status, type: Short, data: '1:4~7', defaultValue: 0}
+        - {name: age, type: Short, data: '1:0~3', defaultValue: 0}
+        - {name: listening, type: Boolean, data: '2:7', defaultValue: false}
+        - {name: capability, type: Short, data: '2:0~6', defaultValue: 0}
+        - {name: opt, type: Boolean, data: '3:7', defaultValue: false}
+        - {name: security, type: Short, data: '3:0~6', defaultValue: 0}
+        - {name: RESERVED, type: Short, data: 4, defaultValue: 0}
+        - {name: basicDeviceClass, type: Short, data: 5, defaultValue: 0}
+        - {name: genericDeviceClass, type: Short, data: 6, defaultValue: 0}
+        - {name: specificDeviceClass, type: Short, data: 7, defaultValue: 0}
+        - {name: commandClass, type: List<Short>, data: '8~RAW[(payload.size() - 1)]', defaultValue: null}
+      constants:
+        - {name: STATUS_OK, type: Short, value: 0}
+        - {name: STATUS_NOT_RESPONDING, type: Short, value: 1}
+        - {name: STATUS_UNKNOWN, type: Short, value: 2}
+- commandClass: NetworkManagementProxy
+  version: 2
+  value: 0x52
+  commands:
+    NodeListGet:
+      extends: 1
+      overridePayload: false
+    NodeListReport:
+      extends: 1
+      overridePayload: false
+    NodeInfoCachedGet:
+      extends: 1
+      overridePayload: false
+    NodeInfoCachedReport:
+      extends: 1
+      overridePayload: true
+      payload:
+        - {name: seqNo, type: Short, data: 0, defaultValue: 0}
+        - {name: status, type: Short, data: '1:4~7', defaultValue: 0}
+        - {name: age, type: Short, data: '1:0~3', defaultValue: 0}
+        - {name: listening, type: Boolean, data: '2:7', defaultValue: false}
+        - {name: capability, type: Short, data: '2:0~6', defaultValue: 0}
+        - {name: opt, type: Boolean, data: '3:7', defaultValue: false}
+        - {name: security, type: Short, data: '3:0~6', defaultValue: 0}
+        - {name: grantedKeys, type: Short, data: 4, defaultValue: 0}
+        - {name: basicDeviceClass, type: Short, data: 5, defaultValue: 0}
+        - {name: genericDeviceClass, type: Short, data: 6, defaultValue: 0}
+        - {name: specificDeviceClass, type: Short, data: 7, defaultValue: 0}
+        - {name: commandClass, type: List<Short>, data: '8~RAW[(payload.size() - 1)]', defaultValue: null}
+- commandClass: NetworkManagementProxy
+  version: 3
+  value: 0x52
+  commands:
+    NodeListGet:
+      extends: 2
+      overridePayload: false
+    NodeListReport:
+      extends: 2
+      overridePayload: false
+    NodeInfoCachedGet:
+      extends: 2
+      overridePayload: false
+    NodeInfoCachedReport:
+      extends: 2
+      overridePayload: false
+    FailedNodeListGet:
+      value: 0x0B
+      payload:
+        - { name: seqNo, type: Short, data: 0, defaultValue: 0 }
+    FailedNodeListReport:
+      value: 0x0C
+      payload:
+        - { name: seqNo, type: Short, data: 0, defaultValue: 0 }
+        - { name: nodeList, type: List<Short>, data: '1~30', defaultValue: null }
+- commandClass: Security
+  version: 1
+  value: 0x98
+  commands:
+    SecurityCommandsSupportedReport:
+      value: 0x03
+      manual: true # this command is coded manually due to complexity, do not auto generate it
+    NetworkKeyVerify:
+      value: 0x07
+    SecurityMessageEncapsulation:
+      value: 0x81
+      payload:
+        - { name: secondFrame, type: Boolean, data: '0:5', defaultValue: false }
+        - { name: sequenced, type: Boolean, data: '0:4', defaultValue: false }
+        - { name: sequenceCounter, type: Short, data: '0:0~3', defaultValue: 0 }
+        - { name: commandClassIdentifier, type: Short, data: 1, defaultValue: 0 }
+        - { name: commandIdentifier, type: Short, data: 2, defaultValue: 0 }
+        - { name: commandByte, type: List<Short>, data: '3~RAW[(payload.size() - 1)]', defaultValue: null }
+- commandClass: SwitchBinary
+  version: 1
+  value: 0x25
+  commands:
+    SwitchBinarySet:
+      value: 0x01
+      payload:
+        - {name: switchValue, type: Short, data: 0, defaultValue: 0}
+    SwitchBinaryGet:
+      value: 0x02
+      payload: []
+    SwitchBinaryReport:
+      value: 0x03
+      payload:
+        - {name: value, type: Short, data: 0, defaultValue: 0}
+- commandClass: SwitchBinary
+  version: 2
+  value: 0x25
+  commands:
+    SwitchBinarySet:
+      extends: 1
+      overridePayload: true
+      value: 0x01
+      payload:
+        - {name: switchValue, type: Short, data: 0, defaultValue: 0}
+        - {name: duration, type: Short, data: 1, defaultValue: 0}
+    SwitchBinaryGet:
+      extends: 1
+      overridePayload: false
+    SwitchBinaryReport:
+      extends: 1
+      overridePayload: true
+      value: 0x03
+      payload:
+        - {name: value, type: Short, data: 0, defaultValue: 0}
+        - {name: targetValue, type: Short, data: 1, defaultValue: 0}
+        - {name: duration, type: Short, data: 2, defaultValue: 0}
+- commandClass: SwitchMultilevel
+  version: 1
+  value: 0x26
+  commands:
+    SwitchMultilevelSet:
+      value: 0x01
+      payload:
+        - {name: value, type: Short, data: 0, defaultValue: 0}
+    SwitchMultilevelGet:
+      value: 0x02
+      payload: []
+    SwitchMultilevelReport:
+      value: 0x03
+      payload:
+        - {name: value, type: Short, data: 0, defaultValue: 0}
+- commandClass: SwitchMultilevel
+  version: 2
+  value: 0x26
+  commands:
+    SwitchMultilevelSet:
+      extends: 1
+      overridePayload: true
+      value: 0x01
+      payload:
+        - { name: value, type: Short, data: 0, defaultValue: 0 }
+        - { name: duration, type: Short, data: 1, defaultValue: 0 }
+    SwitchMultilevelGet:
+      extends: 1
+      overridePayload: false
+    SwitchMultilevelReport:
+      extends: 1
+      overridePayload: false
+- commandClass: SwitchMultilevel
+  version: 3
+  value: 0x26
+  commands:
+    SwitchMultilevelSet:
+      extends: 2
+      overridePayload: false
+    SwitchMultilevelGet:
+      extends: 2
+      overridePayload: false
+    SwitchMultilevelReport:
+      extends: 2
+      overridePayload: false
+- commandClass: ThermostatFanMode
+  version: 1
+  value: 0x44
+  commands:
+    ThermostatFanModeSet:
+      value: 0x01
+      payload:
+        - {name: fanMode, type: Short, data: '0:0~3', defaultValue: 0}
+      constants:
+        - {name: FAN_MODE_AUTO_LOW, type: Short, value: 0}
+        - {name: FAN_MODE_LOW, type: Short, value: 1}
+        - {name: FAN_MODE_AUTO_HIGH, type: Short, value: 2}
+        - {name: FAN_MODE_HIGH, type: Short, value: 3}
+    ThermostatFanModeGet:
+      value: 0x02
+      payload: []
+    ThermostatFanModeReport:
+      value: 0x03
+      payload:
+        - {name: fanMode, type: Short, data: '0:0~3', defaultValue: 0}
+      constants:
+        - {name: FAN_MODE_AUTO_LOW, type: Short, value: 0}
+        - {name: FAN_MODE_LOW, type: Short, value: 1}
+        - {name: FAN_MODE_AUTO_HIGH, type: Short, value: 2}
+        - {name: FAN_MODE_HIGH, type: Short, value: 3}
+    ThermostatFanModeSupportedGet:
+      value: 0x04
+      payload: []
+    ThermostatFanModeSupportedReport:
+      value: 0x05
+      payload:
+        - {name: auto, type: Boolean, data: 0:0, defaultValue: false}
+        - {name: low, type: Boolean, data: 0:1, defaultValue: false}
+        - {name: autoHigh, type: Boolean, data: 0:2, defaultValue: false}
+        - {name: high, type: Boolean, data: 0:3, defaultValue: false}
+- commandClass: ThermostatFanMode
+  version: 2
+  value: 0x44
+  commands:
+    ThermostatFanModeSet:
+      value: 0x01
+      payload:
+        - {name: fanMode, type: Short, data: '0:0~3', defaultValue: 0}
+        - {name: 'off', type: Boolean, data: 0:7, defaultValue: false}
+      constants:
+        - {name: FAN_MODE_AUTO_LOW, type: Short, value: 0}
+        - {name: FAN_MODE_LOW, type: Short, value: 1}
+        - {name: FAN_MODE_AUTO_HIGH, type: Short, value: 2}
+        - {name: FAN_MODE_HIGH, type: Short, value: 3}
+        - {name: FAN_MODE_AUTO_MEDIUM, type: Short, value: 4}
+        - {name: FAN_MODE_MEDIUM, type: Short, value: 5}
+    ThermostatFanModeGet:
+      extends: 1
+      overridePayload: false
+    ThermostatFanModeReport:
+      extends: 1
+      overridePayload: false
+      constants:
+        - {name: FAN_MODE_AUTO_LOW, type: Short, value: 0}
+        - {name: FAN_MODE_LOW, type: Short, value: 1}
+        - {name: FAN_MODE_AUTO_HIGH, type: Short, value: 2}
+        - {name: FAN_MODE_HIGH, type: Short, value: 3}
+        - {name: FAN_MODE_AUTO_MEDIUM, type: Short, value: 4}
+        - {name: FAN_MODE_MEDIUM, type: Short, value: 5}
+    ThermostatFanModeSupportedGet:
+      extends: 1
+      overridePayload: false
+    ThermostatFanModeSupportedReport:
+      extends: 1
+      overridePayload: true
+      payload:
+        - { name: auto, type: Boolean, data: 0:0, defaultValue: false }
+        - { name: low, type: Boolean, data: 0:1, defaultValue: false }
+        - { name: autoHigh, type: Boolean, data: 0:2, defaultValue: false }
+        - { name: high, type: Boolean, data: 0:3, defaultValue: false }
+        - { name: autoMedium, type: Boolean, data: 0:4, defaultValue: false }
+        - { name: medium, type: Boolean, data: 0:5, defaultValue: false }
+
+- commandClass: Time
+  version: 1
+  value: 0x8A
+  commands:
+    TimeGet:
+      value: 0x01
+      payload:
+        - {name: year, type: Short, data: 0, defaultValue: 0}
+        - {name: month, type: Short, data: 0, defaultValue: 0}
+        - {name: day, type: Short, data: 0, defaultValue: 0}
+    TimeReport:
+      value: 0x02
+      payload:
+        - { name: rtcFailure, type: Boolean, data: '0:7', defaultValue: false }
+        - { name: hourLocalTime, type: Short, data: '0:0~4', defaultValue: 0 }
+        - { name: minuteLocalTime, type: Short, data: 1, defaultValue: 0 }
+        - { name: secondLocalTime, type: Short, data: 2, defaultValue: 0 }
+    DateGet:
+      value: 0x03
+    DateReport:
+      value: 0x04
+      payload:
+        - {name: year, type: Integer, data: '0~2', minPayloadSize: 2, minBytes: 2, defaultValue: 0 }
+        - {name: month, type: Short, data: 2, defaultValue: 0}
+        - {name: day, type: Short, data: 3, defaultValue: 0}
+- commandClass: UserCode
+  version: 1
+  value: 0x63
+  commands:
+    UserCodeSet:
+      value: 0x01
+      manual: true # this command is coded manually due to complexity, do not auto generate it
+    UserCodeGet:
+      value: 0x02
+      payload:
+        - { name: userIdentifier, type: Short, data: 0, defaultValue: 0 }
+    UserCodeReport:
+      value: 0x03
+      manual: true # this command is coded manually due to complexity, do not auto generate it
+    UsersNumberGet:
+      value: 0x04
+    UsersNumberReport:
+      value: 0x05
+      payload:
+        - { name: supportedUsers, type: Short, data: 0, defaultValue: 0 }
+- commandClass: UserCode
+  version: 2
+  value: 0x63
+  commands:
+    UserCodeSet:
+      extends: 1
+      overridePayload: false
+    UserCodeGet:
+      extends: 1
+      overridePayload: false
+    UserCodeReport:
+      extends: 1
+      overridePayload: false
+    UsersNumberGet:
+      extends: 1
+      overridePayload: false
+    UsersNumberReport:
+      extends: 1
+      overridePayload: true
+      payload:
+        - { name: supportedUsers, type: Short, data: 0, defaultValue: 0 }
+        - { name: extendedSupportedUsers, type: Integer, data: '1~3', minPayloadSize: 3, minBytes: 2, defaultValue: 0 }
+    UserCodeCapabilitiesGet:
+      value: 0x06
+# TODO: include the rest of the UserCode version 2 command classes
+# UserCodeCapabilitiesReport
+# UserCodeKeypadModeSet
+# UserCodeKeypadModeGet
+# UserCodeKeypadModeReport
+# ExtendedUserCodeSet
+# ExtendedUserCodeGet
+# ExtendedUserCodeReport
+# MasterCodeSet
+# MasterCodeGet
+# MasterCodeReport
+# UserCodeChecksumGet
+# UserCodeChecksumReport
+
+- commandClass: Version
+  version: 1
+  value: 0x86
+  commands:
+    VersionGet:
+      value: 0x11
+    VersionReport:
+      value: 0x12
+      payload:
+        - { name: zWaveLibraryType, type: Short, data: 0, defaultValue: 0 }
+        - { name: zWaveProtocolVersion, type: Short, data: 1, defaultValue: 0 }
+        - { name: zWaveProtocolSubVersion, type: Short, data: 2, defaultValue: 0 }
+        - { name: applicationVersion, type: Short, data: 3, defaultValue: 0 }
+        - { name: applicationSubVersion, type: Short, data: 4, defaultValue: 0 }
+      constants:
+        - { name: LIBRARY_TYPE_STATIC_CONTROLLER, type: Short, value: 1 }
+        - { name: LIBRARY_TYPE_CONTROLLER, type: Short, value: 2 }
+        - { name: LIBRARY_TYPE_ENHANCED_SLAVE, type: Short, value: 3 }
+        - { name: LIBRARY_TYPE_SLAVE, type: Short, value: 4 }
+        - { name: LIBRARY_TYPE_INSTALLER, type: Short, value: 5 }
+        - { name: LIBRARY_TYPE_ROUTING_SLAVE, type: Short, value: 6 }
+        - { name: LIBRARY_TYPE_BRIDGE_CONTROLLER, type: Short, value: 7 }
+        - { name: LIBRARY_TYPE_DEVICE_UNDER_TEST, type: Short, value: 8 }
+        - { name: LIBRARY_TYPE_AV_REMOTE, type: Short, value: 10 }
+        - { name: LIBRARY_TYPE_AV_DEVICE, type: Short, value: 11 }
+    VersionCommandClassGet:
+      value: 0x13
+      payload:
+        - { name: requestedCommandClass, type: Short, data: 0, defaultValue: 0 }
+    VersionCommandClassReport:
+      value: 0x14
+      payload:
+        - { name: requestedCommandClass, type: Short, data: 0, defaultValue: 0 }
+        - { name: commandClassVersion, type: Short, data: 1, defaultValue: 0 }
+- commandClass: Version
+  version: 2
+  value: 0x86
+  commands:
+    VersionGet:
+      extends: 1
+      overridePayload: false
+    VersionReport:
+      extends: 1
+      overridePayload: true
+      payload:
+        - { name: zWaveLibraryType, type: Short, data: 0, defaultValue: 0 }
+        - { name: zWaveProtocolVersion, type: Short, data: 1, defaultValue: 0 }
+        - { name: zWaveProtocolSubVersion, type: Short, data: 2, defaultValue: 0 }
+        - { name: firmware0Version, type: Short, data: 3, defaultValue: 0 }
+        - { name: firmware0SubVersion, type: Short, data: 4, defaultValue: 0 }
+        - { name: hardwareVersion, type: Short, data: 5, defaultValue: 0 }
+        - { name: numberOfFirmwareTargets, type: Short, data: 6, defaultValue: 0 }
+        - { name: firmwareTargets, type: List<Short>, data: '7~RAW[(payload.size() - 1)]', defaultValue: null }
+    VersionCommandClassGet:
+      extends: 1
+      overridePayload: false
+    VersionCommandClassReport:
+      extends: 1
+      overridePayload: false
+- commandClass: Version
+  version: 3
+  value: 0x86
+  commands:
+    VersionGet:
+      extends: 2
+      overridePayload: false
+    VersionReport:
+      extends: 2
+      overridePayload: false
+    VersionCommandClassGet:
+      extends: 2
+      overridePayload: false
+    VersionCommandClassReport:
+      extends: 2
+      overridePayload: false
+    VersionCapabilitiesGet:
+      value: 0x15
+    VersionCapabilitiesReport:
+      value: 0x16
+      payload:
+        - { name: version, type: Boolean, data: 0:0, defaultValue: false }
+        - { name: commandClass, type: Boolean, data: 0:1, defaultValue: false }
+        - { name: zWaveSoftware, type: Boolean, data: 0:2, defaultValue: false }
+    VersionZWaveSoftwareGet:
+      value: 0x17
+      payload:
+        - { name: sdkVersion1, type: Short, data: 0, defaultValue: 0 }
+        - { name: sdkVersion2, type: Short, data: 1, defaultValue: 0 }
+        - { name: sdkVersion3, type: Short, data: 2, defaultValue: 0 }
+        - { name: zWaveApplicationFrameworkAPIVersion1, type: Short, data: 3, defaultValue: 0 }
+        - { name: zWaveApplicationFrameworkAPIVersion2, type: Short, data: 4, defaultValue: 0 }
+        - { name: zWaveApplicationFrameworkAPIVersion3, type: Short, data: 5, defaultValue: 0 }
+        - { name: zWaveApplicationFrameworkBuildNumber1, type: Short, data: 6, defaultValue: 0 }
+        - { name: zWaveApplicationFrameworkBuildNumber2, type: Short, data: 7, defaultValue: 0 }
+        - { name: hostInterfaceVersion1, type: Short, data: 8, defaultValue: 0 }
+        - { name: hostInterfaceVersion2, type: Short, data: 9, defaultValue: 0 }
+        - { name: hostInterfaceVersion3, type: Short, data: 10, defaultValue: 0 }
+        - { name: hostInterfaceBuildNumber1, type: Short, data: 11, defaultValue: 0 }
+        - { name: hostInterfaceBuildNumber2, type: Short, data: 12, defaultValue: 0 }
+        - { name: zWaveProtocolVersion1, type: Short, data: 13, defaultValue: 0 }
+        - { name: zWaveProtocolVersion2, type: Short, data: 14, defaultValue: 0 }
+        - { name: zWaveProtocolVersion3, type: Short, data: 15, defaultValue: 0 }
+        - { name: zWaveProtocolBuildNumber1, type: Short, data: 16, defaultValue: 0 }
+        - { name: zWaveProtocolBuildNumber2, type: Short, data: 17, defaultValue: 0 }
+        - { name: applicationVersion1, type: Short, data: 18, defaultValue: 0 }
+        - { name: applicationVersion2, type: Short, data: 19, defaultValue: 0 }
+        - { name: applicationVersion3, type: Short, data: 20, defaultValue: 0 }
+        - { name: applicationBuildNumber1, type: Short, data: 21, defaultValue: 0 }
+        - { name: applicationBuildNumber2, type: Short, data: 22, defaultValue: 0 }
+- commandClass: ZipGateway
+  version: 1
+  value: 0x5F
+  commands:
+    UnsolicitedDestinationSet:
+      value: 0x08
+      payload:
+        - { name: ipv6Destination, type: List<Short>, data: '0~15', defaultValue: null }
+        - { name: destinationPort, type: Integer, data: '16~18', minPayloadSize: 17, minBytes: 2, defaultValue: 0 }
+    UnsolicitedDestinationGet:
+      value: 0x09
+    UnsolicitedDestinationReport:
+      value: 0x0A
+      payload:
+        - { name: ipv6Destination, type: List<Short>, data: '0~15', defaultValue: null }
+        - { name: destinationPort, type: Integer, data: '16~18', minPayloadSize: 17, minBytes: 2, defaultValue: 0 }
+- commandClass: ZipND
+  version: 1
+  value: 0x58
+  commands:
+    ZipNodeAdvertisement:
+      value: 0x01
+      payload:
+        - {name: local, type: Boolean, data: '0:3', defaultValue: false}
+        - {name: nodeId, type: Short, data: 1, defaultValue: 0}
+        - { name: ipv6Address, type: List<Short>, data: '2~18', defaultValue: null }
+        - { name: homeId, type: List<Short>, data: '19~22', defaultValue: null }
+    ZipNodeSolicitation:
+      value: 0x03
+      payload:
+        - {name: RESERVED, type: Short, data: 0, defaultValue: 0}
+        - {name: nodeId, type: Short, data: 1, defaultValue: 0}
+        - { name: ipv6Address, type: List<Short>, data: '2~18', defaultValue: null }
+    ZipInvNodeSolicitation:
+      value: 0x04
+      payload:
+        - {name: local, type: Boolean, data: '0:3', defaultValue: false}
+        - {name: nodeId, type: Short, data: 1, defaultValue: 0}
+- commandClass: Zip
+  version: 2
+  value: 0x23
+  commands:
+    ZipPacket:
+      value: 0x02
+      manual: true # this command is coded manually due to complexity, do not auto generate it
+- commandClass: Zip
+  version: 3
+  value: 0x23
+  commands:
+    ZipPacket:
+      extends: 2
+      overridePayload: false
+      constants:
+        - {name: ENCAPSULATION_FORMAT_INFO, type: Short, value: 4}
+- commandClass: Zip
+  version: 4
+  value: 0x23
+  commands:
+    ZipPacket:
+      extends: 3
+      overridePayload: false
+      constants:
+        - { name: ZWAVE_MULTICAST_ADDRESSING, type: Short, value: 5 }
+    ZipKeepAlive:
+      value: 0x03
+      payload:
+        - {name: ackRequest, type: Boolean, data: '0:7', defaultValue: false}
+        - {name: ackResponse, type: Boolean, data: '0:6', defaultValue: false}

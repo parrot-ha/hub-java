@@ -1,0 +1,6 @@
+- id: 43f540f0-046d-42c8-9ad4-4a4d297dd304
+  className: com.parrotha.device.handler.thing.Thing
+- id: 56b300d1-c021-42c4-ace2-db3b5e3d3390
+  className: com.parrotha.device.handler.zigbee.outlet.ZigBeeOutlet
+- id: 01aac68f-ba05-4cc3-905f-258f987d1236
+  className: com.parrotha.device.handler.virtual.contactsensor.VirtualContactSensor

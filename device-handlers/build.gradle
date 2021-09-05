@@ -1,0 +1,20 @@
+plugins {
+    id 'hub.java-library-conventions'
+    id 'groovy'
+}
+
+version "${projectVersion}"
+
+repositories {
+    mavenCentral()
+}
+
+// thanks to https://stackoverflow.com/questions/20442626/how-can-i-specify-a-groovy-compilerconfig-using-gradle
+compileGroovy {
+    groovyOptions.configurationScript = file("config.groovy")
+}
+
+dependencies {
+    implementation project(':core')
+    implementation "org.codehaus.groovy:groovy-all:${groovyAllVersion}"
+}

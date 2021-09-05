@@ -1,0 +1,3 @@
+moduleName=parrothub-extension-modules
+moduleVersion=1.0
+extensionClasses=com.parrotha.internal.extension.module.EncodingExtensionMethods

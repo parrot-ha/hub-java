@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="WARN" shutdownHook="disable">
+    <Appenders>
+        <RollingFile name="RollingFile" filename="parrothub.log" filePattern="parrothub-%i.log">
+            <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
+            <Policies>
+                <SizeBasedTriggeringPolicy size="100 MB"/>
+            </Policies>
+            <DefaultRolloverStrategy max="5"/>
+        </RollingFile>
+        <RollingFile name="LiveRollingFile" filename="parrothublive.log" filePattern="parrothublive-%i.log">
+            <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
+            <Policies>
+                <SizeBasedTriggeringPolicy size="5 MB"/>
+            </Policies>
+            <DefaultRolloverStrategy max="5"/>
+        </RollingFile>
+    </Appenders>
+    <Loggers>
+        <Logger name="com.mchange.v2.c3p0.SQLWarnings" level="warn" additivity="false">
+            <AppenderRef ref="RollingFile"/>
+        </Logger>
+        <!-- This is for live logging, send it to a separate file -->
+        <Logger name="parrothub.live" level="trace" additivity="false">
+            <AppenderRef ref="LiveRollingFile"/>
+        </Logger>
+        <Logger name="com.parrotha" level="debug" additivity="false">
+            <AppenderRef ref="RollingFile"/>
+        </Logger>
+        <Logger name="com.parrotha.integration.zigbee.ParrotHubZigBeeNetworkManager" level="warn" additivity="false">
+            <AppenderRef ref="RollingFile"/>
+        </Logger>
+        <Logger name="com.zsmartsystems.zigbee.dongle.ember.internal.ash.AshFrameHandler" level="warn" additivity="false">
+            <AppenderRef ref="RollingFile"/>
+        </Logger>
+        <Logger name="com.zsmartsystems.zigbee.transaction.ZigBeeTransactionManager" level="warn" additivity="false">
+            <AppenderRef ref="RollingFile"/>
+        </Logger>
+        <Logger name="com.zsmartsystems.zigbee.ZigBeeNetworkManager" level="warn" additivity="false">
+            <AppenderRef ref="RollingFile"/>
+        </Logger>
+        <Logger name="com.zsmartsystems" level="warn" additivity="false">
+            <AppenderRef ref="RollingFile"/>
+        </Logger>
+        <Logger name="hsqldb.db" level="warn" additivity="false">
+            <AppenderRef ref="RollingFile"/>
+        </Logger>
+        <Root level="info">
+            <AppenderRef ref="RollingFile"/>
+        </Root>
+    </Loggers>
+</Configuration>

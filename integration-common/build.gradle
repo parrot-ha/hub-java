@@ -1,0 +1,27 @@
+plugins {
+    id 'hub.java-library-conventions'
+    id 'maven-publish'
+}
+
+version "${projectVersion}"
+
+publishing {
+    publications {
+        maven(MavenPublication) {
+            groupId = 'com.parrotha'
+            artifactId = 'parrothub-integration-common'
+            from components.java
+        }
+    }
+}
+
+dependencies {
+    implementation project(':core')
+
+    implementation 'org.pf4j:pf4j:3.5.0'
+    implementation 'org.apache.commons:commons-lang3:3.11'
+}
+
+jar {
+    archiveBaseName = 'parrothub-integration-common'
+}
