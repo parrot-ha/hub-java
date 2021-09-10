@@ -777,10 +777,12 @@ public class AutomationAppScriptDelegateImpl extends EntityScriptDelegateCommon 
     }
 
     public void section(Map<String, Object> options, String sectionTitle, Closure closure) {
-        if (sectionTitle != null && options == null) {
+        if (options == null) {
             options = new HashMap<>();
         }
-        options.put("title", sectionTitle);
+        if(sectionTitle != null) {
+            options.put("title", sectionTitle);
+        }
         section(options, closure);
     }
 
