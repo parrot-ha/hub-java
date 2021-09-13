@@ -29,7 +29,6 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -40,7 +39,6 @@ public class ConfigurationServiceImpl implements ConfigurationService {
 
     Map<String, Object> configuration;
     private Map<String, IntegrationConfiguration> integrations;
-//    Map<Protocol, String> protocolListMap;
 
     @Override
     public Map<String, Object> getIntegrationConfiguration(String integrationId) {
@@ -56,7 +54,7 @@ public class ConfigurationServiceImpl implements ConfigurationService {
         IntegrationConfiguration integrationConfiguration = getIntegrationById(integrationId);
         if (integrationConfiguration != null) {
             Object setting = integrationConfiguration.getSettingByName(configurationId);
-            if(setting != null) {
+            if (setting != null) {
                 return setting.toString();
             }
         }
@@ -66,7 +64,7 @@ public class ConfigurationServiceImpl implements ConfigurationService {
     @Override
     public void updateIntegrationConfigurationValue(String integrationId, String configurationKey, String configurationValue) {
         IntegrationConfiguration integrationConfiguration = getIntegrationById(integrationId);
-        if(integrationConfiguration != null) {
+        if (integrationConfiguration != null) {
             integrationConfiguration.addSetting(configurationKey, configurationValue);
             saveIntegration(integrationId);
         }
@@ -96,12 +94,6 @@ public class ConfigurationServiceImpl implements ConfigurationService {
         integrationConfiguration.setProtocol(protocol);
         integrationConfiguration.setClassName(className);
         integrationConfiguration.setSettings(settings);
-
-        AbstractIntegration abstractIntegration = getIntegrationObject(integrationConfiguration.getClassName());
-        if (abstractIntegration != null) {
-            integrationConfiguration.setName(abstractIntegration.getName());
-            integrationConfiguration.setDescription(abstractIntegration.getDescription());
-        }
 
         getIntegrationMap().put(integrationConfiguration.getId(), integrationConfiguration);
         saveIntegration(integrationConfiguration.getId());
@@ -166,7 +158,9 @@ public class ConfigurationServiceImpl implements ConfigurationService {
     }
 
     synchronized private void loadIntegrations() {
-        if (integrations != null) return;
+        if (integrations != null) {
+            return;
+        }
         Map<String, IntegrationConfiguration> integrationsTemp = new HashMap();
         File integrationConfigDir = new File("config/integrations/");
         if (integrationConfigDir.exists() && integrationConfigDir.isDirectory()) {
@@ -179,12 +173,7 @@ public class ConfigurationServiceImpl implements ConfigurationService {
                 for (File f : integrationConfigFiles) {
                     try {
                         IntegrationConfiguration integration = yaml.load(new FileInputStream(f));
-                        AbstractIntegration abstractIntegration = getIntegrationObject(integration.getClassName());
-                        if (abstractIntegration != null) {
-                            integration.setName(abstractIntegration.getName());
-                            integration.setDescription(abstractIntegration.getDescription());
-                        }
-                        integrationsTemp.put((String) integration.getId(), integration);
+                        integrationsTemp.put(integration.getId(), integration);
                     } catch (FileNotFoundException e) {
                         e.printStackTrace();
                     }
@@ -192,25 +181,6 @@ public class ConfigurationServiceImpl implements ConfigurationService {
             }
         }
         integrations = integrationsTemp;
-    }
-
-    private AbstractIntegration getIntegrationObject(String className) {
-        try {
-            Class<AbstractIntegration> integrationClass = (Class<AbstractIntegration>) Class.forName(className);
-            AbstractIntegration abstractIntegration = integrationClass.getDeclaredConstructor().newInstance();
-            return abstractIntegration;
-        } catch (ClassNotFoundException classNotFoundException) {
-            classNotFoundException.printStackTrace();
-        } catch (IllegalAccessException illegalAccessException) {
-            illegalAccessException.printStackTrace();
-        } catch (InstantiationException instantiationException) {
-            instantiationException.printStackTrace();
-        } catch (NoSuchMethodException e) {
-            e.printStackTrace();
-        } catch (InvocationTargetException e) {
-            e.printStackTrace();
-        }
-        return null;
     }
 
     private void createDirectory(String directory) {

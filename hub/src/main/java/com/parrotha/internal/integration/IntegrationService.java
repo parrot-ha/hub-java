@@ -21,19 +21,22 @@ package com.parrotha.internal.integration;
 import com.parrotha.device.Protocol;
 import com.parrotha.integration.CloudIntegration;
 import com.parrotha.integration.DeviceIntegration;
-import com.parrotha.internal.Main;
 import com.parrotha.internal.device.DeviceIntegrationServiceImpl;
 import com.parrotha.internal.device.DeviceService;
 import com.parrotha.internal.entity.CloudIntegrationServiceImpl;
-import com.parrotha.internal.hub.LocationService;
 import com.parrotha.internal.entity.EntityService;
+import com.parrotha.internal.hub.LocationService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.yaml.snakeyaml.Yaml;
 
+import java.io.File;
+import java.io.FileFilter;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
+import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Enumeration;
@@ -55,6 +58,8 @@ public class IntegrationService {
     private Map<String, AbstractIntegration> integrationMap;
     private Map<Protocol, List<String>> protocolListMap = null;
 
+    private URLClassLoader pluginClassLoader;
+
     public IntegrationService(IntegrationRegistry integrationRegistry, ConfigurationService configurationService, DeviceService deviceService,
                               EntityService scriptService, DeviceIntegrationServiceImpl deviceIntegrationService,
                               EntityService entityService, LocationService locationService) {
@@ -65,6 +70,22 @@ public class IntegrationService {
         this.deviceIntegrationService = deviceIntegrationService;
         this.entityService = entityService;
         this.locationService = locationService;
+
+        File plugins[] = new File("./plugins").listFiles(new FileFilter() {
+            @Override
+            public boolean accept(File file) {
+                return file.getName().endsWith(".jar");
+            }
+        });
+        List<URL> plugInURLs = new ArrayList<>(plugins.length);
+        for (File plugin : plugins) {
+            try {
+                plugInURLs.add(plugin.toURI().toURL());
+            } catch (MalformedURLException e) {
+                e.printStackTrace();
+            }
+        }
+        pluginClassLoader = new URLClassLoader(plugInURLs.toArray(new URL[0]));
     }
 
     public boolean removeIntegration(String id) {
@@ -186,7 +207,7 @@ public class IntegrationService {
         Map<String, AbstractIntegration> temporaryIntegrationMap = new HashMap<>();
         Map<Protocol, List<String>> temporaryProtocolListMap = new HashMap<>();
 
-        Collection<IntegrationConfiguration> integrationConfigurations = getIntegrations();
+        Collection<IntegrationConfiguration> integrationConfigurations = configurationService.getIntegrations();
         if (integrationConfigurations != null) {
             for (IntegrationConfiguration integrationConfiguration : integrationConfigurations) {
                 AbstractIntegration abstractIntegration = getAbstractIntegrationFromConfiguration(
@@ -203,12 +224,11 @@ public class IntegrationService {
         protocolListMap = temporaryProtocolListMap;
     }
 
-    private AbstractIntegration getAbstractIntegrationFromConfiguration(
-            IntegrationConfiguration integrationConfiguration) {
+    private AbstractIntegration getAbstractIntegrationFromConfiguration(IntegrationConfiguration integrationConfiguration) {
         AbstractIntegration abstractIntegration = null;
         try {
             Class<? extends AbstractIntegration> integrationClass = Class
-                    .forName(integrationConfiguration.getClassName()).asSubclass(AbstractIntegration.class);
+                    .forName(integrationConfiguration.getClassName(), true, pluginClassLoader).asSubclass(AbstractIntegration.class);
             abstractIntegration = integrationClass.getDeclaredConstructor().newInstance();
             abstractIntegration.setId(integrationConfiguration.getId());
             //abstractIntegration.setLabel(integrationConfiguration.getLabel());
@@ -227,7 +247,11 @@ public class IntegrationService {
     }
 
     public Collection<IntegrationConfiguration> getIntegrations() {
-        return configurationService.getIntegrations();
+        Collection<IntegrationConfiguration> integrations = configurationService.getIntegrations();
+        for(IntegrationConfiguration integrationConfiguration : integrations) {
+            integrationConfiguration.setName(getIntegrationById(integrationConfiguration.getId()).getName());
+        }
+        return integrations;
     }
 
     public String createIntegration(String integrationClassName) {
@@ -289,11 +313,11 @@ public class IntegrationService {
 
     public List<Map<String, String>> getAvailableIntegrations() {
         List<String> integrationClasses = Stream.of(
-                "com.parrotha.integration.zigbee.ZigBeeIntegration",
-                "com.parrotha.integration.lan.LanIntegration").collect(Collectors.toList());
+                "com.parrotha.integration.zigbee.ZigBeeIntegration"//,"com.parrotha.integration.lan.LanIntegration"
+        ).collect(Collectors.toList());
 
         try {
-            Enumeration<URL> resources = Main.class.getClassLoader().getResources("integrationInformation.yaml");
+            Enumeration<URL> resources = pluginClassLoader.getResources("integrationInformation.yaml");
             while (resources.hasMoreElements()) {
                 URL url = resources.nextElement();
                 Yaml yaml = new Yaml();
