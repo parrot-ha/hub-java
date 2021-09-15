@@ -43,8 +43,6 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class IntegrationService {
     private static final Logger logger = LoggerFactory.getLogger(IntegrationService.class);
@@ -58,7 +56,7 @@ public class IntegrationService {
     private Map<String, AbstractIntegration> integrationMap;
     private Map<Protocol, List<String>> protocolListMap = null;
 
-    private URLClassLoader pluginClassLoader;
+    private URLClassLoader extensionClassLoader;
 
     public IntegrationService(IntegrationRegistry integrationRegistry, ConfigurationService configurationService, DeviceService deviceService,
                               EntityService scriptService, DeviceIntegrationServiceImpl deviceIntegrationService,
@@ -71,7 +69,13 @@ public class IntegrationService {
         this.entityService = entityService;
         this.locationService = locationService;
 
-        File plugins[] = new File("./plugins").listFiles(new FileFilter() {
+        File extensionDirectory = new File("./extensions");
+
+        if (!extensionDirectory.exists()) {
+            extensionDirectory.mkdir();
+        }
+
+        File plugins[] = extensionDirectory.listFiles(new FileFilter() {
             @Override
             public boolean accept(File file) {
                 return file.getName().endsWith(".jar");
@@ -85,7 +89,7 @@ public class IntegrationService {
                 e.printStackTrace();
             }
         }
-        pluginClassLoader = new URLClassLoader(plugInURLs.toArray(new URL[0]));
+        extensionClassLoader = new URLClassLoader(plugInURLs.toArray(new URL[0]));
     }
 
     public boolean removeIntegration(String id) {
@@ -228,7 +232,7 @@ public class IntegrationService {
         AbstractIntegration abstractIntegration = null;
         try {
             Class<? extends AbstractIntegration> integrationClass = Class
-                    .forName(integrationConfiguration.getClassName(), true, pluginClassLoader).asSubclass(AbstractIntegration.class);
+                    .forName(integrationConfiguration.getClassName(), true, extensionClassLoader).asSubclass(AbstractIntegration.class);
             abstractIntegration = integrationClass.getDeclaredConstructor().newInstance();
             abstractIntegration.setId(integrationConfiguration.getId());
             //abstractIntegration.setLabel(integrationConfiguration.getLabel());
@@ -248,7 +252,7 @@ public class IntegrationService {
 
     public Collection<IntegrationConfiguration> getIntegrations() {
         Collection<IntegrationConfiguration> integrations = configurationService.getIntegrations();
-        for(IntegrationConfiguration integrationConfiguration : integrations) {
+        for (IntegrationConfiguration integrationConfiguration : integrations) {
             integrationConfiguration.setName(getIntegrationById(integrationConfiguration.getId()).getName());
         }
         return integrations;
@@ -257,7 +261,7 @@ public class IntegrationService {
     public String createIntegration(String integrationClassName) {
         //TODO: validate class name is in a list of allowable classes
         try {
-            Class<? extends AbstractIntegration> integrationClass = Class.forName(integrationClassName)
+            Class<? extends AbstractIntegration> integrationClass = Class.forName(integrationClassName, true, extensionClassLoader)
                     .asSubclass(AbstractIntegration.class);
             AbstractIntegration integration = integrationClass.getDeclaredConstructor().newInstance();
             String integrationId;
@@ -312,12 +316,10 @@ public class IntegrationService {
     }
 
     public List<Map<String, String>> getAvailableIntegrations() {
-        List<String> integrationClasses = Stream.of(
-                "com.parrotha.integration.zigbee.ZigBeeIntegration"//,"com.parrotha.integration.lan.LanIntegration"
-        ).collect(Collectors.toList());
+        List<String> integrationClasses = new ArrayList<>();
 
         try {
-            Enumeration<URL> resources = pluginClassLoader.getResources("integrationInformation.yaml");
+            Enumeration<URL> resources = extensionClassLoader.getResources("integrationInformation.yaml");
             while (resources.hasMoreElements()) {
                 URL url = resources.nextElement();
                 Yaml yaml = new Yaml();
@@ -333,7 +335,7 @@ public class IntegrationService {
         for (String integrationClassName : integrationClasses) {
             Map<String, String> integration = new HashMap<>();
             try {
-                Class<? extends AbstractIntegration> integrationClass = Class.forName(integrationClassName)
+                Class<? extends AbstractIntegration> integrationClass = Class.forName(integrationClassName, true, extensionClassLoader)
                         .asSubclass(AbstractIntegration.class);
                 AbstractIntegration abstractIntegration = integrationClass.getDeclaredConstructor().newInstance();
                 integration.put("name", abstractIntegration.getName());
