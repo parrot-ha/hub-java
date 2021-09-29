@@ -64,6 +64,9 @@ public class IntegrationRegistry {
     }
 
     public void unregisterIntegration(AbstractIntegration integration) {
+        if(integration == null) {
+            return;
+        }
         integrationIdMap.remove(integration.getId());
 
         if (integration instanceof DeviceIntegration) {
