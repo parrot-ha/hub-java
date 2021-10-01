@@ -212,7 +212,9 @@ public class ZWaveIPClient implements RawDataChannel {
     }
 
     public byte[] sendZIPTransaction(ZIPTransaction zipTransaction) {
-        if (logger.isDebugEnabled()) logger.debug("TX request: {}", zipTransaction.getRequest());
+        if (logger.isDebugEnabled()) {
+            logger.debug("TX request: {}", zipTransaction.getRequest());
+        }
 
         Future<byte[]> futureResponse = sendMessageAsync(zipTransaction);
         if (futureResponse == null) {
@@ -222,7 +224,7 @@ public class ZWaveIPClient implements RawDataChannel {
 
         // connection will stay open for 60 seconds by default, so only send a keep alive if the transaction timeout
         // is longer than 55 seconds just to be safe.
-        if(zipTransaction.getTimeout() > 55) {
+        if (zipTransaction.getTimeout() > 55) {
             // start a timer to keep the connection alive
             TimerTask task = new TimerTask() {
                 public void run() {
@@ -238,7 +240,7 @@ public class ZWaveIPClient implements RawDataChannel {
             futureResponse.cancel(true);
         }
 
-        if(keepAliveTimer != null) {
+        if (keepAliveTimer != null) {
             keepAliveTimer.cancel();
             keepAliveTimer = null;
         }
@@ -292,7 +294,15 @@ public class ZWaveIPClient implements RawDataChannel {
         zipPacket.setzWaveCmdIncluded(true);
         zipPacket.setSecureOrigin(true);
         zipPacket.setSeqNo((short) sequenceNumber);
-        zipPacket.setzWaveCommand(HexUtils.hexStringToShortList(zWaveCommand));
+
+        // check for secure message
+        if (zWaveCommand.startsWith("9881")) {
+            // S0 message, add encapsulation format header
+            zipPacket.setHeaderExtension(HexUtils.hexStringToShortList("0584028000"));
+            zipPacket.setzWaveCommand(HexUtils.hexStringToShortList(zWaveCommand.substring("988100".length())));
+        } else {
+            zipPacket.setzWaveCommand(HexUtils.hexStringToShortList(zWaveCommand));
+        }
 
         byte[] packet = HexUtils.hexStringToByteArray(zipPacket.format());
 
@@ -434,7 +444,8 @@ public class ZWaveIPClient implements RawDataChannel {
                     // update our ackRegistration's timeout
                     updateAckRegistrationTimeout(ackRegistration, nackRetryTimeoutInMilliseconds);
                     // schedule the "nack queue full" retry timer
-                    nackRetryTimer.schedule(new NackRetryTimerTask(this.pskDtlsClient, this.addressEndpoint, ackRegistration), nackRetryTimeoutInMilliseconds);
+                    nackRetryTimer.schedule(new NackRetryTimerTask(this.pskDtlsClient, this.addressEndpoint, ackRegistration),
+                            nackRetryTimeoutInMilliseconds);
                 } else if (((ZipPacket) command).getNackWaiting()) {
                     AckRegistration ackRegistration = this.messagesWaitingForAck.get(sequenceNumber);
                     if (ackRegistration != null) {
@@ -463,7 +474,9 @@ public class ZWaveIPClient implements RawDataChannel {
     }
 
     private Command parseCommand(byte[] data) {
-        if (data == null) return null;
+        if (data == null) {
+            return null;
+        }
 
         String commandClassAndCommandString = HexUtils.byteArrayToHexString(Arrays.copyOfRange(data, 0, 2));
         String payloadString = null;
@@ -475,7 +488,9 @@ public class ZWaveIPClient implements RawDataChannel {
         if (zWaveCommand != null) {
             try {
                 int version = zWaveCommand.getMaxVersion();
-                Class<? extends Command> commandClazz = Class.forName("com.parrotha.zwave.commands." + zWaveCommand.getPackageName() + "v" + version + "." + zWaveCommand.getClassName()).asSubclass(Command.class);
+                Class<? extends Command> commandClazz = Class.forName(
+                                "com.parrotha.zwave.commands." + zWaveCommand.getPackageName() + "v" + version + "." + zWaveCommand.getClassName())
+                        .asSubclass(Command.class);
                 Command cmd = commandClazz.getDeclaredConstructor().newInstance();
                 if (payloadString != null) {
                     cmd.setPayload(HexUtils.hexStringToShortList(payloadString));
