@@ -35,4 +35,12 @@ public abstract class Command {
     public String format() {
         return getCMD() + HexUtils.shortListToHexString(getPayload());
     }
+
+    public Short getCommandClassIdentifier() {
+        return (short) HexUtils.hexStringToInt(getCMD().substring(0,2));
+    }
+
+    public Short getCommandIdentifier() {
+        return (short) HexUtils.hexStringToInt(getCMD().substring(2,4));
+    }
 }

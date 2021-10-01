@@ -126,4 +126,10 @@ public class SecurityMessageEncapsulation extends Command {
                 ", commandByte: " + commandByte +
                 ')';
     }
+
+    public void encapsulate(Command cmd) {
+        this.commandIdentifier = cmd.getCommandIdentifier();
+        this.commandClassIdentifier = cmd.getCommandClassIdentifier();
+        this.commandByte = cmd.getPayload();
+    }
 }
