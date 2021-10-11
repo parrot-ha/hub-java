@@ -13,7 +13,14 @@ jobs:
         with:
           java-version: '11'
           distribution: 'zulu'
+      - name: Set up nodejs
+        uses: actions/setup-node@v2
+        with:
+          node-version: '14'
       - name: Validate Gradle wrapper
         uses: gradle/wrapper-validation-action@v1
+      - name: Install node dependencies
+        run: npm install
+        working-directory: ./hub/ui
       - name: Build with Gradle
         run: ./gradlew build
