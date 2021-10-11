@@ -319,8 +319,14 @@ public class AutomationAppScriptDelegateImpl extends EntityScriptDelegateCommon 
             } else {
                 return ((CloudIntegration) integration).getApiServerUrl();
             }
+        } else {
+            // TODO: get local IP address and return that.
+            if (url != null) {
+                return "http://TODO" + url;
+            } else {
+                return "http://TODO";
+            }
         }
-        return null;
     }
 
     List<ChildDeviceWrapper> getChildDevices() {
@@ -780,7 +786,7 @@ public class AutomationAppScriptDelegateImpl extends EntityScriptDelegateCommon 
         if (options == null) {
             options = new HashMap<>();
         }
-        if(sectionTitle != null) {
+        if (sectionTitle != null) {
             options.put("title", sectionTitle);
         }
         section(options, closure);

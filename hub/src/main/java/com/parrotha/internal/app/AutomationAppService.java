@@ -462,6 +462,9 @@ public class AutomationAppService {
 
     public String addAutomationAppSourceCode(String sourceCode) {
         Map definition = extractAutomationAppDefinition(sourceCode);
+        if(definition == null) {
+            throw new IllegalArgumentException("No definition found.");
+        }
         String aaId = automationAppDataStore
                 .addAutomationAppSourceCode(sourceCode, new AutomationApp(null, null, definition));
         return aaId;
