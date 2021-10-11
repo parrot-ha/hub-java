@@ -604,6 +604,14 @@ void generateCommandJavaClass(String basePackage, String baseCodeDirectory, Stri
     commandJavaClass << "    public String format() {\n"
     commandJavaClass << "        return getCMD() + HexUtils.shortListToHexString(getPayload());\n"
     commandJavaClass << "    }\n"
+    commandJavaClass << "\n"
+    commandJavaClass << "    public Short getCommandClassIdentifier() {\n"
+    commandJavaClass << "        return (short) HexUtils.hexStringToInt(getCMD().substring(0,2));\n"
+    commandJavaClass << "    }\n"
+    commandJavaClass << "\n"
+    commandJavaClass << "    public Short getCommandIdentifier() {\n"
+    commandJavaClass << "        return (short) HexUtils.hexStringToInt(getCMD().substring(2,4));\n"
+    commandJavaClass << "    }\n"
     commandJavaClass << "}\n"
 }
 

@@ -55,13 +55,13 @@ public class ZIPGWIntegration extends DeviceIntegration implements DeviceExclude
 
         String address = getSetting("zipGWAddress");
         // default address of z/ip gateway from config file
-        if (address == null) {
+        if (address == null || address.length() == 0) {
             address = "fd00:aaaa::3";
         }
 
         String pskPassword = getSetting("pskPassword");
         // default psk of z/ip gateway from config file
-        if (pskPassword == null) {
+        if (pskPassword == null || pskPassword.length() == 0) {
             pskPassword = "123456789012345678901234567890AA";
         }
 
@@ -176,6 +176,7 @@ public class ZIPGWIntegration extends DeviceIntegration implements DeviceExclude
             }
             if (nodeRemoveStatus.getNodeId() != 0x00) {
                 excludedDevices.add(Map.of("deviceNetworkId", HexUtils.integerToHexString(nodeRemoveStatus.getNodeId(), 1)));
+                deleteItem(HexUtils.integerToHexString(nodeRemoveStatus.getNodeId(), 1));
             } else {
                 excludedDevices.add(Map.of("deviceNetworkId", "Unknown"));
             }
@@ -208,6 +209,7 @@ public class ZIPGWIntegration extends DeviceIntegration implements DeviceExclude
     public void processNodeAdd(NodeAddStatus nodeAddStatus) {
         scanRunning = false;
         if (nodeAddStatus.getStatus() == NodeAddStatus.ADD_NODE_STATUS_DONE) {
+            logger.debug("New device added: " + nodeAddStatus);
             addMessage = "Successfully added device";
             if (addedDevices == null) {
                 addedDevices = new ArrayList<>();

@@ -752,6 +752,13 @@
         - { name: commandClassIdentifier, type: Short, data: 1, defaultValue: 0 }
         - { name: commandIdentifier, type: Short, data: 2, defaultValue: 0 }
         - { name: commandByte, type: List<Short>, data: '3~RAW[(payload.size() - 1)]', defaultValue: null }
+      additionalMethods:
+        - "\n    public SecurityMessageEncapsulation encapsulate(Command cmd) {\n"
+        - "        this.commandIdentifier = cmd.getCommandIdentifier();\n"
+        - "        this.commandClassIdentifier = cmd.getCommandClassIdentifier();\n"
+        - "        this.commandByte = cmd.getPayload();\n"
+        - "        return this;\n"
+        - "    }\n"
 - commandClass: SwitchBinary
   version: 1
   value: 0x25
