@@ -21,11 +21,13 @@ package com.parrotha.internal.integration;
 import com.parrotha.device.Protocol;
 import com.parrotha.integration.CloudIntegration;
 import com.parrotha.integration.DeviceIntegration;
+import com.parrotha.internal.Main;
 import com.parrotha.internal.device.DeviceIntegrationServiceImpl;
 import com.parrotha.internal.device.DeviceService;
 import com.parrotha.internal.entity.CloudIntegrationServiceImpl;
 import com.parrotha.internal.entity.EntityService;
 import com.parrotha.internal.hub.LocationService;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.yaml.snakeyaml.Yaml;
@@ -43,6 +45,7 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 public class IntegrationService {
     private static final Logger logger = LoggerFactory.getLogger(IntegrationService.class);
@@ -56,7 +59,7 @@ public class IntegrationService {
     private Map<String, AbstractIntegration> integrationMap;
     private Map<Protocol, List<String>> protocolListMap = null;
 
-    private URLClassLoader extensionClassLoader;
+    private Map<String, Map<String, Object>> integrationTypeMap;
 
     public IntegrationService(IntegrationRegistry integrationRegistry, ConfigurationService configurationService, DeviceService deviceService,
                               EntityService scriptService, DeviceIntegrationServiceImpl deviceIntegrationService,
@@ -69,27 +72,103 @@ public class IntegrationService {
         this.entityService = entityService;
         this.locationService = locationService;
 
-        File extensionDirectory = new File("./extensions");
+        loadIntegrationTypes();
+    }
 
+    private void loadIntegrationTypes() {
+        File extensionDirectory = new File("./extensions");
         if (!extensionDirectory.exists()) {
             extensionDirectory.mkdir();
         }
-
-        File plugins[] = extensionDirectory.listFiles(new FileFilter() {
+        File extDirs[] = extensionDirectory.listFiles(new FileFilter() {
             @Override
             public boolean accept(File file) {
-                return file.getName().endsWith(".jar");
+                return file.isDirectory();
             }
         });
-        List<URL> plugInURLs = new ArrayList<>(plugins.length);
-        for (File plugin : plugins) {
+
+        Map<String, Map<String, Object>> integrations = new HashMap<>();
+        for (File extDir : extDirs) {
             try {
-                plugInURLs.add(plugin.toURI().toURL());
+                File jarFiles[] = extDir.listFiles(new FileFilter() {
+                    @Override
+                    public boolean accept(File file) {
+                        return file.getName().endsWith(".jar");
+                    }
+                });
+                ArrayList<URL> urls = new ArrayList<>();
+                urls.add(extDir.toURI().toURL());
+                for (File jarFile : jarFiles) {
+                    urls.add(jarFile.toURI().toURL());
+                }
+
+                ClassLoader myClassLoader = new URLClassLoader(urls.toArray(new URL[0]));
+
+                List<Map<String, Object>> tmpIntegrations = getIntegrationsFromClassloader(myClassLoader, extensionDirectory.getAbsolutePath());
+
+                for (Map<String, Object> tmpIntegration : tmpIntegrations) {
+                    tmpIntegration.put("location", extDir.getAbsolutePath());
+                    integrations.put((String) tmpIntegration.get("id"), tmpIntegration);
+                }
             } catch (MalformedURLException e) {
                 e.printStackTrace();
             }
         }
-        extensionClassLoader = new URLClassLoader(plugInURLs.toArray(new URL[0]));
+
+        List<Map<String, Object>> tmpIntegrations = getIntegrationsFromClassloader(Main.class.getClassLoader(), null);
+        for (Map<String, Object> tmpIntegration : tmpIntegrations) {
+            integrations.put((String) tmpIntegration.get("id"), tmpIntegration);
+        }
+
+        integrationTypeMap = integrations;
+    }
+
+    private List<Map<String, Object>> getIntegrationsFromClassloader(ClassLoader classLoader, String baseDirectory) {
+        List<Map<String, String>> integrationClasses = new ArrayList<>();
+        try {
+            Enumeration<URL> resources = classLoader.getResources("integrationInformation.yaml");
+            while (resources.hasMoreElements()) {
+                URL url = resources.nextElement();
+                Yaml yaml = new Yaml();
+                Map integrationInformation = yaml.load(url.openStream());
+                String className = (String) integrationInformation.get("className");
+                if (baseDirectory != null && url.toString().startsWith("jar:file:" + baseDirectory)) {
+                    integrationClasses.add(Map.of("className", className, "id", (String) integrationInformation.get("id")));
+                } else if (baseDirectory == null) {
+                    integrationClasses.add(Map.of("className", className, "id", (String) integrationInformation.get("id")));
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        List<Map<String, Object>> availableIntegrations = new ArrayList<>();
+        for (Map<String, String> integrationClassMap : integrationClasses) {
+            Map<String, Object> integration = new HashMap<>();
+            try {
+                Class<? extends AbstractIntegration> integrationClass = Class.forName(integrationClassMap.get("className"), true, classLoader)
+                        .asSubclass(AbstractIntegration.class);
+                AbstractIntegration abstractIntegration = integrationClass.getDeclaredConstructor().newInstance();
+                integration.put("id", integrationClassMap.get("id"));
+                integration.put("name", abstractIntegration.getName());
+                integration.put("className", integrationClassMap.get("className"));
+                integration.put("description", abstractIntegration.getDescription());
+                integration.put("classLoader", classLoader);
+                availableIntegrations.add(integration);
+            } catch (ClassNotFoundException classNotFoundException) {
+                classNotFoundException.printStackTrace();
+            } catch (IllegalAccessException illegalAccessException) {
+                illegalAccessException.printStackTrace();
+            } catch (InstantiationException instantiationException) {
+                instantiationException.printStackTrace();
+            } catch (NoSuchMethodException e) {
+                e.printStackTrace();
+            } catch (InvocationTargetException e) {
+                e.printStackTrace();
+            }
+        }
+        return availableIntegrations;
+
     }
 
     public boolean removeIntegration(String id) {
@@ -228,25 +307,58 @@ public class IntegrationService {
         protocolListMap = temporaryProtocolListMap;
     }
 
+    private ClassLoader getClassLoaderForIntegration(String integrationTypeId) {
+        ClassLoader cl = null;
+        Map<String, Object> integrationInfo = integrationTypeMap.get(integrationTypeId);
+        if (integrationInfo != null) {
+            cl = (ClassLoader) integrationInfo.get("classLoader");
+        }
+
+        if (cl == null) {
+            cl = Main.class.getClassLoader();
+        }
+        return cl;
+    }
+
+    private AbstractIntegration getIntegrationClass(String integrationTypeId) {
+        AbstractIntegration abstractIntegration = null;
+        ClassLoader integrationClassLoader = getClassLoaderForIntegration(integrationTypeId);
+        if (integrationClassLoader != null) {
+            Class<? extends AbstractIntegration> integrationClass = null;
+            try {
+                integrationClass = Class
+                        .forName((String) integrationTypeMap.get(integrationTypeId).get("className"), true, integrationClassLoader)
+                        .asSubclass(AbstractIntegration.class);
+                abstractIntegration = integrationClass.getDeclaredConstructor().newInstance();
+            } catch (ClassNotFoundException | NoSuchMethodException e) {
+                e.printStackTrace();
+            } catch (InvocationTargetException e) {
+                e.printStackTrace();
+            } catch (InstantiationException e) {
+                e.printStackTrace();
+            } catch (IllegalAccessException e) {
+                e.printStackTrace();
+            }
+        }
+        return abstractIntegration;
+    }
+
     private AbstractIntegration getAbstractIntegrationFromConfiguration(IntegrationConfiguration integrationConfiguration) {
         AbstractIntegration abstractIntegration = null;
-        try {
-            Class<? extends AbstractIntegration> integrationClass = Class
-                    .forName(integrationConfiguration.getClassName(), true, extensionClassLoader).asSubclass(AbstractIntegration.class);
-            abstractIntegration = integrationClass.getDeclaredConstructor().newInstance();
-            abstractIntegration.setId(integrationConfiguration.getId());
-            //abstractIntegration.setLabel(integrationConfiguration.getLabel());
-        } catch (ClassNotFoundException classNotFoundException) {
-            classNotFoundException.printStackTrace();
-        } catch (IllegalAccessException illegalAccessException) {
-            illegalAccessException.printStackTrace();
-        } catch (InstantiationException instantiationException) {
-            instantiationException.printStackTrace();
-        } catch (NoSuchMethodException e) {
-            e.printStackTrace();
-        } catch (InvocationTargetException e) {
-            e.printStackTrace();
+        if (StringUtils.isNotBlank(integrationConfiguration.getIntegrationTypeId())) {
+            abstractIntegration = getIntegrationClass(integrationConfiguration.getIntegrationTypeId());
+        } else {
+            Optional<Map<String, Object>> integrationInfo = integrationTypeMap.values().stream()
+                    .filter(m -> integrationConfiguration.getClassName().equals(m.get("className"))).findFirst();
+            if (integrationInfo.isPresent()) {
+                abstractIntegration = getIntegrationClass((String) integrationInfo.get().get("id"));
+            }
         }
+
+        if (abstractIntegration != null) {
+            abstractIntegration.setId(integrationConfiguration.getId());
+        }
+
         return abstractIntegration;
     }
 
@@ -254,7 +366,7 @@ public class IntegrationService {
         Collection<IntegrationConfiguration> integrations = configurationService.getIntegrations();
         for (IntegrationConfiguration integrationConfiguration : integrations) {
             AbstractIntegration abstractIntegration = getIntegrationById(integrationConfiguration.getId());
-            if(abstractIntegration != null) {
+            if (abstractIntegration != null) {
                 integrationConfiguration.setName(abstractIntegration.getName());
             } else {
                 integrationConfiguration.setName("UNKNOWN");
@@ -263,101 +375,58 @@ public class IntegrationService {
         return integrations;
     }
 
-    public String createIntegration(String integrationClassName) {
-        //TODO: validate class name is in a list of allowable classes
-        try {
-            Class<? extends AbstractIntegration> integrationClass = Class.forName(integrationClassName, true, extensionClassLoader)
-                    .asSubclass(AbstractIntegration.class);
-            AbstractIntegration integration = integrationClass.getDeclaredConstructor().newInstance();
-            String integrationId;
-            if (integration instanceof DeviceIntegration) {
-                integrationId = configurationService
-                        .addIntegration(((DeviceIntegration) integration).getProtocol(), integrationClassName,
-                                integration.getDefaultSettings());
-            } else {
-                integrationId = configurationService
-                        .addIntegration(null, integrationClassName, integration.getDefaultSettings());
-            }
+    public String createIntegration(String integrationTypeId) {
 
-            IntegrationConfiguration integrationConfiguration = configurationService.getIntegrationById(integrationId);
-            AbstractIntegration abstractIntegration = getAbstractIntegrationFromConfiguration(integrationConfiguration);
-            if (integrationMap == null) {
-                integrationMap = new HashMap<>();
-            }
-            integrationMap.put(integrationConfiguration.getId(), abstractIntegration);
-
-            if (protocolListMap == null) {
-                protocolListMap = new HashMap<>();
-            }
-            protocolListMap
-                    .computeIfAbsent(integrationConfiguration.getProtocol(),
-                            k -> new ArrayList<>()).add(integrationConfiguration.getId());
-
-            abstractIntegration.setConfigurationService(new IntegrationConfigurationServiceImpl(configurationService));
-
-            abstractIntegration.setId(integrationId);
-            abstractIntegration.start();
-
-            initializeIntegration(abstractIntegration);
-            integrationRegistry.registerIntegration(abstractIntegration);
-
-            return integrationId;
-        } catch (ClassNotFoundException classNotFoundException) {
-            classNotFoundException.printStackTrace();
-        } catch (IllegalAccessException illegalAccessException) {
-            illegalAccessException.printStackTrace();
-        } catch (InstantiationException instantiationException) {
-            instantiationException.printStackTrace();
-        } catch (NoSuchMethodException e) {
-            e.printStackTrace();
-        } catch (InvocationTargetException e) {
-            e.printStackTrace();
+        AbstractIntegration integration = getIntegrationClass(integrationTypeId);
+        String integrationId;
+        if (integration instanceof DeviceIntegration) {
+            integrationId = configurationService
+                    .addIntegration(((DeviceIntegration) integration).getProtocol(), integrationTypeId,
+                            integration.getDefaultSettings());
+        } else {
+            integrationId = configurationService
+                    .addIntegration(null, integrationTypeId, integration.getDefaultSettings());
         }
-        return null;
+
+        IntegrationConfiguration integrationConfiguration = configurationService.getIntegrationById(integrationId);
+        AbstractIntegration abstractIntegration = getAbstractIntegrationFromConfiguration(integrationConfiguration);
+        if (integrationMap == null) {
+            integrationMap = new HashMap<>();
+        }
+        integrationMap.put(integrationConfiguration.getId(), abstractIntegration);
+
+        if (protocolListMap == null) {
+            protocolListMap = new HashMap<>();
+        }
+        protocolListMap
+                .computeIfAbsent(integrationConfiguration.getProtocol(),
+                        k -> new ArrayList<>()).add(integrationConfiguration.getId());
+
+        abstractIntegration.setConfigurationService(new IntegrationConfigurationServiceImpl(configurationService));
+
+        abstractIntegration.setId(integrationId);
+        abstractIntegration.start();
+
+        initializeIntegration(abstractIntegration);
+        integrationRegistry.registerIntegration(abstractIntegration);
+
+        return integrationId;
     }
 
     public AbstractIntegration getIntegrationById(String id) {
         return getIntegrationMap().get(id);
     }
 
-    public List<Map<String, String>> getAvailableIntegrations() {
-        List<String> integrationClasses = new ArrayList<>();
 
-        try {
-            Enumeration<URL> resources = extensionClassLoader.getResources("integrationInformation.yaml");
-            while (resources.hasMoreElements()) {
-                URL url = resources.nextElement();
-                Yaml yaml = new Yaml();
-                Map integrationInformation = yaml.load(url.openStream());
-                String className = (String) integrationInformation.get("className");
-                integrationClasses.add(className);
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+    public List<Map<String, String>> getIntegrationTypes() {
 
         List<Map<String, String>> availableIntegrations = new ArrayList<>();
-        for (String integrationClassName : integrationClasses) {
+        for (Map<String, Object> integrationType : integrationTypeMap.values()) {
             Map<String, String> integration = new HashMap<>();
-            try {
-                Class<? extends AbstractIntegration> integrationClass = Class.forName(integrationClassName, true, extensionClassLoader)
-                        .asSubclass(AbstractIntegration.class);
-                AbstractIntegration abstractIntegration = integrationClass.getDeclaredConstructor().newInstance();
-                integration.put("name", abstractIntegration.getName());
-                integration.put("className", integrationClassName);
-                integration.put("description", abstractIntegration.getDescription());
-                availableIntegrations.add(integration);
-            } catch (ClassNotFoundException classNotFoundException) {
-                classNotFoundException.printStackTrace();
-            } catch (IllegalAccessException illegalAccessException) {
-                illegalAccessException.printStackTrace();
-            } catch (InstantiationException instantiationException) {
-                instantiationException.printStackTrace();
-            } catch (NoSuchMethodException e) {
-                e.printStackTrace();
-            } catch (InvocationTargetException e) {
-                e.printStackTrace();
-            }
+            integration.put("id", (String) integrationType.get("id"));
+            integration.put("name", (String) integrationType.get("name"));
+            integration.put("description", (String) integrationType.get("description"));
+            availableIntegrations.add(integration);
         }
         return availableIntegrations;
     }
