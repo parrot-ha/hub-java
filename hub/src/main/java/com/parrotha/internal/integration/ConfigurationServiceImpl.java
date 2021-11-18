@@ -88,11 +88,11 @@ public class ConfigurationServiceImpl implements ConfigurationService {
         loadIntegrations();
     }
 
-    public String addIntegration(Protocol protocol, String className, Map settings) {
+    public String addIntegration(Protocol protocol, String integrationTypeId, Map settings) {
         IntegrationConfiguration integrationConfiguration = new IntegrationConfiguration();
         integrationConfiguration.setId(UUID.randomUUID().toString());
         integrationConfiguration.setProtocol(protocol);
-        integrationConfiguration.setClassName(className);
+        integrationConfiguration.setIntegrationTypeId(integrationTypeId);
         integrationConfiguration.setSettings(settings);
 
         getIntegrationMap().put(integrationConfiguration.getId(), integrationConfiguration);

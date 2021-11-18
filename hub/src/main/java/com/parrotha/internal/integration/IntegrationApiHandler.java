@@ -42,7 +42,7 @@ public class IntegrationApiHandler extends BaseApiHandler {
 
     public void setupApi(Javalin app) {
         app.get("/api/integration_types", ctx -> {
-            List<Map<String, String>> integrations = integrationService.getAvailableIntegrations();
+            List<Map<String, String>> integrations = integrationService.getIntegrationTypes();
 
             ctx.status(200);
             ctx.contentType("application/json");
@@ -86,7 +86,7 @@ public class IntegrationApiHandler extends BaseApiHandler {
         app.post("/api/integrations", ctx -> {
             String body = ctx.body();
             Map bodyMap = (Map) (new JsonSlurper().parseText(body));
-            String integrationClassName = (String) bodyMap.get("name");
+            String integrationTypeId = (String) bodyMap.get("id");
 
             Map<String, Object> integrationModel = new HashMap<>();
             integrationModel.put("message", "");
@@ -94,7 +94,7 @@ public class IntegrationApiHandler extends BaseApiHandler {
 
             ctx.status(200);
             try {
-                integrationId = integrationService.createIntegration(integrationClassName);
+                integrationId = integrationService.createIntegration(integrationTypeId);
             } catch (Exception e) {
                 //TODO: allow other error codes.
                 ctx.status(500);

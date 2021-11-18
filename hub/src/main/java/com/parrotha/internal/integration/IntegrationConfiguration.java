@@ -25,6 +25,7 @@ import java.util.Map;
 
 public class IntegrationConfiguration {
     private String id;
+    private String integrationTypeId;
     private String label;
     private String className;
     private Protocol protocol;
@@ -40,6 +41,14 @@ public class IntegrationConfiguration {
 
     public void setId(String id) {
         this.id = id;
+    }
+
+    public String getIntegrationTypeId() {
+        return integrationTypeId;
+    }
+
+    public void setIntegrationTypeId(String integrationTypeId) {
+        this.integrationTypeId = integrationTypeId;
     }
 
     public String getLabel() {

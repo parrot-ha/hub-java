@@ -4,7 +4,7 @@
       <v-row>
         <v-col
           v-for="integrationType in integrationTypes"
-          :key="integrationType.className"
+          :key="integrationType.id"
           :cols="12"
         >
           <v-card>
@@ -15,7 +15,7 @@
             <v-card-actions>
               <v-btn
                 color="primary"
-                @click="addIntegration(integrationType.className)"
+                @click="addIntegration(integrationType.id)"
               >
                 Add
               </v-btn>
@@ -42,8 +42,8 @@ export default {
     };
   },
   methods: {
-    addIntegration: function(className) {
-      var body = { name: className };
+    addIntegration: function(integrationTypeId) {
+      var body = { id: integrationTypeId };
       fetch('/api/integrations', { method: 'POST', body: JSON.stringify(body) })
         .then(handleErrors)
         .then(response => {
