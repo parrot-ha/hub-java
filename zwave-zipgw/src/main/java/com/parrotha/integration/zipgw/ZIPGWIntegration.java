@@ -20,12 +20,12 @@ package com.parrotha.integration.zipgw;
 
 import com.parrotha.device.HubAction;
 import com.parrotha.device.HubResponse;
+import com.parrotha.device.Protocol;
 import com.parrotha.integration.DeviceIntegration;
 import com.parrotha.integration.extension.DeviceExcludeIntegrationExtension;
 import com.parrotha.integration.extension.DeviceScanIntegrationExtension;
 import com.parrotha.integration.extension.ResetIntegrationExtension;
 import com.parrotha.internal.utils.HexUtils;
-import com.parrotha.ui.PageLayoutBuilder;
 import com.parrotha.ui.PreferencesBuilder;
 import com.parrotha.zwave.commands.networkmanagementinclusionv3.NodeAddStatus;
 import com.parrotha.zwave.commands.networkmanagementinclusionv3.NodeRemoveStatus;
@@ -44,6 +44,8 @@ public class ZIPGWIntegration extends DeviceIntegration implements DeviceExclude
     private static final Logger logger = LoggerFactory.getLogger(ZIPGWIntegration.class);
 
     private ZIPGWHandler zipgwHandler;
+
+    private static final String[] tags = new String[]{"PROTOCOL_ZWAVE"};
 
     @Override
     public void start() {
@@ -84,8 +86,13 @@ public class ZIPGWIntegration extends DeviceIntegration implements DeviceExclude
     }
 
     @Override
-    public String getIntegrationType() {
-        return null;
+    public Protocol getProtocol() {
+        return Protocol.ZWAVE;
+    }
+
+    @Override
+    public String[] getTags() {
+        return tags;
     }
 
     @Override

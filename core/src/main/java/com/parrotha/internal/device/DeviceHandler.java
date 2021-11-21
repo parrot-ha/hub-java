@@ -18,6 +18,7 @@
  */
 package com.parrotha.internal.device;
 
+import groovy.lang.GString;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.ArrayList;
@@ -30,6 +31,7 @@ public class DeviceHandler {
     private String name;
     private String namespace;
     private String author;
+    private List<String> tags;
     private List<String> capabilityList;
     private List<Command> commandList;
     private List<Attribute> attributeList;
@@ -47,6 +49,19 @@ public class DeviceHandler {
         this.name = (String) definition.get("name");
         this.namespace = (String) definition.get("namespace");
         this.author = (String) definition.get("author");
+        if (definition.get("tags") != null) {
+            if (definition.get("tags") instanceof String || definition.get("tags") instanceof GString) {
+                tags = new ArrayList<>();
+                tags.add(definition.get("tags").toString());
+            } else if (definition.get("tags") instanceof List) {
+                tags = new ArrayList<>();
+                for (Object tagItem : (List) definition.get("tags")) {
+                    if (tagItem != null) {
+                        tags.add(tagItem.toString());
+                    }
+                }
+            }
+        }
         this.capabilityList = (List<String>) definition.get("capabilityList");
         this.commandList = (List<Command>) definition.get("commandList");
         this.attributeList = (List<Attribute>) definition.get("attributeList");
@@ -63,36 +78,65 @@ public class DeviceHandler {
      * Check if the 2 DeviceHandlers are equal but ignore the id field
      */
     public boolean equalsIgnoreId(DeviceHandler dh) {
-        if (dh == null) return false;
-        if (dh == this) return true;
-        if (!StringUtils.equals(file, dh.getFile())) return false;
-        if (!StringUtils.equals(name, dh.getName())) return false;
-        if (!StringUtils.equals(namespace, dh.getNamespace())) return false;
-        if (!StringUtils.equals(author, dh.getAuthor())) return false;
+        if (dh == null) {
+            return false;
+        }
+        if (dh == this) {
+            return true;
+        }
+        if (!StringUtils.equals(file, dh.getFile())) {
+            return false;
+        }
+        if (!StringUtils.equals(name, dh.getName())) {
+            return false;
+        }
+        if (!StringUtils.equals(namespace, dh.getNamespace())) {
+            return false;
+        }
+        if (!StringUtils.equals(author, dh.getAuthor())) {
+            return false;
+        }
+
+        if (tags != null) {
+            if (!tags.equals(dh.getTags())) {
+                return false;
+            }
+        } else if (dh.getTags() != null) {
+            // dh.tags is not null but tags is null, they are not equal
+            return false;
+        }
 
         if (capabilityList != null) {
-            if (!capabilityList.equals(dh.getCapabilityList())) return false;
+            if (!capabilityList.equals(dh.getCapabilityList())) {
+                return false;
+            }
         } else if (dh.getCapabilityList() != null) {
             // dh.capabilityList is not null but capabilityList is null, they are not equal
             return false;
         }
 
         if (commandList != null) {
-            if (!commandList.equals(dh.getCommandList())) return false;
+            if (!commandList.equals(dh.getCommandList())) {
+                return false;
+            }
         } else if (dh.getCommandList() != null) {
             // dh.commandlist is not null but commandlist is null, they are not equal
             return false;
         }
 
         if (attributeList != null) {
-            if (!attributeList.equals(dh.getAttributeList())) return false;
+            if (!attributeList.equals(dh.getAttributeList())) {
+                return false;
+            }
         } else if (dh.getAttributeList() != null) {
             // dh.attributeList is not null but attributeList is null, they are not equal
             return false;
         }
 
         if (fingerprints != null) {
-            if (!fingerprints.equals(dh.getFingerprints())) return false;
+            if (!fingerprints.equals(dh.getFingerprints())) {
+                return false;
+            }
         } else if (dh.getFingerprints() != null) {
             // dh.fingerprints is not null but fingerprints is null, they are not equal
             return false;
@@ -101,8 +145,9 @@ public class DeviceHandler {
     }
 
     private static boolean compareList(List l1, List l2) {
-        if ((l1 != null && l2 == null) || (l1 == null && l2 != null))
+        if ((l1 != null && l2 == null) || (l1 == null && l2 != null)) {
             return false;
+        }
         if (l1 != null && l2 != null) {
             if (l1.size() != l2.size()) {
                 return false;
@@ -152,6 +197,14 @@ public class DeviceHandler {
 
     public void setAuthor(String author) {
         this.author = author;
+    }
+
+    public List<String> getTags() {
+        return tags;
+    }
+
+    public void setTags(List<String> tags) {
+        this.tags = tags;
     }
 
     public List<String> getCapabilityList() {

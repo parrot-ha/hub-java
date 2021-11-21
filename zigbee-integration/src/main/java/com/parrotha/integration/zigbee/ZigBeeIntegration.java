@@ -18,11 +18,6 @@
  */
 package com.parrotha.integration.zigbee;
 
-import com.zsmartsystems.zigbee.IeeeAddress;
-import com.zsmartsystems.zigbee.ZigBeeNode;
-import com.zsmartsystems.zigbee.ZigBeeStatus;
-import com.zsmartsystems.zigbee.transport.ZigBeePort;
-import org.apache.commons.lang3.math.NumberUtils;
 import com.parrotha.device.HubAction;
 import com.parrotha.device.HubResponse;
 import com.parrotha.device.Protocol;
@@ -31,6 +26,11 @@ import com.parrotha.integration.extension.DeviceScanIntegrationExtension;
 import com.parrotha.integration.extension.ResetIntegrationExtension;
 import com.parrotha.internal.utils.HexUtils;
 import com.parrotha.ui.PreferencesBuilder;
+import com.zsmartsystems.zigbee.IeeeAddress;
+import com.zsmartsystems.zigbee.ZigBeeNode;
+import com.zsmartsystems.zigbee.ZigBeeStatus;
+import com.zsmartsystems.zigbee.transport.ZigBeePort;
+import org.apache.commons.lang3.math.NumberUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,6 +45,8 @@ public class ZigBeeIntegration extends DeviceIntegration implements DeviceScanIn
     private static final Logger logger = LoggerFactory.getLogger(ZigBeeIntegration.class);
 
     private ZigBeeHandler zigBeeHandler;
+
+    private static final String[] tags = new String[]{"PROTOCOL_ZIGBEE"};
 
     public ZigBeeIntegration() {
     }
@@ -95,7 +97,8 @@ public class ZigBeeIntegration extends DeviceIntegration implements DeviceScanIn
                 .withEnumInput("zigbeeChannel",
                         "ZigBee Channel",
                         "ZigBee Channel",
-                        Arrays.asList("Use Existing Value", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23", "24", "25", "26"),
+                        Arrays.asList("Use Existing Value", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23", "24", "25",
+                                "26"),
                         false,
                         false,
                         true)
@@ -123,11 +126,6 @@ public class ZigBeeIntegration extends DeviceIntegration implements DeviceScanIn
     @Override
     public void stop() {
         zigBeeHandler.stop();
-    }
-
-    @Override
-    public String getIntegrationType() {
-        return "zigbee";
     }
 
     @Override
@@ -173,7 +171,9 @@ public class ZigBeeIntegration extends DeviceIntegration implements DeviceScanIn
     public boolean startScan(Map options) {
         if (!zigBeeHandler.joinMode) {
             ZigBeeStatus status = zigBeeHandler.permitJoin(90);
-            if (status == ZigBeeStatus.SUCCESS) return true;
+            if (status == ZigBeeStatus.SUCCESS) {
+                return true;
+            }
         }
         return false;
     }
@@ -182,7 +182,9 @@ public class ZigBeeIntegration extends DeviceIntegration implements DeviceScanIn
     public boolean stopScan(Map options) {
         if (zigBeeHandler.joinMode) {
             ZigBeeStatus status = zigBeeHandler.permitJoin(0);
-            if (status == ZigBeeStatus.SUCCESS) return true;
+            if (status == ZigBeeStatus.SUCCESS) {
+                return true;
+            }
         }
         return false;
     }
@@ -213,6 +215,11 @@ public class ZigBeeIntegration extends DeviceIntegration implements DeviceScanIn
     @Override
     public Protocol getProtocol() {
         return Protocol.ZIGBEE;
+    }
+
+    @Override
+    public String[] getTags() {
+        return tags;
     }
 
     @Override

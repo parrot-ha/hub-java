@@ -24,7 +24,10 @@ import com.parrotha.device.Protocol
 import java.text.DecimalFormat
 
 metadata {
-    definition(name: "Lutron Dimmer", namespace: "com.parrotha.lutron.device", author: "Parrot HA") {
+    definition(name: "Lutron Dimmer",
+            namespace: "com.parrotha.lutron.device",
+            author: "Parrot HA",
+            tags: "LUTRON") {
         capability "Switch"
         capability "SwitchLevel"
     }

@@ -45,6 +45,8 @@ public class LutronIntegration extends DeviceIntegration implements TelnetInputL
 
     private boolean running = false;
 
+    private static final String[] tags = new String[]{"LUTRON"};
+
     @Override
     public Map<String, Object> itemListButton(String id, String button) {
         return null;
@@ -123,7 +125,7 @@ public class LutronIntegration extends DeviceIntegration implements TelnetInputL
     @Override
     public void start() {
         String bridgeAddress = getSetting("bridgeAddress");
-        if(bridgeAddress != null && bridgeAddress.length() > 0) {
+        if (bridgeAddress != null && bridgeAddress.length() > 0) {
             tc = new TelnetClient("VT100");
             tc.registerInputListener(this);
 
@@ -159,7 +161,7 @@ public class LutronIntegration extends DeviceIntegration implements TelnetInputL
     public void stop() {
         try {
             running = false;
-            if(tc != null) {
+            if (tc != null) {
                 tc.unregisterInputListener();
                 tc.disconnect();
             }
@@ -192,13 +194,8 @@ public class LutronIntegration extends DeviceIntegration implements TelnetInputL
     }
 
     @Override
-    public Protocol getProtocol() {
-        return Protocol.OTHER;
-    }
-
-    @Override
-    public String getIntegrationType() {
-        return "lutron";
+    public String[] getTags() {
+        return tags;
     }
 
     @Override

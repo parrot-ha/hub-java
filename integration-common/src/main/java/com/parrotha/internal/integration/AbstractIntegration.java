@@ -18,9 +18,9 @@
  */
 package com.parrotha.internal.integration;
 
+import com.parrotha.service.IntegrationConfigurationService;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
-import com.parrotha.service.IntegrationConfigurationService;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -54,8 +54,6 @@ public abstract class AbstractIntegration {
     public abstract void start();
 
     public abstract void stop();
-
-    public abstract String getIntegrationType();
 
     public abstract String getName();
 

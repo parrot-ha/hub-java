@@ -39,6 +39,11 @@ public abstract class DeviceIntegration extends AbstractIntegration {
         return Protocol.OTHER;
     }
 
+    // override if you want to provide tags to filter device handlers by
+    public String[] getTags() {
+        return new String[]{};
+    }
+
     private DeviceIntegrationService deviceIntegrationService;
 
     public void setDeviceIntegrationService(DeviceIntegrationService deviceIntegrationService) {
@@ -78,7 +83,8 @@ public abstract class DeviceIntegration extends AbstractIntegration {
         return deviceIntegrationService.getDeviceHandlerByFingerprint(fingerprint);
     }
 
-    public void addDevice(String deviceHandlerId, String deviceName, String deviceNetworkId, Map<String, Object> deviceData, Map<String, String> additionalIntegrationParameters) {
+    public void addDevice(String deviceHandlerId, String deviceName, String deviceNetworkId, Map<String, Object> deviceData,
+                          Map<String, String> additionalIntegrationParameters) {
         deviceIntegrationService.addDevice(getId(), deviceHandlerId, deviceName, deviceNetworkId, deviceData, additionalIntegrationParameters);
     }
 

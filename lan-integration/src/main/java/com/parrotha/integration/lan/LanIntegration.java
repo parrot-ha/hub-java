@@ -116,11 +116,6 @@ public class LanIntegration extends DeviceIntegration {
     }
 
     @Override
-    public String getIntegrationType() {
-        return "lan";
-    }
-
-    @Override
     public String getName() {
         return "LAN";
     }
