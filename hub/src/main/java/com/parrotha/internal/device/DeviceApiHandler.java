@@ -44,14 +44,17 @@ public class DeviceApiHandler extends BaseApiHandler {
 
     public void setupApi(Javalin app) {
         app.ws("/api/devices/:id/events", ws -> {
-            final DeviceSocketEventListener deviceEventListener = new DeviceSocketEventListener();
+            final Map<String, DeviceSocketEventListener> deviceSocketEventListenerMap = new HashMap<>();
             ws.onConnect(ctx -> {
                 String deviceId = ctx.pathParam("id");
+                DeviceSocketEventListener deviceEventListener = new DeviceSocketEventListener();
                 deviceEventListener.registerCtx(deviceId, ctx);
+                deviceSocketEventListenerMap.put(ctx.getSessionId(), deviceEventListener);
                 entityService.registerEventListener(deviceEventListener);
             });
 
             ws.onClose(ctx -> {
+                DeviceSocketEventListener deviceEventListener = deviceSocketEventListenerMap.remove(ctx.getSessionId());
                 entityService.unregisterEventListener(deviceEventListener);
                 deviceEventListener.unregisterCtx();
             });
