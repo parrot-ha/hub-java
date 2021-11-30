@@ -34,6 +34,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -45,7 +46,7 @@ public class LutronIntegration extends DeviceIntegration implements TelnetInputL
 
     private boolean running = false;
 
-    private static final String[] tags = new String[]{"LUTRON"};
+    private static final List<String> tags = List.of("LUTRON");
 
     @Override
     public Map<String, Object> itemListButton(String id, String button) {
@@ -194,7 +195,7 @@ public class LutronIntegration extends DeviceIntegration implements TelnetInputL
     }
 
     @Override
-    public String[] getTags() {
+    public List<String> getTags() {
         return tags;
     }
 

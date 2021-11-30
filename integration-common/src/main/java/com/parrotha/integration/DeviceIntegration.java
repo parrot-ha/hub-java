@@ -24,6 +24,8 @@ import com.parrotha.device.Protocol;
 import com.parrotha.internal.integration.AbstractIntegration;
 import com.parrotha.service.DeviceIntegrationService;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 public abstract class DeviceIntegration extends AbstractIntegration {
@@ -40,8 +42,8 @@ public abstract class DeviceIntegration extends AbstractIntegration {
     }
 
     // override if you want to provide tags to filter device handlers by
-    public String[] getTags() {
-        return new String[]{};
+    public List<String> getTags() {
+        return new ArrayList<>();
     }
 
     private DeviceIntegrationService deviceIntegrationService;

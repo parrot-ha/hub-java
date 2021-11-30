@@ -23,6 +23,11 @@
                   label="Type"
                   v-model="device.deviceHandlerId"
                 ></v-select>
+                <v-icon
+                  :key="`icon-${dhFiltering}`"
+                  @click="dhFiltering = !dhFiltering"
+                  v-text="dhFiltering ? 'mdi-filter' : 'mdi-filter-off'"
+                ></v-icon>
                 <v-select
                   :items="integrations"
                   :item-text="item => item.label"
@@ -243,6 +248,7 @@ export default {
       deviceId: '',
       device: {},
       deviceHandlers: {},
+      dhFiltering: false,
       integrations: {},
       preferences: {},
       settings: {},
@@ -321,7 +327,7 @@ export default {
   mounted: function() {
     this.deviceId = this.$route.params.id;
 
-    fetch('/api/integrations?field=id&field=name&field=label')
+    fetch('/api/integrations?type=DEVICE&field=id&field=name&field=label&field=tags')
       .then(response => response.json())
       .then(data => {
         if (typeof data !== 'undefined' && data != null) {
@@ -371,7 +377,7 @@ export default {
         }
       });
 
-    fetch(`/api/device-handlers?field=id&field=name&field=namespace`)
+    fetch(`/api/device-handlers?field=id&field=name&field=namespace&field=tags`)
       .then(response => response.json())
       .then(data => {
         if (typeof data !== 'undefined' && data != null) {

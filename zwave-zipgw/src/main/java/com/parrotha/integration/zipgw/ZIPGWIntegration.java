@@ -45,7 +45,7 @@ public class ZIPGWIntegration extends DeviceIntegration implements DeviceExclude
 
     private ZIPGWHandler zipgwHandler;
 
-    private static final String[] tags = new String[]{"PROTOCOL_ZWAVE"};
+    private static final List<String> tags = List.of("PROTOCOL_ZWAVE");
 
     @Override
     public void start() {
@@ -91,7 +91,7 @@ public class ZIPGWIntegration extends DeviceIntegration implements DeviceExclude
     }
 
     @Override
-    public String[] getTags() {
+    public List<String> getTags() {
         return tags;
     }
 

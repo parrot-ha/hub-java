@@ -361,9 +361,9 @@ public class DeviceApiHandler extends BaseApiHandler {
             }
 
             if (fields != null && fields.size() > 0) {
-                List<Map<String, String>> dhList = new ArrayList<Map<String, String>>();
+                List<Map<String, Object>> dhList = new ArrayList<>();
                 for (DeviceHandler dh : deviceHandlers) {
-                    Map<String, String> dhInfo = new HashMap<>();
+                    Map<String, Object> dhInfo = new HashMap<>();
                     for (String field : fields) {
                         switch (field) {
                             case "id":
@@ -375,6 +375,8 @@ public class DeviceApiHandler extends BaseApiHandler {
                             case "namespace":
                                 dhInfo.put("namespace", dh.getNamespace());
                                 break;
+                            case "tags":
+                                dhInfo.put("tags", dh.getTags());
                         }
                     }
                     dhList.add(dhInfo);

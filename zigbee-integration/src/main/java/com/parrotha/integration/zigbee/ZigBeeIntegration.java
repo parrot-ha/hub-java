@@ -46,7 +46,7 @@ public class ZigBeeIntegration extends DeviceIntegration implements DeviceScanIn
 
     private ZigBeeHandler zigBeeHandler;
 
-    private static final String[] tags = new String[]{"PROTOCOL_ZIGBEE"};
+    private static final List<String> tags = List.of("PROTOCOL_ZIGBEE");
 
     public ZigBeeIntegration() {
     }
@@ -218,7 +218,7 @@ public class ZigBeeIntegration extends DeviceIntegration implements DeviceScanIn
     }
 
     @Override
-    public String[] getTags() {
+    public List<String> getTags() {
         return tags;
     }
 
