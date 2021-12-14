@@ -13,5 +13,5 @@ dependencies {
     implementation group: 'org.apache.logging.log4j', name: 'log4j-api', version: "${log4jVersion}"
     implementation group: 'org.apache.logging.log4j', name: 'log4j-core', version: "${log4jVersion}"
 
-    implementation 'org.eclipse.californium:scandium:2.6.2'
+    implementation 'org.eclipse.californium:scandium:2.6.6'
 }

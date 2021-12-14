@@ -22,7 +22,7 @@ dependencies {
     implementation group: 'org.apache.logging.log4j', name: 'log4j-api', version: "${log4jVersion}"
     implementation group: 'org.apache.logging.log4j', name: 'log4j-core', version: "${log4jVersion}"
 
-    implementation 'org.apache.commons:commons-lang3:3.11'
+    implementation "org.apache.commons:commons-lang3:${commonsLang3Version}"
     implementation group: 'commons-beanutils', name: 'commons-beanutils', version: '1.9.4'
 
     implementation "org.codehaus.groovy:groovy:${groovyAllVersion}"

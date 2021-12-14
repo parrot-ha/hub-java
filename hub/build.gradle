@@ -61,13 +61,13 @@ dependencies {
     implementation "org.apache.logging.log4j:log4j-slf4j-impl:${log4jVersion}"
     implementation group: 'org.apache.logging.log4j', name: 'log4j-api', version: "${log4jVersion}"
     implementation group: 'org.apache.logging.log4j', name: 'log4j-core', version: "${log4jVersion}"
-    implementation 'org.apache.commons:commons-lang3:3.11'
+    implementation "org.apache.commons:commons-lang3:${commonsLang3Version}"
 
     implementation 'org.codehaus.groovy.modules.http-builder:http-builder:0.7.1'
     implementation 'org.apache.httpcomponents:httpclient:4.5.13'
 
     implementation 'commons-io:commons-io:2.8.0'
-    implementation 'org.yaml:snakeyaml:1.27'
+    implementation 'org.yaml:snakeyaml:1.29'
 
     implementation 'com.google.guava:guava:30.0-jre'
 
