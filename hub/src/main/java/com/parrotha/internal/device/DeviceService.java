@@ -527,37 +527,42 @@ public class DeviceService {
     public void reprocessDeviceHandlers() {
         Collection<DeviceHandler> deviceHandlers = deviceDataStore.getAllDeviceHandlers();
 
-        Map<String, DeviceHandler> newDeviceHandlerInfoMap = processDeviceHandlerInfo();
+        // run this process in the background, allows quicker start up of system at the
+        // expense of system starting up with possibly old device handler definition, however
+        // this should be quickly rectified once system is fully running
+        new Thread(() -> {
+            Map<String, DeviceHandler> newDeviceHandlerInfoMap = processDeviceHandlerInfo();
 
-        // check each device handler info against what is in the config file.
-        Iterator<DeviceHandler> newDHInfoIter = newDeviceHandlerInfoMap.values().iterator();
-        while (newDHInfoIter.hasNext()) {
-            DeviceHandler newDHInfo = newDHInfoIter.next();
-            String fileName = newDHInfo.getFile();
-            Iterator<DeviceHandler> oldDHInfoIter = deviceHandlers.iterator();
+            // check each device handler info against what is in the config file.
+            Iterator<DeviceHandler> newDHInfoIter = newDeviceHandlerInfoMap.values().iterator();
+            while (newDHInfoIter.hasNext()) {
+                DeviceHandler newDHInfo = newDHInfoIter.next();
+                String fileName = newDHInfo.getFile();
+                Iterator<DeviceHandler> oldDHInfoIter = deviceHandlers.iterator();
 
-            boolean foundExistingDH = false;
-            while (oldDHInfoIter.hasNext()) {
-                DeviceHandler oldDHInfo = oldDHInfoIter.next();
-                if (fileName.equals(oldDHInfo.getFile())) {
-                    foundExistingDH = true;
-                    // the file name matches, let see if any of the values have changed.
-                    //TODO: this check is only if the file name stays the same, add another check in case all the contents stay the same, but the file name changed.
-                    if (newDHInfo.equalsIgnoreId(oldDHInfo)) {
-                        // only difference is the id,, so no changes
-                        logger.debug("No changes for file " + fileName);
-                    } else {
-                        logger.debug("Changes for file " + fileName);
-                        newDHInfo.setId(oldDHInfo.getId());
-                        deviceDataStore.updateDeviceHandler(newDHInfo);
+                boolean foundExistingDH = false;
+                while (oldDHInfoIter.hasNext()) {
+                    DeviceHandler oldDHInfo = oldDHInfoIter.next();
+                    if (fileName.equals(oldDHInfo.getFile())) {
+                        foundExistingDH = true;
+                        // the file name matches, let see if any of the values have changed.
+                        //TODO: this check is only if the file name stays the same, add another check in case all the contents stay the same, but the file name changed.
+                        if (newDHInfo.equalsIgnoreId(oldDHInfo)) {
+                            // only difference is the id,, so no changes
+                            logger.debug("No changes for file " + fileName);
+                        } else {
+                            logger.debug("Changes for file " + fileName);
+                            newDHInfo.setId(oldDHInfo.getId());
+                            deviceDataStore.updateDeviceHandler(newDHInfo);
+                        }
                     }
                 }
+                if (!foundExistingDH) {
+                    // we have a new device handler.
+                    deviceDataStore.addDeviceHandler(newDHInfo);
+                }
             }
-            if (!foundExistingDH) {
-                // we have a new device handler.
-                deviceDataStore.addDeviceHandler(newDHInfo);
-            }
-        }
+        }).start();
     }
 
     private Map<String, DeviceHandler> processDeviceHandlerInfo() {

@@ -22,7 +22,7 @@ import com.parrotha.device.HubAction
 import com.parrotha.device.Protocol
 
 metadata {
-    definition(name: "Lutron Switch", namespace: "com.parrotha.lutron.device", author: "Parrot HA") {
+    definition(name: "Lutron Switch", namespace: "com.parrotha.lutron.device", author: "Parrot HA", tags: "LUTRON") {
         capability "Switch"
     }
 }

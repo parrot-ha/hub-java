@@ -24,6 +24,8 @@ import com.parrotha.device.Protocol;
 import com.parrotha.internal.integration.AbstractIntegration;
 import com.parrotha.service.DeviceIntegrationService;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 public abstract class DeviceIntegration extends AbstractIntegration {
@@ -37,6 +39,11 @@ public abstract class DeviceIntegration extends AbstractIntegration {
     // a protocol, this is where it is specified.
     public Protocol getProtocol() {
         return Protocol.OTHER;
+    }
+
+    // override if you want to provide tags to filter device handlers by
+    public List<String> getTags() {
+        return new ArrayList<>();
     }
 
     private DeviceIntegrationService deviceIntegrationService;
@@ -78,7 +85,8 @@ public abstract class DeviceIntegration extends AbstractIntegration {
         return deviceIntegrationService.getDeviceHandlerByFingerprint(fingerprint);
     }
 
-    public void addDevice(String deviceHandlerId, String deviceName, String deviceNetworkId, Map<String, Object> deviceData, Map<String, String> additionalIntegrationParameters) {
+    public void addDevice(String deviceHandlerId, String deviceName, String deviceNetworkId, Map<String, Object> deviceData,
+                          Map<String, String> additionalIntegrationParameters) {
         deviceIntegrationService.addDevice(getId(), deviceHandlerId, deviceName, deviceNetworkId, deviceData, additionalIntegrationParameters);
     }
 

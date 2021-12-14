@@ -294,34 +294,40 @@ public class AutomationAppService {
     public void reprocessAutomationApps() {
         Collection<AutomationApp> automationApps = automationAppDataStore.getAllAutomationApps(true);
 
-        Map<String, AutomationApp> newAutomationAppInfoMap = processAutomationApps();
+        // run this process in the background, allows quicker start up of system at the
+        // expense of system starting up with possibly old automation app definition, however
+        // this should be quickly rectified once system is fully running
+        new Thread(() -> {
 
-        // check each automation app info against what is in the config file.
-        if (newAutomationAppInfoMap != null) {
+            Map<String, AutomationApp> newAutomationAppInfoMap = processAutomationApps();
 
-            Iterator<AutomationApp> newAAInfoIter = newAutomationAppInfoMap.values().iterator();
-            while (newAAInfoIter.hasNext()) {
-                AutomationApp newAAInfo = newAAInfoIter.next();
-                String fileName = newAAInfo.getFile();
-                Iterator<AutomationApp> oldAAInfoIter = automationApps.iterator();
-                boolean foundExistingAA = false;
-                while (oldAAInfoIter.hasNext()) {
-                    AutomationApp oldAAInfo = oldAAInfoIter.next();
-                    if (fileName.equals(oldAAInfo.getFile())) {
-                        foundExistingAA = true;
-                        // the file name matches, let see if any of the values have changed.
-                        //TODO: this check is only if the file name stays the same, add another check in case all the contents stay the same, but the file name changed.
+            // check each automation app info against what is in the config file.
+            if (newAutomationAppInfoMap != null) {
 
-                        updateAutomationAppIfChanged(oldAAInfo, newAAInfo);
+                Iterator<AutomationApp> newAAInfoIter = newAutomationAppInfoMap.values().iterator();
+                while (newAAInfoIter.hasNext()) {
+                    AutomationApp newAAInfo = newAAInfoIter.next();
+                    String fileName = newAAInfo.getFile();
+                    Iterator<AutomationApp> oldAAInfoIter = automationApps.iterator();
+                    boolean foundExistingAA = false;
+                    while (oldAAInfoIter.hasNext()) {
+                        AutomationApp oldAAInfo = oldAAInfoIter.next();
+                        if (fileName.equals(oldAAInfo.getFile())) {
+                            foundExistingAA = true;
+                            // the file name matches, let see if any of the values have changed.
+                            //TODO: this check is only if the file name stays the same, add another check in case all the contents stay the same, but the file name changed.
+
+                            updateAutomationAppIfChanged(oldAAInfo, newAAInfo);
+                        }
+                    }
+                    if (!foundExistingAA) {
+                        // we have a new automation app, load it.
+                        // we have a new device handler.
+                        automationAppDataStore.addAutomationApp(newAAInfo);
                     }
                 }
-                if (!foundExistingAA) {
-                    // we have a new automation app, load it.
-                    // we have a new device handler.
-                    automationAppDataStore.addAutomationApp(newAAInfo);
-                }
             }
-        }
+        }).start();
     }
 
     private void updateAutomationAppIfChanged(AutomationApp oldAutomationApp, AutomationApp newAutomationApp) {

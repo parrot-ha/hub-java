@@ -18,6 +18,7 @@
  */
 package com.parrotha.internal.integration;
 
+import com.parrotha.integration.DeviceIntegration;
 import groovy.json.JsonBuilder;
 import groovy.json.JsonSlurper;
 import io.javalin.Javalin;
@@ -50,28 +51,36 @@ public class IntegrationApiHandler extends BaseApiHandler {
         });
 
         app.get("/api/integrations", ctx -> {
+            String integrationType = ctx.queryParam("type");
             List<String> fields = ctx.queryParams("field");
 
             Collection<IntegrationConfiguration> integrations = integrationService.getIntegrations();
+
             if (fields != null && fields.size() > 0) {
-                List<Map<String, String>> integrationList = new ArrayList<Map<String, String>>();
+                List<Map<String, Object>> integrationList = new ArrayList<>();
                 for (IntegrationConfiguration integration : integrations) {
-                    Map<String, String> integrationMap = new HashMap<>();
-                    for (String field : fields) {
-                        switch (field) {
-                            case "id":
-                                integrationMap.put("id", integration.getId());
-                                break;
-                            case "name":
-                                integrationMap.put("name", integration.getName());
-                                break;
-                            case "label":
-                                integrationMap.put("label",
-                                        integration.getLabel() != null ? integration.getLabel() : integration.getName());
-                                break;
+                    AbstractIntegration abstractIntegration = integrationService.getIntegrationById(integration.getId());
+                    if (integrationType == null || ("DEVICE".equals(integrationType) && abstractIntegration instanceof DeviceIntegration)) {
+                        Map<String, Object> integrationMap = new HashMap<>();
+                        for (String field : fields) {
+                            switch (field) {
+                                case "id":
+                                    integrationMap.put("id", integration.getId());
+                                    break;
+                                case "name":
+                                    integrationMap.put("name", integration.getName());
+                                    break;
+                                case "label":
+                                    integrationMap.put("label",
+                                            integration.getLabel() != null ? integration.getLabel() : integration.getName());
+                                    break;
+                                case "tags":
+                                    integrationMap.put("tags", ((DeviceIntegration)abstractIntegration).getTags());
+                            }
                         }
+
+                        integrationList.add(integrationMap);
                     }
-                    integrationList.add(integrationMap);
                 }
                 ctx.status(200);
                 ctx.contentType("application/json");
@@ -132,7 +141,7 @@ public class IntegrationApiHandler extends BaseApiHandler {
                     options.put("resetWarning", ((ResetIntegrationExtension) abstractIntegration).getResetWarning());
                     features.put("reset", options);
                 }
-                if(abstractIntegration instanceof ItemListIntegrationExtension) {
+                if (abstractIntegration instanceof ItemListIntegrationExtension) {
                     features.put("itemList", null);
                 }
                 integrationModel.put("features", features);
@@ -244,7 +253,9 @@ public class IntegrationApiHandler extends BaseApiHandler {
 
     private Map handleDeviceScanFeature(String integrationId, String action, Map options) {
         AbstractIntegration abstractIntegration = integrationService.getIntegrationById(integrationId);
-        if (abstractIntegration == null) return null;
+        if (abstractIntegration == null) {
+            return null;
+        }
         if (abstractIntegration instanceof DeviceScanIntegrationExtension) {
             if ("startScan".equals(action)) {
                 ((DeviceScanIntegrationExtension) abstractIntegration).startScan(options);
@@ -259,7 +270,9 @@ public class IntegrationApiHandler extends BaseApiHandler {
 
     private Map handleDeviceExcludeFeature(String integrationId, String action, Map options) {
         AbstractIntegration abstractIntegration = integrationService.getIntegrationById(integrationId);
-        if (abstractIntegration == null) return null;
+        if (abstractIntegration == null) {
+            return null;
+        }
         if (abstractIntegration instanceof DeviceExcludeIntegrationExtension) {
             if ("startExclude".equals(action)) {
                 ((DeviceExcludeIntegrationExtension) abstractIntegration).startExclude(options);
@@ -271,9 +284,12 @@ public class IntegrationApiHandler extends BaseApiHandler {
         }
         return null;
     }
+
     private boolean handleResetFeature(String integrationId, String action, Map options) {
         AbstractIntegration abstractIntegration = integrationService.getIntegrationById(integrationId);
-        if (abstractIntegration == null) return false;
+        if (abstractIntegration == null) {
+            return false;
+        }
         if (abstractIntegration instanceof ResetIntegrationExtension) {
             if ("reset".equals(action)) {
                 return ((ResetIntegrationExtension) abstractIntegration).reset(options);
