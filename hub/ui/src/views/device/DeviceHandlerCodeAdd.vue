@@ -99,7 +99,7 @@ export default {
             this.alertMessage = data.message;
             this.alert = true;
           } else {
-            this.$router.push(`/dh-code/${data.dhId}/edit`);
+            this.$router.push(`/dh-code/${data.id}/edit`);
           }
         })
         .catch(error => {

@@ -39,7 +39,8 @@ public interface DeviceDataStore {
 
     Device getInstalledAutomationAppChildDevice(String parentInstalledAutomationAppId, String deviceNetworkId);
 
-    String createDevice(String deviceHandlerId, String deviceName, String deviceNetworkId, String integrationId, Map<String, Object> deviceData, Map<String, String> additionalIntegrationParameters);
+    String createDevice(String deviceHandlerId, String deviceName, String deviceNetworkId, String integrationId, Map<String, Object> deviceData,
+                        Map<String, String> additionalIntegrationParameters);
 
     boolean updateDevice(Device device);
 
@@ -62,4 +63,6 @@ public interface DeviceDataStore {
     String getDeviceHandlerSourceCode(String id);
 
     boolean updateDeviceHandlerSourceCode(String id, String sourceCode);
+
+    String addDeviceHandlerSourceCode(String sourceCode, DeviceHandler deviceHandler);
 }
