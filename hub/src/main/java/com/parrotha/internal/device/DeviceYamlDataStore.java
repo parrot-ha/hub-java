@@ -18,12 +18,12 @@
  */
 package com.parrotha.internal.device;
 
+import com.parrotha.internal.integration.Integration;
 import groovy.json.JsonBuilder;
 import groovy.json.JsonSlurperClassic;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.SerializationUtils;
 import org.apache.commons.lang3.StringUtils;
-import com.parrotha.internal.integration.Integration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.yaml.snakeyaml.Yaml;
@@ -54,7 +54,9 @@ public class DeviceYamlDataStore implements DeviceDataStore {
     @Override
     public Collection<Device> getDevicesByCapability(String capability) {
         Collection<Device> devices = new ArrayList<>();
-        if (StringUtils.isBlank(capability)) return devices;
+        if (StringUtils.isBlank(capability)) {
+            return devices;
+        }
         for (Device device : getAllDevices()) {
             List<String> capabilityList = getDeviceHandler(device.getDeviceHandlerId()).getCapabilityList();
             if (capabilityList != null) {
@@ -71,16 +73,18 @@ public class DeviceYamlDataStore implements DeviceDataStore {
     @Override
     public Device getDeviceById(String id) {
         Device device = getDevices().get(id);
-        if (device != null)
+        if (device != null) {
             return SerializationUtils.clone(device);
+        }
         return null;
     }
 
     @Override
     public Device getDeviceByIntegrationAndDNI(String integrationId, String deviceNetworkId) {
         Device device = getDevices().get(getDeviceDNItoIDMap().get((integrationId != null ? integrationId : "null") + ":" + deviceNetworkId));
-        if (device != null)
+        if (device != null) {
             return SerializationUtils.clone(device);
+        }
         return null;
     }
 
@@ -108,8 +112,9 @@ public class DeviceYamlDataStore implements DeviceDataStore {
         if (childDeviceIds != null && childDeviceIds.size() > 0) {
             for (String childDeviceId : childDeviceIds) {
                 Device childDevice = getDeviceById(childDeviceId);
-                if (childDevice != null)
+                if (childDevice != null) {
                     childDevices.add(childDevice);
+                }
             }
         }
         return childDevices;
@@ -223,26 +228,30 @@ public class DeviceYamlDataStore implements DeviceDataStore {
     }
 
     private Map<String, Device> getDevices() {
-        if (devices == null)
+        if (devices == null) {
             loadDevices();
+        }
         return devices;
     }
 
     private Map<String, String> getDeviceDNItoIDMap() {
-        if (deviceDNItoIdMap == null)
+        if (deviceDNItoIdMap == null) {
             loadDevices();
+        }
         return deviceDNItoIdMap;
     }
 
     private Map<String, Set<String>> getAppChildDeviceMap() {
-        if(appChildDeviceMap == null)
+        if (appChildDeviceMap == null) {
             loadDevices();
+        }
         return appChildDeviceMap;
     }
 
     private Map<String, Set<String>> getChildDeviceMap() {
-        if(childDeviceMap == null)
+        if (childDeviceMap == null) {
             loadDevices();
+        }
         return childDeviceMap;
     }
 
@@ -266,7 +275,9 @@ public class DeviceYamlDataStore implements DeviceDataStore {
 
     synchronized public void loadDevices() {
 
-        if (devices != null) return;
+        if (devices != null) {
+            return;
+        }
         Map<String, Device> newDevices = new HashMap<>();
         Map<String, String> newDeviceDNItoIdMap = new HashMap<>();
         Map<String, Set<String>> newChildDeviceMap = new HashMap<>();
@@ -284,7 +295,8 @@ public class DeviceYamlDataStore implements DeviceDataStore {
                         Map deviceMap = yaml.load(new FileInputStream(f));
                         Device d = createDeviceFromMap(deviceMap);
                         newDevices.put(d.getId(), d);
-                        newDeviceDNItoIdMap.put((d.getIntegration() != null ? d.getIntegration().getId() : "null") + ":" + d.getDeviceNetworkId(), d.getId());
+                        newDeviceDNItoIdMap.put((d.getIntegration() != null ? d.getIntegration().getId() : "null") + ":" + d.getDeviceNetworkId(),
+                                d.getId());
                         if (StringUtils.isNotEmpty(d.getParentDeviceId())) {
                             addChildDevice(newChildDeviceMap, d.getParentDeviceId(), d.getId());
                         } else if (StringUtils.isNotEmpty(d.getParentInstalledAutomationAppId())) {
@@ -315,8 +327,9 @@ public class DeviceYamlDataStore implements DeviceDataStore {
         device.setDeviceNetworkId((String) map.get("deviceNetworkId"));
         device.setParentDeviceId((String) map.get("parentDeviceId"));
         device.setParentInstalledAutomationAppId((String) map.get("parentInstalledAutomationAppId"));
-        if (map.get("integration") != null)
+        if (map.get("integration") != null) {
             device.setIntegration(new Integration((Map) map.get("integration")));
+        }
         if (map.get("state") != null && map.get("state") instanceof String && StringUtils.isNotEmpty((String) map.get("state"))) {
             // need to use classic json slurper so we don't end up with LazyMap that can't be serialized.
             device.setState((Map) new JsonSlurperClassic().parseText((String) map.get("state")));
@@ -345,10 +358,12 @@ public class DeviceYamlDataStore implements DeviceDataStore {
             device.setSettings(deviceSettings);
         }
 
-        if (map.get("created") != null && map.get("created") instanceof Integer)
+        if (map.get("created") != null && map.get("created") instanceof Integer) {
             device.setCreated(new Date((Integer) map.get("created")));
-        if (map.get("updated") != null && map.get("updated") instanceof Integer)
+        }
+        if (map.get("updated") != null && map.get("updated") instanceof Integer) {
             device.setUpdated(new Date((Integer) map.get("updated")));
+        }
 
         return device;
     }
@@ -371,8 +386,9 @@ public class DeviceYamlDataStore implements DeviceDataStore {
             map.put("state", new JsonBuilder(device.getState()).toString());
             device.setState((Map) new JsonSlurperClassic().parseText((String) map.get("state")));
         }
-        if (device.getData() != null)
+        if (device.getData() != null) {
             map.put("data", new JsonBuilder(device.getData()).toString());
+        }
 
         if (device.getCurrentStates() != null) {
             Map<String, Map<String, Object>> currentStatesMap = new HashMap<>();
@@ -435,8 +451,9 @@ public class DeviceYamlDataStore implements DeviceDataStore {
     }
 
     private Map<String, DeviceHandler> getDeviceHandlerInfo() {
-        if (deviceHandlerInfo == null)
+        if (deviceHandlerInfo == null) {
             deviceHandlerInfo = loadDeviceHandlerConfig();
+        }
         return deviceHandlerInfo;
     }
 
@@ -517,6 +534,25 @@ public class DeviceYamlDataStore implements DeviceDataStore {
         }
 
         return false;
+    }
+
+    @Override
+    public String addDeviceHandlerSourceCode(String sourceCode, DeviceHandler deviceHandler) {
+        String dhId = UUID.randomUUID().toString();
+        String fileName = "deviceHandlers/" + dhId + ".groovy";
+
+        deviceHandler.setId(dhId);
+        deviceHandler.setFile(fileName);
+
+        File f = new File(fileName);
+        try {
+            IOUtils.write(sourceCode, new FileOutputStream(f), StandardCharsets.UTF_8);
+            addDeviceHandler(deviceHandler);
+            return dhId;
+        } catch (IOException e) {
+            logger.warn("Exception saving device handler source code", e);
+        }
+        return null;
     }
 
 }

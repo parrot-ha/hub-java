@@ -18,12 +18,12 @@
  */
 package com.parrotha.internal.device;
 
+import com.parrotha.internal.BaseApiHandler;
+import com.parrotha.internal.entity.EntityService;
 import groovy.json.JsonBuilder;
 import groovy.json.JsonSlurper;
 import io.javalin.Javalin;
 import org.apache.commons.lang3.StringUtils;
-import com.parrotha.internal.BaseApiHandler;
-import com.parrotha.internal.entity.EntityService;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -276,10 +276,11 @@ public class DeviceApiHandler extends BaseApiHandler {
             Device device = deviceService.getDeviceById(id);
 
             Collection<State> currentStates;
-            if (device.getCurrentStates() != null)
+            if (device.getCurrentStates() != null) {
                 currentStates = device.getCurrentStates().values();
-            else
+            } else {
                 currentStates = new ArrayList<>();
+            }
 
             ctx.status(200);
             ctx.contentType("application/json");
@@ -290,7 +291,7 @@ public class DeviceApiHandler extends BaseApiHandler {
             String id = ctx.pathParam("id");
             Device device = deviceService.getDeviceById(id);
             device.getData();
-            Map <String, Object> information = new HashMap<>();
+            Map<String, Object> information = new HashMap<>();
             information.put("data", device.getData());
             ctx.status(200);
             ctx.contentType("application/json");
@@ -429,9 +430,19 @@ public class DeviceApiHandler extends BaseApiHandler {
             Map bodyMap = (Map) new JsonSlurper().parse(ctx.bodyAsInputStream());
             String sourceCode = (String) bodyMap.get("sourceCode");
             try {
-                //TODO: save source code in new file
-                //deviceService.createDeviceHandlerSourceCode(id, sourceCode);
-                buildStandardJsonResponse(ctx, 200, false, "Not yet Implemented");
+                //save source code in new file
+                String dhId = deviceService.addDeviceHandlerSourceCode(sourceCode);
+
+                if (dhId != null) {
+                    Map<String, Object> response = new HashMap<>();
+                    response.put("success", true);
+                    response.put("id", dhId);
+                    ctx.status(200);
+                    ctx.contentType("application/json");
+                    ctx.result(new JsonBuilder(response).toString());
+                } else {
+                    buildStandardJsonResponse(ctx, 200, false, "Unable to save Device Handler");
+                }
             } catch (RuntimeException e) {
                 Map<String, Object> response = new HashMap<>();
                 response.put("success", false);

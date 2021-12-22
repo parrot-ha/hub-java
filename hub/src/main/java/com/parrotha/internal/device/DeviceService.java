@@ -18,12 +18,6 @@
  */
 package com.parrotha.internal.device;
 
-import groovy.lang.GString;
-import groovy.lang.GroovyShell;
-import groovy.util.DelegatingScript;
-import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.codehaus.groovy.control.CompilerConfiguration;
 import com.parrotha.app.exception.UnknownDeviceTypeException;
 import com.parrotha.device.Event;
 import com.parrotha.device.HubAction;
@@ -34,6 +28,12 @@ import com.parrotha.internal.Main;
 import com.parrotha.internal.integration.Integration;
 import com.parrotha.internal.integration.IntegrationRegistry;
 import com.parrotha.internal.script.ParrotHubDelegatingScript;
+import groovy.lang.GString;
+import groovy.lang.GroovyShell;
+import groovy.util.DelegatingScript;
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.codehaus.groovy.control.CompilerConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.yaml.snakeyaml.Yaml;
@@ -512,7 +512,7 @@ public class DeviceService {
             File f = new File(fileName);
             try {
                 String scriptCode = IOUtils.toString(new FileInputStream(f), StandardCharsets.UTF_8);
-                Map definition = extractDeviceHandlerInformation(scriptCode);
+                Map definition = extractDeviceHandlerDefinition(scriptCode);
                 DeviceHandler newDeviceHandler = new DeviceHandler(id, fileName, definition);
                 if (!newDeviceHandler.equalsIgnoreId(existingDeviceHandler)) {
                     deviceDataStore.updateDeviceHandler(newDeviceHandler);
@@ -583,7 +583,7 @@ public class DeviceService {
 
                     Class<ParrotHubDelegatingScript> deviceHandlerScriptClass = (Class<ParrotHubDelegatingScript>) Class.forName(className);
                     ParrotHubDelegatingScript deviceHandlerScript = deviceHandlerScriptClass.getDeclaredConstructor().newInstance();
-                    Map dhi = extractDeviceHandlerInformation(deviceHandlerScript);
+                    Map dhi = extractDeviceHandlerDefinition(deviceHandlerScript);
                     deviceHandlerInfo.put(deviceHandlerId, new DeviceHandler(deviceHandlerId, "class:" + className, dhi));
                 }
             }
@@ -618,7 +618,7 @@ public class DeviceService {
                         String deviceHandlerId = UUID.randomUUID().toString();
 
                         String scriptCode = IOUtils.toString(new FileInputStream(f), StandardCharsets.UTF_8);
-                        Map dhi = extractDeviceHandlerInformation(scriptCode);
+                        Map dhi = extractDeviceHandlerDefinition(scriptCode);
 
                         deviceHandlerInfo.put(deviceHandlerId, new DeviceHandler(deviceHandlerId, "deviceHandlers/" + f.getName(), dhi));
                     } catch (Exception e) {
@@ -631,16 +631,16 @@ public class DeviceService {
         return deviceHandlerInfo;
     }
 
-    private Map extractDeviceHandlerInformation(String deviceHandlerScript) {
+    private Map extractDeviceHandlerDefinition(String deviceHandlerScript) {
         CompilerConfiguration compilerConfiguration = new CompilerConfiguration();
         compilerConfiguration.setScriptBaseClass("com.parrotha.internal.script.ParrotHubDelegatingScript");
         GroovyShell shell = new GroovyShell(compilerConfiguration);
 
         ParrotHubDelegatingScript parrotHubDelegatingScript = (ParrotHubDelegatingScript) shell.parse(deviceHandlerScript);
-        return extractDeviceHandlerInformation(parrotHubDelegatingScript);
+        return extractDeviceHandlerDefinition(parrotHubDelegatingScript);
     }
 
-    private Map extractDeviceHandlerInformation(DelegatingScript deviceHandlerScript) {
+    private Map extractDeviceHandlerDefinition(DelegatingScript deviceHandlerScript) {
         deviceHandlerScript.setDelegate(new DeviceDefinitionDelegate());
 
         deviceHandlerScript.invokeMethod("run", null);
@@ -659,8 +659,18 @@ public class DeviceService {
     }
 
     public boolean updateDeviceHandlerSourceCode(String id, String sourceCode) {
-        extractDeviceHandlerInformation(sourceCode);
+        extractDeviceHandlerDefinition(sourceCode);
         return deviceDataStore.updateDeviceHandlerSourceCode(id, sourceCode);
+    }
+
+    public String addDeviceHandlerSourceCode(String sourceCode) {
+        Map definition = extractDeviceHandlerDefinition(sourceCode);
+        if (definition == null) {
+            throw new IllegalArgumentException("No definition found.");
+        }
+        String dhId = deviceDataStore
+                .addDeviceHandlerSourceCode(sourceCode, new DeviceHandler(null, null, definition));
+        return dhId;
     }
 
 }
