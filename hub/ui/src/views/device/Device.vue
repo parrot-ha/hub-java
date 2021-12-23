@@ -299,13 +299,14 @@ export default {
             for (var section of data.sections) {
               for (var input of section.input) {
                 if (typeof this.settings[input.name] === 'undefined') {
-                  //TODO: is empty string ok, or should it be null?
                   this.settings[input.name] = {
                     name: input.name,
-                    value: null,
+                    value: (input.defaultValue == null || typeof input.defaultValue === 'undefined') ? null : input.defaultValue,
                     type: input.type,
                     multiple: input.multiple ? true : false
                   };
+                } else if (this.settings[input.name].value == null && input.defaultValue != null && typeof input.defaultValue !== 'undefined') {
+                  this.settings[input.name].value = input.defaultValue;
                 }
               }
             }

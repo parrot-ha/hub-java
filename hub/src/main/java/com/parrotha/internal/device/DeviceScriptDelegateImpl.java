@@ -46,12 +46,14 @@ import org.slf4j.LoggerFactory;
 import java.lang.reflect.InvocationTargetException;
 import java.time.LocalTime;
 import java.time.OffsetDateTime;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.TimeZone;
 
 public class DeviceScriptDelegateImpl extends EntityScriptDelegateCommon implements DeviceScriptDelegate {
     private static final Logger logger = LoggerFactory.getLogger(DeviceScriptDelegateImpl.class);
@@ -157,8 +159,12 @@ public class DeviceScriptDelegateImpl extends EntityScriptDelegateCommon impleme
         return state;
     }
 
+    public void updateDataValue(String dataValueName, Object dataValueValue) {
+        getDevice().updateDataValue(dataValueName, dataValueValue);
+    }
+
     public Object getDataValue(String dataValueName) {
-        return getDevice().getData().get(dataValueName);
+        return getDevice().getDataValue(dataValueName);
     }
 
     private ZigBee zigbee;
@@ -300,6 +306,44 @@ public class DeviceScriptDelegateImpl extends EntityScriptDelegateCommon impleme
         scheduleService.schedule(ScheduleService.DEVICE_TYPE, this.device.getId(), runTime, handlerMethod, options);
     }
 
+    public void schedule(Date dateTime, MetaMethod handlerMethod) {
+        schedule(dateTime, handlerMethod.getName(), new HashMap<>());
+    }
+
+    public void schedule(Date dateTime, String handlerMethod) {
+        schedule(dateTime, handlerMethod, new HashMap<>());
+    }
+
+    public void schedule(Date dateTime, MetaMethod handlerMethod, Map<String, Object> options) {
+        schedule(dateTime, handlerMethod.getName(), options);
+    }
+
+    public void schedule(Date dateTime, String handlerMethod, Map<String, Object> options) {
+        if (dateTime == null || handlerMethod == null) {
+            return;
+        }
+        ZonedDateTime zdt = ZonedDateTime.ofInstant(dateTime.toInstant(), TimeZone.getDefault().toZoneId());
+        String cronExpression = String.format("%d %d %d * * ?", zdt.getSecond(), zdt.getMinute(), zdt.getHour());
+        schedule(cronExpression, handlerMethod, options);
+    }
+
+    public void schedule(String cronExpression, MetaMethod handlerMethod) {
+        schedule(cronExpression, handlerMethod.getName(), new HashMap<>());
+    }
+
+    public void schedule(String cronExpression, String handlerMethod) {
+        schedule(cronExpression, handlerMethod, new HashMap<>());
+    }
+
+    public void schedule(String cronExpression, MetaMethod handlerMethod, Map<String, Object> options) {
+        schedule(cronExpression, handlerMethod.getName(), options);
+    }
+
+    public void schedule(String cronExpression, String handlerMethod, Map<String, Object> options) {
+        scheduleService
+                .schedule(ScheduleService.DEVICE_TYPE, device.getId(), cronExpression, handlerMethod, options);
+    }
+
     /**
      * https://docs.smartthings.com/en/latest/ref-docs/smartapp-ref.html#now
      *
@@ -382,6 +426,8 @@ public class DeviceScriptDelegateImpl extends EntityScriptDelegateCommon impleme
         closure.run();
         return metadataValue;
     }
+
+    void attribute(String name, String value) {}
 
     // [name:Cree Bulb Custom, namespace:smartthings, author:SmartThings, ocfDeviceType:oic.d.light, runLocally:true, executeCommandsLocally:true, minHubCoreVersion:000.022.0004]
     void definition(Map map, Closure closure) {
