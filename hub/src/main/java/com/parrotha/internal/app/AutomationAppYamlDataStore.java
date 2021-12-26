@@ -18,11 +18,11 @@
  */
 package com.parrotha.internal.app;
 
+import com.parrotha.internal.system.OAuthToken;
 import groovy.json.JsonBuilder;
 import groovy.json.JsonSlurperClassic;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
-import com.parrotha.internal.system.OAuthToken;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.yaml.snakeyaml.Yaml;
@@ -134,6 +134,7 @@ public class AutomationAppYamlDataStore implements AutomationAppDataStore {
                 .get(installedAutomationApp.getId());
         //synchronize this on each installed automation app, don't need to synchronize for all
         synchronized (existingInstalledAutomationApp) {
+            existingInstalledAutomationApp.setInstalled(installedAutomationApp.isInstalled());
             existingInstalledAutomationApp.setLabel(installedAutomationApp.getLabel());
             existingInstalledAutomationApp.setSettings(installedAutomationApp.getSettings());
             return saveInstalledAutomationApp(installedAutomationApp.getId());

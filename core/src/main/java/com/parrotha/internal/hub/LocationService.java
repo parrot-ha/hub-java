@@ -33,7 +33,7 @@ public interface LocationService {
 
     void saveHub();
 
-    Map<String, Date> getSunriseAndSunset(Map<String, String> options);
+    Map<String, Date> getSunriseAndSunset(Map<String, Object> options);
 
     void calculateSunriseAndSunset();
 }
