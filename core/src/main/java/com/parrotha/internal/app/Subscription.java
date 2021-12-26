@@ -28,7 +28,6 @@ public class Subscription {
     private String handlerMethod;
     private String subscribedAppId;
 
-
     public Subscription() {
     }
 
@@ -85,6 +84,12 @@ public class Subscription {
         this.attributeNameAndValue = attributeNameAndValue;
     }
 
+    /**
+     * Equals method ignores id so that duplicates can be eliminated.
+     *
+     * @param o
+     * @return
+     */
     @Override
     public boolean equals(Object o) {
         if (this == o) {
@@ -94,14 +99,14 @@ public class Subscription {
             return false;
         }
         Subscription that = (Subscription) o;
-        return Objects.equals(id, that.id) && Objects.equals(deviceId, that.deviceId) &&
+        return Objects.equals(deviceId, that.deviceId) &&
                 Objects.equals(locationId, that.locationId) && Objects.equals(attributeNameAndValue, that.attributeNameAndValue) &&
                 Objects.equals(handlerMethod, that.handlerMethod) && Objects.equals(subscribedAppId, that.subscribedAppId);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, deviceId, locationId, attributeNameAndValue, handlerMethod, subscribedAppId);
+        return Objects.hash(deviceId, locationId, attributeNameAndValue, handlerMethod, subscribedAppId);
     }
 
     @Override

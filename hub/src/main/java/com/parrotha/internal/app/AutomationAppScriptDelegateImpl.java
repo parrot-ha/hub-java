@@ -432,7 +432,7 @@ public class AutomationAppScriptDelegateImpl extends EntityScriptDelegateCommon 
         return getSunriseAndSunset(new HashMap<>());
     }
 
-    public Map<String, Date> getSunriseAndSunset(Map<String, String> options) {
+    public Map<String, Date> getSunriseAndSunset(Map<String, Object> options) {
         return locationService.getSunriseAndSunset(options);
     }
 

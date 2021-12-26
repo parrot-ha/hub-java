@@ -24,6 +24,12 @@ import org.apache.commons.lang3.StringUtils;
  * Utility methods that are used in multiple hub code locations
  */
 public class HubUtils {
+    public static Long timeOffset(Object object) {
+        if (object == null) return 0L;
+        if (object instanceof Number) return timeOffset((Number)object);
+        else return timeOffset(object.toString());
+    }
+
     public static Long timeOffset(Number minutes) {
         if (minutes == null) return 0L;
         return minutes.longValue() * 60 * 1000;

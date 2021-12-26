@@ -185,11 +185,12 @@ public class LocationServiceImpl implements LocationService {
         }
     }
 
-    public Map<String, Date> getSunriseAndSunset(Map<String, String> options) {
+    public Map<String, Date> getSunriseAndSunset(Map<String, Object> options) {
         Double latitude = null;
         Double longitude = null;
 
-        if (StringUtils.isNotBlank(options.get("zipCode"))) {
+        Object zipCode = options.get("zipCode");
+        if (zipCode != null && StringUtils.isNotBlank(zipCode.toString())) {
             // TODO: use a map of zip codes to lat/long to get date time.
             throw new NotYetImplementedException();
         }
