@@ -1048,12 +1048,12 @@ public class EntityServiceImpl implements EntityService {
         return null;
     }
 
-
     public Map<String, Object> getDevicePreferencesLayout(String id) {
         Class<Script> deviceScript = getScriptForDevice(id);
+        Device device = deviceService.getDeviceById(id);
 
         //TODO: throw device or device handler not found exception?
-        return getDeviceScriptPreferencesLayout(deviceScript);
+        return getDevicePreferencesLayout(deviceScript, device);
     }
 
     @Override
@@ -1079,6 +1079,42 @@ public class EntityServiceImpl implements EntityService {
             DevicePreferencesDelegate dsd = (DevicePreferencesDelegate) parrotHubDelegatingScript.getDelegate();
             if (dsd.preferences != null) {
                 return dsd.preferences;
+            } else {
+                return new HashMap<>();
+            }
+        } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
+            e.printStackTrace();
+        }
+
+        return null;
+    }
+
+    private Map<String, Object> getDevicePreferencesLayout(Class<Script> deviceScript, Device device) {
+        if (deviceScript == null) {
+            return null;
+        }
+
+        try {
+            ParrotHubDelegatingScript parrotHubDelegatingScript = (ParrotHubDelegatingScript) deviceScript.getConstructor()
+                    .newInstance();
+            parrotHubDelegatingScript.setDelegate(new DeviceScriptDelegateImpl(device, deviceService, this, locationService, scheduleService,
+                    automationAppService));
+
+            parrotHubDelegatingScript.invokeMethod("run", null);
+
+            DeviceScriptDelegateImpl dsd = (DeviceScriptDelegateImpl) parrotHubDelegatingScript.getDelegate();
+            if (dsd.metadataValue != null) {
+                ArrayList list = (ArrayList) dsd.metadataValue.get("preferences");
+                Map<String, List> section = new HashMap<>();
+                section.put("input", list);
+                section.put("body", list);
+
+                List<Map> sections = new ArrayList<>();
+                sections.add(section);
+
+                Map<String, Object>preferences = new HashMap<>();
+                preferences.put("sections", sections);
+                return preferences;
             } else {
                 return new HashMap<>();
             }
