@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2021 by the respective copyright holders.
+ * Copyright (c) 2021-2022 by the respective copyright holders.
  * All rights reserved.
  * <p>
  * This file is part of Parrot Home Automation Hub.
@@ -18,16 +18,16 @@
  */
 package com.parrotha.app;
 
-import groovy.lang.GroovyObjectSupport;
 import com.parrotha.internal.device.Attribute;
 import com.parrotha.internal.device.Device;
 import com.parrotha.internal.device.DeviceService;
 import com.parrotha.internal.device.State;
+import com.parrotha.internal.entity.EntityService;
 import com.parrotha.internal.hub.Hub;
 import com.parrotha.internal.hub.LocationService;
-import com.parrotha.internal.entity.EntityService;
 import com.parrotha.internal.utils.HexUtils;
 import com.parrotha.internal.utils.ObjectUtils;
+import groovy.lang.GroovyObjectSupport;
 
 import java.util.Date;
 import java.util.List;
@@ -61,7 +61,9 @@ public class DeviceWrapperImpl extends GroovyObjectSupport implements DeviceWrap
     }
 
     public Object propertyMissing(String name) {
-        if (name == null) return null;
+        if (name == null) {
+            return null;
+        }
         if (name.startsWith("current")) {
             String attributeName = name.substring("current".length()).toLowerCase();
             return latestValue(attributeName);
@@ -79,13 +81,17 @@ public class DeviceWrapperImpl extends GroovyObjectSupport implements DeviceWrap
 
     @Override
     public void setDeviceNetworkId(String deviceNetworkId) {
-        if (deviceService == null) throw new IllegalStateException("DeviceNetworkId is currently not updatable");
+        if (deviceService == null) {
+            throw new IllegalStateException("DeviceNetworkId is currently not updatable");
+        }
         device.setDeviceNetworkId(deviceNetworkId);
         deviceService.saveDevice(device);
     }
 
     public String getZigbeeId() {
-        if (device.getIntegration() != null) return (String) device.getIntegration().getOption("zigbeeId");
+        if (device.getIntegration() != null) {
+            return (String) device.getIntegration().getOption("zigbeeId");
+        }
         return null;
     }
 
@@ -104,17 +110,25 @@ public class DeviceWrapperImpl extends GroovyObjectSupport implements DeviceWrap
     }
 
     public State currentState(String attributeName) {
-        if (device.getCurrentStates() == null) return null;
+        if (device.getCurrentStates() == null) {
+            return null;
+        }
         return device.getCurrentStates().get(attributeName);
     }
 
     public Object latestValue(String attributeName) {
-        if (attributeName == null) return null;
+        if (attributeName == null) {
+            return null;
+        }
 
         State state = currentState(attributeName);
-        if (state == null) return null;
+        if (state == null) {
+            return null;
+        }
         Attribute attribute = deviceService.getAttributeForDeviceHandler(this.device.getDeviceHandlerId(), attributeName);
-        if (attribute == null) return null;
+        if (attribute == null) {
+            return null;
+        }
         String dataType = attribute.getDataType();
         if ("STRING".equalsIgnoreCase(dataType) || "ENUM".equalsIgnoreCase(dataType)) {
             return state.getStringValue();
@@ -141,7 +155,9 @@ public class DeviceWrapperImpl extends GroovyObjectSupport implements DeviceWrap
     }
 
     public String getDisplayName() {
-        if (device.getLabel() == null) return device.getName();
+        if (device.getLabel() == null) {
+            return device.getName();
+        }
         return device.getLabel();
     }
 
@@ -174,6 +190,16 @@ public class DeviceWrapperImpl extends GroovyObjectSupport implements DeviceWrap
     public void updateDataValue(String key, Object value) {
         device.getData().put(key, value);
         deviceService.saveDeviceData(device.getId(), device.getData());
+    }
+
+    @Override
+    public void updateSetting(String inputName, Object value) {
+        deviceService.updateDeviceSetting(this.device.getId(), inputName, value);
+    }
+
+    @Override
+    public void updateSetting(String inputName, Map options) {
+        deviceService.updateDeviceSetting(this.device.getId(), inputName, (String) options.get("type"), options.get("value"));
     }
 
     @Override
