@@ -201,6 +201,10 @@ public class DeviceScriptDelegateImpl extends EntityScriptDelegateCommon impleme
         scheduleService.unschedule(ScheduleService.DEVICE_TYPE, getDevice().getId(), method);
     }
 
+    public void unschedule(MetaMethod method) {
+        unschedule(method.getName());
+    }
+
     /**
      * Creates a recurring schedule that executes the specified handlerMethod every one minute.
      * Using this method will pick a random start time in the next one minute, and run every one minute after that.
