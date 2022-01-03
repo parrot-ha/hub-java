@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2021 by the respective copyright holders.
+ * Copyright (c) 2021-2022 by the respective copyright holders.
  * All rights reserved.
  * <p>
  * This file is part of Parrot Home Automation Hub.
@@ -25,6 +25,8 @@ import com.parrotha.device.HubResponse;
 import com.parrotha.device.Protocol;
 import com.parrotha.internal.ChangeTrackingMap;
 import com.parrotha.internal.Main;
+import com.parrotha.internal.app.InstalledAutomationApp;
+import com.parrotha.internal.app.InstalledAutomationAppSetting;
 import com.parrotha.internal.integration.Integration;
 import com.parrotha.internal.integration.IntegrationRegistry;
 import com.parrotha.internal.script.ParrotHubDelegatingScript;
@@ -450,6 +452,19 @@ public class DeviceService {
         //TODO: store state history in database
         //TODO: use write behind cache for saving device
         deviceDataStore.updateDevice(d);
+    }
+
+    public void updateDeviceSetting(String id, String name, Object value) {
+        updateDeviceSetting(id, name, null, value);
+    }
+
+    public void updateDeviceSetting(String id, String name, String type, Object value) {
+        Device device = getDeviceById(id);
+        DeviceSetting deviceSetting = device.getSettingByName(name);
+        if (deviceSetting != null) {
+            deviceSetting.processValueTypeAndMultiple(value, type != null ? type : deviceSetting.getType(), deviceSetting.isMultiple());
+            deviceDataStore.updateDevice(device);
+        }
     }
 
     public void initialize() {

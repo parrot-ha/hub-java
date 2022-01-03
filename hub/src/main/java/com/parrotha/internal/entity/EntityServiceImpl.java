@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2021 by the respective copyright holders.
+ * Copyright (c) 2021-2022 by the respective copyright holders.
  * All rights reserved.
  * <p>
  * This file is part of Parrot Home Automation Hub.
@@ -199,7 +199,7 @@ public class EntityServiceImpl implements EntityService {
         if (eventListeners.size() > 0) {
             new Thread(() -> {
                 for (EventListener eventListener : eventListeners) {
-                     eventListener.eventReceived(event);
+                    eventListener.eventReceived(event);
                 }
             }).start();
         }
@@ -839,7 +839,7 @@ public class EntityServiceImpl implements EntityService {
                             try {
                                 Object response = runInstalledAutomationAppMethodWithParamsAndReturn(id, params,
                                         new Request(httpMethod, headers, body),
-                                        methodName, null);
+                                        methodName, (Object) null);
                                 if (response instanceof Response) {
                                     return (Response) response;
                                 } else if (response instanceof Map) {
@@ -1112,7 +1112,7 @@ public class EntityServiceImpl implements EntityService {
                 List<Map> sections = new ArrayList<>();
                 sections.add(section);
 
-                Map<String, Object>preferences = new HashMap<>();
+                Map<String, Object> preferences = new HashMap<>();
                 preferences.put("sections", sections);
                 return preferences;
             } else {

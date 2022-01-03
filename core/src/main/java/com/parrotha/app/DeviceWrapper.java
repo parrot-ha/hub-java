@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2021 by the respective copyright holders.
+ * Copyright (c) 2021-2022 by the respective copyright holders.
  * All rights reserved.
  * <p>
  * This file is part of Parrot Home Automation Hub.
@@ -65,6 +65,10 @@ public interface DeviceWrapper {
     Object getDataValue(String key);
 
     void updateDataValue(String key, Object value);
+
+    void updateSetting(String inputName, Object value);
+
+    void updateSetting(String inputName, Map options);
 
     List<EventWrapper> eventsSince(Date date);
 
