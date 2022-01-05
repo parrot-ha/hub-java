@@ -18,6 +18,7 @@
  */
 package com.parrotha.internal.device;
 
+import com.parrotha.app.EventWrapper;
 import com.parrotha.internal.BaseApiHandler;
 import com.parrotha.internal.entity.EntityService;
 import groovy.json.JsonBuilder;
@@ -25,8 +26,11 @@ import groovy.json.JsonSlurper;
 import io.javalin.Javalin;
 import org.apache.commons.lang3.StringUtils;
 
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -285,6 +289,16 @@ public class DeviceApiHandler extends BaseApiHandler {
             ctx.status(200);
             ctx.contentType("application/json");
             ctx.result(new JsonBuilder(currentStates).toString());
+        });
+
+        app.get("/api/devices/:id/events", ctx -> {
+            String id = ctx.pathParam("id");
+            Date fromDate = Date.from(LocalDateTime.now().minusDays(7).atZone(ZoneId.systemDefault()).toInstant());
+            List<EventWrapper> events = entityService.eventsSince("DEVICE", id, fromDate, -1);
+
+            ctx.status(200);
+            ctx.contentType("application/json");
+            ctx.result(new JsonBuilder(events).toString());
         });
 
         app.get("/api/devices/:id/information", ctx -> {

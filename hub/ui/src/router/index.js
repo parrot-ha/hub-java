@@ -26,6 +26,11 @@ const routes = [
     component: () => import('../views/device/Device.vue')
   },
   {
+    path: '/devices/:id/events',
+    name: 'DeviceEvents',
+    component: () => import('../views/device/DeviceEvents.vue')
+  },
+  {
     path: '/devicetiles/:id',
     name: 'devicetile',
     component: () => import('../views/device/DeviceTile.vue')

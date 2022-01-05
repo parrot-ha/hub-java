@@ -21,6 +21,7 @@ package com.parrotha.internal.hub;
 import com.parrotha.device.Event;
 import com.parrotha.internal.database.DatasourceFactory;
 import org.jdbi.v3.core.Jdbi;
+import org.jdbi.v3.core.statement.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -67,10 +68,19 @@ public class EventSQLDataStore implements EventDataStore {
 
     @Override
     public List<Event> eventsSince(String source, String sourceId, Date date, int maxEvents) {
-        List<Event> events = jdbi.withHandle(handle ->
-                handle.createQuery("select ID, NAME, VALUE, DESCRIPTION_TEXT, DISPLAYED, DISPLAY_NAME, " +
-                        "IS_STATE_CHANGE, UNIT, DATA, DATE, SOURCE, SOURCE_ID, IS_DIGITAL FROM EVENT_HISTORY;")
-                        .mapTo(Event.class).list()
+        List<Event> events = jdbi.withHandle(handle -> {
+                    Query query = handle.createQuery("select ID, NAME, VALUE, DESCRIPTION_TEXT, DISPLAYED, DISPLAY_NAME, " +
+                                    "IS_STATE_CHANGE, UNIT, DATA, DATE, SOURCE, SOURCE_ID, IS_DIGITAL FROM EVENT_HISTORY " +
+                                    "WHERE SOURCE = :source AND SOURCE_ID = :sourceId " +
+                                    "AND DATE > :startDate;")
+                            .bind("source", source)
+                            .bind("sourceId", sourceId)
+                            .bind("startDate", date);
+                    if (maxEvents > -1) {
+                        query.setMaxRows(maxEvents);
+                    }
+                    return query.mapTo(Event.class).list();
+                }
         );
         return events;
     }
@@ -79,8 +89,8 @@ public class EventSQLDataStore implements EventDataStore {
     public List<Event> eventsBetween(String source, String sourceId, Date startDate, Date endDate, int maxEvents) {
         List<Event> events = jdbi.withHandle(handle ->
                 handle.createQuery("select ID, NAME, VALUE, DESCRIPTION_TEXT, DISPLAYED, DISPLAY_NAME, " +
-                        "IS_STATE_CHANGE, UNIT, DATA, DATE, SOURCE, SOURCE_ID, IS_DIGITAL FROM EVENT_HISTORY " +
-                        "WHERE DATE > :startDate AND DATE < :endDate;")
+                                "IS_STATE_CHANGE, UNIT, DATA, DATE, SOURCE, SOURCE_ID, IS_DIGITAL FROM EVENT_HISTORY " +
+                                "WHERE DATE > :startDate AND DATE < :endDate;")
                         .bind("startDate", startDate)
                         .bind("endDate", endDate)
                         .setMaxRows(maxEvents)
