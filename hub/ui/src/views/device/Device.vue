@@ -47,7 +47,7 @@
                   <tr>
                     <td>Events</td>
                     <td>
-                      <a :href="`/device/${device.id}/events`">List Events</a>
+                      <a :href="`/devices/${device.id}/events`">List Events</a>
                     </td>
                   </tr>
                   <tr>
@@ -301,11 +301,19 @@ export default {
                 if (typeof this.settings[input.name] === 'undefined') {
                   this.settings[input.name] = {
                     name: input.name,
-                    value: (input.defaultValue == null || typeof input.defaultValue === 'undefined') ? null : input.defaultValue,
+                    value:
+                      input.defaultValue == null ||
+                      typeof input.defaultValue === 'undefined'
+                        ? null
+                        : input.defaultValue,
                     type: input.type,
                     multiple: input.multiple ? true : false
                   };
-                } else if (this.settings[input.name].value == null && input.defaultValue != null && typeof input.defaultValue !== 'undefined') {
+                } else if (
+                  this.settings[input.name].value == null &&
+                  input.defaultValue != null &&
+                  typeof input.defaultValue !== 'undefined'
+                ) {
                   this.settings[input.name].value = input.defaultValue;
                 }
               }

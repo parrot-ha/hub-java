@@ -101,6 +101,11 @@ export default {
           title: 'Device Handler Code',
           href: '/dh-code',
           icon: 'mdi-file-document-edit-outline'
+        },
+        {
+          title: 'Extensions',
+          href: '/extensions',
+          icon: 'mdi-puzzle-outline'
         }
       ]
     };
