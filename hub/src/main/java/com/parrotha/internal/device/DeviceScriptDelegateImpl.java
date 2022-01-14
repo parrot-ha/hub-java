@@ -79,8 +79,9 @@ public class DeviceScriptDelegateImpl extends EntityScriptDelegateCommon impleme
     private LiveLogger log = null;
 
     public LiveLogger getLog() {
-        if (log == null)
+        if (log == null) {
             log = new LiveLogger("parrothub.live.dev." + device.getId());
+        }
         return log;
     }
 
@@ -126,9 +127,11 @@ public class DeviceScriptDelegateImpl extends EntityScriptDelegateCommon impleme
     }
 
     public DeviceWrapper addChildDevice(String namespace, String typeName, String deviceNetworkId, Object hubId, Map properties) {
-        Device childDevice = deviceService.addChildDevice(device.getId(), DeviceService.PARENT_TYPE_DEVICE, namespace, typeName, deviceNetworkId, properties);
-        if (childDevice != null)
+        Device childDevice = deviceService.addChildDevice(device.getId(), DeviceService.PARENT_TYPE_DEVICE, namespace, typeName, deviceNetworkId,
+                properties);
+        if (childDevice != null) {
             return new DeviceWrapperImpl(childDevice, deviceService, entityService, locationService);
+        }
         return null;
     }
 
@@ -170,13 +173,14 @@ public class DeviceScriptDelegateImpl extends EntityScriptDelegateCommon impleme
     private ZigBee zigbee;
 
     public ZigBee getZigbee() {
-        if (zigbee == null)
+        if (zigbee == null) {
             try {
                 Class<?> clazz = Class.forName("com.parrotha.zigbee.ZigBeeImpl");
                 zigbee = (ZigBee) clazz.getDeclaredConstructor(DeviceWrapper.class).newInstance(device);
             } catch (ClassNotFoundException | NoSuchMethodException | IllegalAccessException | InstantiationException | InvocationTargetException e) {
                 logger.warn("Exception while loading ZigBee class, may not be implemented.", e);
             }
+        }
 
         return zigbee;
     }
@@ -184,8 +188,9 @@ public class DeviceScriptDelegateImpl extends EntityScriptDelegateCommon impleme
     private Zwave zwave;
 
     public Zwave getZwave() {
-        if (zwave == null)
+        if (zwave == null) {
             zwave = new Zwave();
+        }
         return zwave;
     }
 
@@ -217,12 +222,27 @@ public class DeviceScriptDelegateImpl extends EntityScriptDelegateCommon impleme
         scheduleService.schedule("DEV", getDevice().getId(), cronExpression, handlerMethod, null);
     }
 
+    public void runEvery1Minute(MetaMethod handlerMethod) {
+        if (handlerMethod == null) {
+            return;
+        }
+
+        runEvery1Minute(handlerMethod.getName());
+    }
+
     /**
      * Creates a recurring schedule that executes the specified handlerMethod every five minutes.
      * Using this method will pick a random start time in the next five minutes, and run every five minutes after that.
      */
     public void runEvery5Minutes(String handlerMethod) {
         scheduleEveryTimeOfMinutes(5, handlerMethod);
+    }
+
+    public void runEvery5Minutes(MetaMethod handlerMethod) {
+        if (handlerMethod == null) {
+            return;
+        }
+        runEvery5Minutes(handlerMethod.getName());
     }
 
     /**
@@ -233,12 +253,26 @@ public class DeviceScriptDelegateImpl extends EntityScriptDelegateCommon impleme
         scheduleEveryTimeOfMinutes(10, handlerMethod);
     }
 
+    public void runEvery10Minutes(MetaMethod handlerMethod) {
+        if (handlerMethod == null) {
+            return;
+        }
+        runEvery10Minutes(handlerMethod.getName());
+    }
+
     /**
      * Creates a recurring schedule that executes the specified handlerMethod every fifteen minutes.
      * Using this method will pick a random start time in the next fifteen minutes, and run every fifteen minutes after that.
      */
     public void runEvery15Minutes(String handlerMethod) {
         scheduleEveryTimeOfMinutes(15, handlerMethod);
+    }
+
+    public void runEvery15Minutes(MetaMethod handlerMethod) {
+        if (handlerMethod == null) {
+            return;
+        }
+        runEvery15Minutes(handlerMethod.getName());
     }
 
     /**
@@ -249,13 +283,22 @@ public class DeviceScriptDelegateImpl extends EntityScriptDelegateCommon impleme
         scheduleEveryTimeOfMinutes(30, handlerMethod);
     }
 
+    public void runEvery30Minutes(MetaMethod handlerMethod) {
+        if (handlerMethod == null) {
+            return;
+        }
+        runEvery30Minutes(handlerMethod.getName());
+    }
+
     private void scheduleEveryTimeOfMinutes(int minutesParam, String handlerMethod) {
         // create a cron schedule that starts randomly in the next minutes
         Random rand = new Random();
         int seconds = rand.nextInt(60);
         // pick a randam time to start
         int minutes = LocalTime.now().getMinute() + rand.nextInt(minutesParam);
-        if (minutes > 59) minutes = minutes - 60;
+        if (minutes > 59) {
+            minutes = minutes - 60;
+        }
         String cronExpression = String.format("%d %d/%d * * * ?", seconds, minutes, minutesParam);
         scheduleService.schedule("DEV", getDevice().getId(), cronExpression, handlerMethod, null);
     }
@@ -365,8 +408,12 @@ public class DeviceScriptDelegateImpl extends EntityScriptDelegateCommon impleme
      * @return
      */
     public List<String> delayBetween(List<String> commands, int delay) {
-        if (commands == null) return null;
-        if (commands.size() == 0) return commands;
+        if (commands == null) {
+            return null;
+        }
+        if (commands.size() == 0) {
+            return commands;
+        }
 
         List<String> returnList = new ArrayList<>();
         int index = 0;
@@ -431,7 +478,8 @@ public class DeviceScriptDelegateImpl extends EntityScriptDelegateCommon impleme
         return metadataValue;
     }
 
-    void attribute(String name, String value) {}
+    void attribute(String name, String value) {
+    }
 
     // [name:Cree Bulb Custom, namespace:smartthings, author:SmartThings, ocfDeviceType:oic.d.light, runLocally:true, executeCommandsLocally:true, minHubCoreVersion:000.022.0004]
     void definition(Map map, Closure closure) {
