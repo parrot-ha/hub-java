@@ -134,7 +134,12 @@ const routes = [
     path: '/extensions',
     name: "Extensions",
     component: () => import('../views/extensions/ExtensionList.vue')
-  }
+  },
+  {
+    path: '/ext-settings',
+    name: "ExtensionSettings",
+    component: () => import('../views/extensions/ExtensionSettings.vue')
+  },
   {
     path: '/about',
     name: 'About',
