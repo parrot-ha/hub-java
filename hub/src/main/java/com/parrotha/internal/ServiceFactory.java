@@ -22,6 +22,7 @@ import com.parrotha.internal.app.AutomationAppService;
 import com.parrotha.internal.device.DeviceIntegrationServiceImpl;
 import com.parrotha.internal.device.DeviceService;
 import com.parrotha.internal.entity.EntityServiceImpl;
+import com.parrotha.internal.extension.ExtensionService;
 import com.parrotha.internal.hub.EventService;
 import com.parrotha.internal.hub.LocationService;
 import com.parrotha.internal.hub.LocationServiceImpl;
@@ -96,6 +97,15 @@ public class ServiceFactory {
                     getDeviceIntegrationService(), getEntityService(), getLocationService());
         }
         return integrationService;
+    }
+
+    private static ExtensionService extensionService;
+
+    public static ExtensionService getExtensionService() {
+        if (extensionService == null) {
+            extensionService = new ExtensionService();
+        }
+        return extensionService;
     }
 
     private static ScheduleService scheduleService;

@@ -9,8 +9,8 @@
               <v-simple-table>
                 <thead>
                   <tr>
-                    <th scope="col" style="width:48%">Name</th>
-                    <th scope="col" style="width:52%">URL</th>
+                    <th scope="col" style="width:35%">Name</th>
+                    <th scope="col" style="width:65%">URL</th>
                   </tr>
                 </thead>
                 <tbody>

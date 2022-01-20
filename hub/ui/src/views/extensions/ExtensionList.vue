@@ -27,10 +27,7 @@
                           name: 'Extension',
                           params: { id: extension.id }
                         }"
-                        >{{ extension.label }} ({{
-                          extension.name
-                        }})</router-link
-                      >
+                        >{{ extension.name }}</router-link>
                     </td>
                     <td>{{ extension.description }}</td>
                   </tr>
@@ -49,7 +46,7 @@ export default {
   name: 'ExtensionList',
   data() {
     return {
-      extension: []
+      extensions: []
     };
   },
   mounted: function() {

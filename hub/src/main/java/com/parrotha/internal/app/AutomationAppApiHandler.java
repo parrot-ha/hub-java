@@ -43,14 +43,14 @@ import static io.javalin.core.security.SecurityUtil.roles;
 import static com.parrotha.internal.ui.UIFramework.UIRole.ADMIN;
 import static com.parrotha.internal.ui.UIFramework.UIRole.ANYONE;
 
-public class ApiHandlerAutomationApp extends BaseApiHandler {
-    private static final Logger logger = LoggerFactory.getLogger(ApiHandlerAutomationApp.class);
+public class AutomationAppApiHandler extends BaseApiHandler {
+    private static final Logger logger = LoggerFactory.getLogger(AutomationAppApiHandler.class);
 
     AutomationAppService automationAppService;
     EntityService entityService;
     ScheduleService scheduleService;
 
-    public ApiHandlerAutomationApp(AutomationAppService automationAppService, EntityService entityService,
+    public AutomationAppApiHandler(AutomationAppService automationAppService, EntityService entityService,
                                    ScheduleService scheduleService) {
         this.automationAppService = automationAppService;
         this.entityService = entityService;

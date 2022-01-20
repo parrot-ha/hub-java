@@ -18,9 +18,10 @@
  */
 package com.parrotha.internal;
 
-import com.parrotha.internal.app.ApiHandlerAutomationApp;
+import com.parrotha.internal.app.AutomationAppApiHandler;
 import com.parrotha.internal.device.DeviceApiHandler;
 import com.parrotha.internal.device.DeviceService;
+import com.parrotha.internal.extension.ExtensionApiHandler;
 import com.parrotha.internal.hub.LocationApiHandler;
 import com.parrotha.internal.hub.ScheduleService;
 import com.parrotha.internal.hub.SettingsApiHandler;
@@ -60,10 +61,11 @@ public class Main {
 
         // configure api
         new DeviceApiHandler(deviceService, entityService).setupApi(uiFramework.getApp());
-        new ApiHandlerAutomationApp(ServiceFactory.getAutomationAppService(), entityService, scheduleService).setupApi(uiFramework.getApp());
+        new AutomationAppApiHandler(ServiceFactory.getAutomationAppService(), entityService, scheduleService).setupApi(uiFramework.getApp());
         new IntegrationApiHandler(ServiceFactory.getIntegrationService()).setupApi(uiFramework.getApp());
         new LocationApiHandler(ServiceFactory.getLocationService()).setupApi(uiFramework.getApp());
         new SettingsApiHandler(entityService).setupApi(uiFramework.getApp());
+        new ExtensionApiHandler(ServiceFactory.getExtensionService()).setupApi(uiFramework.getApp());
 
         Thread myShutdownHook = new Thread(() -> {
             logger.info("In the middle of a shutdown");
