@@ -18,14 +18,11 @@
  */
 package com.parrotha.internal.hub;
 
+import com.parrotha.internal.BaseApiHandler;
 import groovy.json.JsonBuilder;
 import groovy.json.JsonSlurper;
 import io.javalin.Javalin;
 import org.apache.commons.lang3.StringUtils;
-import com.parrotha.internal.BaseApiHandler;
-import com.parrotha.internal.hub.Hub;
-import com.parrotha.internal.hub.Location;
-import com.parrotha.internal.hub.LocationService;
 
 import java.math.BigDecimal;
 import java.text.SimpleDateFormat;

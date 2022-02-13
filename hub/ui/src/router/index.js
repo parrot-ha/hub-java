@@ -131,6 +131,16 @@ const routes = [
     component: () => import('../views/device/DeviceHandlerCodeEdit.vue')
   },
   {
+    path: '/extensions',
+    name: "Extensions",
+    component: () => import('../views/extensions/ExtensionList.vue')
+  },
+  {
+    path: '/ext-settings',
+    name: "ExtensionSettings",
+    component: () => import('../views/extensions/ExtensionSettings.vue')
+  },
+  {
     path: '/about',
     name: 'About',
     // route level code-splitting
