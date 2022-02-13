@@ -130,8 +130,8 @@ public class ZIPGWIntegration extends DeviceIntegration implements DeviceExclude
         List<Map<String, Object>> bodyList = new ArrayList<>();
         List<Map<String, Object>> columnList = new ArrayList<>();
 
-        columnList.add(Map.of("name", "nodeId", "title", "Node ID", "data", "nodes.id"));
-        bodyList.add(Map.of("name", "deviceTable", "title", "Devices", "type", "table", "columns", columnList));
+        columnList.add(Map.of("name", "nodeId", "title", "Node ID", "data", "id"));
+        bodyList.add(Map.of("name", "deviceTable", "title", "Devices", "type", "table", "columns", columnList, "data", "nodes"));
         sections.add(Map.of("name", "deviceList", "title", "Device List", "body", bodyList));
 
         return sections;
