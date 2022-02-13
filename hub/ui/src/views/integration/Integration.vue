@@ -111,20 +111,15 @@
                       </tr>
                     </thead>
                     <tbody>
-                      <tr v-for="column in bodyItem.columns" :key="column.data">
+                      <tr
+                        v-for="(dataRow, k) in pageData[bodyItem.data]"
+                        :key="k"
+                      >
                         <td
-                          v-for="(dataItem, k) in pageData[
-                            column.data.substring(0, column.data.indexOf('.'))
-                          ]"
-                          :key="k"
+                          v-for="column in bodyItem.columns"
+                          :key="column.data"
                         >
-                          {{
-                            dataItem[
-                              column.data.substring(
-                                column.data.indexOf('.') + 1
-                              )
-                            ]
-                          }}
+                          {{ dataRow[column.data] }}
                         </td>
                       </tr>
                     </tbody>
