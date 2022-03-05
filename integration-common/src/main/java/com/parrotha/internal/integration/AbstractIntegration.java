@@ -62,8 +62,8 @@ public abstract class AbstractIntegration {
     public abstract Map<String, String> getDisplayInformation();
 
     // override this method if you want to provide a default configuration
-    public Map<String, Object> getDefaultSettings() {
-        return new HashMap<>();
+    public List<IntegrationSetting> getDefaultSettings() {
+        return new ArrayList<>();
     }
 
     // override this method if integration provides options to configure
@@ -93,11 +93,11 @@ public abstract class AbstractIntegration {
         this.configurationService = configurationService;
     }
 
-    public String getSetting(String key) {
+    public String getSettingAsString(String key) {
         return configurationService.getConfigurationValue(id, key);
     }
 
-    public String getSetting(String key, String defaultValue) {
+    public String getSettingAsString(String key, String defaultValue) {
         String value = configurationService.getConfigurationValue(id, key);
         if (StringUtils.isNotBlank(value)) {
             return value;
@@ -105,12 +105,17 @@ public abstract class AbstractIntegration {
         return defaultValue;
     }
 
+    public void updateSetting(String key, String value, String type, boolean multiple) {
+        configurationService.updateConfigurationValue(id, key, value, type, multiple);
+    }
+
+    @Deprecated
     public void updateSetting(String key, String value) {
-        configurationService.updateConfigurationValue(id, key, value);
+        updateSetting(key, value, "text", false);
     }
 
     public Integer getSettingAsInteger(String key) {
-        String settingObj = getSetting(key);
+        String settingObj = getSettingAsString(key);
         Integer settingInteger = null;
         if (settingObj instanceof String && NumberUtils.isCreatable(settingObj)) {
             settingInteger = Integer.parseInt(settingObj);
@@ -120,7 +125,7 @@ public abstract class AbstractIntegration {
     }
 
     public Integer getSettingAsInteger(String key, int defaultValue) {
-        String settingObj = getSetting(key);
+        String settingObj = getSettingAsString(key);
         Integer settingInteger = null;
         if (settingObj instanceof String && NumberUtils.isCreatable(settingObj)) {
             settingInteger = Integer.parseInt(settingObj);
@@ -133,7 +138,7 @@ public abstract class AbstractIntegration {
         return settingInteger;
     }
 
-    public Map<String, Object> getSettings() {
+    public List<IntegrationSetting> getSettings() {
         return configurationService.getConfiguration(id);
     }
 }

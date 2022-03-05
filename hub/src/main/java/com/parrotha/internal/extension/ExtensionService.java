@@ -52,7 +52,7 @@ public class ExtensionService {
 
                 ClassLoader myClassLoader = new URLClassLoader(urls.toArray(new URL[0]));
 
-                List<Map<String, String>> tmpIntegrations = getExtensionFromClassloader(myClassLoader, extensionDirectory.getAbsolutePath());
+                List<Map<String, String>> tmpIntegrations = getExtensionFromClassloader(myClassLoader, extDir.getPath());
                 extensions.addAll(tmpIntegrations);
             } catch (MalformedURLException e) {
                 e.printStackTrace();
@@ -62,7 +62,7 @@ public class ExtensionService {
         extensionsList = extensions;
     }
 
-    private List<Map<String, String>> getExtensionFromClassloader(ClassLoader classLoader, String baseDirectory) {
+    private List<Map<String, String>> getExtensionFromClassloader(ClassLoader classLoader, String extensionDirectory) {
         List<Map<String, String>> extensions = new ArrayList<>();
         try {
             Enumeration<URL> resources = classLoader.getResources("extensionInformation.yaml");
@@ -73,7 +73,7 @@ public class ExtensionService {
                 String id = (String) extensionInformation.get("id");
                 String name = (String) extensionInformation.get("name");
                 String description = (String) extensionInformation.get("description");
-                extensions.add(Map.of("id", id, "name", name, "description", description));
+                extensions.add(Map.of("id", id, "name", name, "description", description, "location", extensionDirectory));
             }
         } catch (IOException e) {
             e.printStackTrace();

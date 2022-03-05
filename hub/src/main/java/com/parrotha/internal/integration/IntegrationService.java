@@ -46,6 +46,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 
 public class IntegrationService {
     private static final Logger logger = LoggerFactory.getLogger(IntegrationService.class);
@@ -204,21 +205,34 @@ public class IntegrationService {
 
         List<String> changedKeys = new ArrayList<>();
         for (String key : settingsMap.keySet()) {
-            Object value = settingsMap.get(key);
+            Map setting = (Map) settingsMap.get(key);
+
+
             if ("label".equals(key)) {
-                integrationConfiguration.setLabel((String) value);
+                integrationConfiguration.setLabel((String) setting.get("value"));
             } else {
-                Object existingSetting = integrationConfiguration.getSettings().get(key);
+                IntegrationSetting existingSetting = integrationConfiguration.getSettingByName(key);
                 if (existingSetting != null) {
+                    Object value = setting.get("value");
                     // update existing setting
-                    if (!existingSetting.toString().equals(value.toString())) {
-                        integrationConfiguration.addSetting(key, value);
+                    // TODO: create method on IntegrationSetting to check for changes.
+                    if ((existingSetting.getValue() == null && value != null) || (existingSetting.getValue() != null && value == null) ||
+                            existingSetting.getValue() != null && value != null && !existingSetting.getValue().equals(value.toString())) {
+                        existingSetting.processValueTypeAndMultiple(setting.get("value"), (String) setting.get("type"),
+                                (Boolean) setting.get("multiple"));
+
                         // add to list of changed fields
                         changedKeys.add(key);
                     }
                 } else {
                     // create new setting
-                    integrationConfiguration.addSetting(key, value);
+                    existingSetting = new IntegrationSetting();
+                    existingSetting.setId(UUID.randomUUID().toString());
+                    existingSetting.setName(key);
+                    existingSetting.processValueTypeAndMultiple(setting.get("value"), (String) setting.get("type"),
+                            (Boolean) setting.get("multiple"));
+                    integrationConfiguration.addSetting(existingSetting);
+
                     // add to list of changed fields
                     changedKeys.add(key);
                 }
@@ -242,15 +256,17 @@ public class IntegrationService {
             for (String integrationId : integrationMap.keySet()) {
                 AbstractIntegration abstractIntegration = integrationMap.get(integrationId);
                 if (abstractIntegration != null) {
-                    try {
-                        abstractIntegration.setConfigurationService(integrationConfigurationService);
-                        initializeIntegration(abstractIntegration);
-                        integrationRegistry.registerIntegration(abstractIntegration);
-                        abstractIntegration.setId(integrationId);
-                        abstractIntegration.start();
-                    } catch (Exception e) {
-                        logger.warn("Exception while starting integration", e);
-                    }
+                    new Thread(() -> {
+                        try {
+                            abstractIntegration.setConfigurationService(integrationConfigurationService);
+                            initializeIntegration(abstractIntegration);
+                            integrationRegistry.registerIntegration(abstractIntegration);
+                            abstractIntegration.setId(integrationId);
+                            abstractIntegration.start();
+                        } catch (Exception e) {
+                            logger.warn("Exception while starting integration", e);
+                        }
+                    }).start();
                 }
             }
         }

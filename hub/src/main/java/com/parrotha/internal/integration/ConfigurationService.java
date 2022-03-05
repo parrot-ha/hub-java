@@ -19,10 +19,9 @@
 package com.parrotha.internal.integration;
 
 import com.parrotha.device.Protocol;
-import com.parrotha.internal.integration.IntegrationConfiguration;
 
 import java.util.Collection;
-import java.util.Map;
+import java.util.List;
 
 public interface ConfigurationService {
     void initialize();
@@ -31,13 +30,13 @@ public interface ConfigurationService {
 
     IntegrationConfiguration getIntegrationById(String id);
 
-    Map<String, Object> getIntegrationConfiguration(String integrationId);
+    List<IntegrationSetting> getIntegrationConfiguration(String integrationId);
 
     String getIntegrationConfigurationValue(String integrationId, String configurationKey);
 
-    void updateIntegrationConfigurationValue(String integrationId, String configurationKey, String configurationValue);
+    void updateIntegrationConfigurationValue(String integrationId, String configurationKey, Object configurationValue, String type, boolean multiple);
 
-    String addIntegration(Protocol protocol, String className, Map preferences);
+    String addIntegration(Protocol protocol, String className, List<IntegrationSetting> settings);
 
     boolean removeIntegration(String integrationId);
 

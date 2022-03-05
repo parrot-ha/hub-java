@@ -31,6 +31,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -41,7 +42,7 @@ public class ConfigurationServiceImpl implements ConfigurationService {
     private Map<String, IntegrationConfiguration> integrations;
 
     @Override
-    public Map<String, Object> getIntegrationConfiguration(String integrationId) {
+    public List<IntegrationSetting> getIntegrationConfiguration(String integrationId) {
         IntegrationConfiguration integrationConfiguration = getIntegrationById(integrationId);
         if (integrationConfiguration != null) {
             return integrationConfiguration.getSettings();
@@ -53,20 +54,30 @@ public class ConfigurationServiceImpl implements ConfigurationService {
     public String getIntegrationConfigurationValue(String integrationId, String configurationId) {
         IntegrationConfiguration integrationConfiguration = getIntegrationById(integrationId);
         if (integrationConfiguration != null) {
-            Object setting = integrationConfiguration.getSettingByName(configurationId);
+            IntegrationSetting setting = integrationConfiguration.getSettingByName(configurationId);
             if (setting != null) {
-                return setting.toString();
+                return setting.getValue();
             }
         }
         return null;
     }
 
     @Override
-    public void updateIntegrationConfigurationValue(String integrationId, String configurationKey, String configurationValue) {
+    public void updateIntegrationConfigurationValue(String integrationId, String configurationKey, Object configurationValue, String type,
+                                                    boolean multiple) {
         IntegrationConfiguration integrationConfiguration = getIntegrationById(integrationId);
         if (integrationConfiguration != null) {
-            integrationConfiguration.addSetting(configurationKey, configurationValue);
-            saveIntegration(integrationId);
+            IntegrationSetting setting = integrationConfiguration.getSettingByName(configurationKey);
+            if (setting != null) {
+                if (configurationValue != null) {
+                    setting.setValue(configurationValue.toString());
+                } else {
+                    setting.setValue(null);
+                }
+                setting.setType(type);
+                setting.setMultiple(multiple);
+                saveIntegration(integrationId);
+            }
         }
     }
 
@@ -88,7 +99,7 @@ public class ConfigurationServiceImpl implements ConfigurationService {
         loadIntegrations();
     }
 
-    public String addIntegration(Protocol protocol, String integrationTypeId, Map settings) {
+    public String addIntegration(Protocol protocol, String integrationTypeId, List<IntegrationSetting> settings) {
         IntegrationConfiguration integrationConfiguration = new IntegrationConfiguration();
         integrationConfiguration.setId(UUID.randomUUID().toString());
         integrationConfiguration.setProtocol(protocol);
@@ -174,7 +185,7 @@ public class ConfigurationServiceImpl implements ConfigurationService {
                     try {
                         IntegrationConfiguration integration = yaml.load(new FileInputStream(f));
                         integrationsTemp.put(integration.getId(), integration);
-                    } catch (FileNotFoundException e) {
+                    } catch (Exception e) {
                         e.printStackTrace();
                     }
                 }

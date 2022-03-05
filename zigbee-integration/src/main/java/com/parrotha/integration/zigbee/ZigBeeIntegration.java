@@ -62,7 +62,7 @@ public class ZigBeeIntegration extends DeviceIntegration implements DeviceScanIn
 
         if (keys.contains("zigbeeChannel")) {
             // change the channel of the zigbee radio
-            Object channelObj = getSetting("zigbeeChannel");
+            Object channelObj = getSettingAsString("zigbeeChannel");
             if (channelObj instanceof String && NumberUtils.isCreatable((String) channelObj)) {
                 int channel = NumberUtils.createInteger((String) channelObj);
                 if (channel > 10 && channel < 27) {
@@ -107,8 +107,8 @@ public class ZigBeeIntegration extends DeviceIntegration implements DeviceScanIn
 
     @Override
     public void start() {
-        String serialPortName = (String) getSetting("serialPortName");
-        Object serialPortFlowControl = getSetting("serialPortFlowControl");
+        String serialPortName = getSettingAsString("serialPortName");
+        Object serialPortFlowControl = getSettingAsString("serialPortFlowControl");
         ZigBeePort.FlowControl flowControl = null;
         if (serialPortFlowControl instanceof String) {
             if (((String) serialPortFlowControl).startsWith("Hardware")) {

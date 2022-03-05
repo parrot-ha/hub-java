@@ -18,14 +18,16 @@
  */
 package com.parrotha.service;
 
-import java.util.Map;
+import com.parrotha.internal.integration.IntegrationSetting;
+
+import java.util.List;
 
 public interface IntegrationConfigurationService {
     String getLabel(String integrationId);
 
-    Map<String, Object> getConfiguration(String integrationId);
+    List<IntegrationSetting> getConfiguration(String integrationId);
 
     String getConfigurationValue(String integrationId, String configurationKey);
 
-    void updateConfigurationValue(String integrationId, String configurationKey, String configurationValue);
+    void updateConfigurationValue(String integrationId, String configurationKey, Object configurationValue, String type, boolean multiple);
 }
