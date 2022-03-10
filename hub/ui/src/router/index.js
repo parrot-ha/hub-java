@@ -132,12 +132,12 @@ const routes = [
   },
   {
     path: '/extensions',
-    name: "Extensions",
+    name: 'Extensions',
     component: () => import('../views/extensions/ExtensionList.vue')
   },
   {
     path: '/ext-settings',
-    name: "ExtensionSettings",
+    name: 'ExtensionSettings',
     component: () => import('../views/extensions/ExtensionSettings.vue')
   },
   {

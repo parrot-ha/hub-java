@@ -38,20 +38,20 @@
                     <div v-if="body.type === 'text'">
                       <v-text-field
                         :label="body.title"
-                        v-model="integration.settings[body.name]"
+                        v-model="settings[body.name].value"
                       ></v-text-field>
                     </div>
                     <div v-else-if="body.type === 'enum'">
                       <v-select
                         :items="body.options"
                         :label="body.title"
-                        v-model="integration.settings[body.name]"
+                        v-model="settings[body.name].value"
                       ></v-select>
                     </div>
                     <div v-else-if="body.type === 'bool'">
                       <v-switch
                         :label="body.title"
-                        v-model="integration.settings[body.name]"
+                        v-model="settings[body.name].value"
                       ></v-switch>
                     </div>
                   </div>
@@ -245,6 +245,7 @@ export default {
       integration: {
         settings: {}
       },
+      settings: {},
       preferences: {},
       pageLayout: [],
       pageData: {},
@@ -277,8 +278,8 @@ export default {
         });
     },
     saveIntegration: function() {
-      var updatedSettings = this.integration.settings;
-      updatedSettings.label = this.integration.label;
+      var updatedSettings = this.settings;
+      updatedSettings.label = { value: this.integration.label };
       fetch(`/api/integrations/${this.integrationId}/settings`, {
         method: 'POST',
         body: JSON.stringify(updatedSettings)
@@ -451,11 +452,36 @@ export default {
           this.preferences = data;
           for (var section of data.sections) {
             for (var input of section.input) {
-              if (
-                typeof this.integration.settings[input.name] === 'undefined'
-              ) {
+              if (typeof this.settings[input.name] === 'undefined') {
                 //TODO: is empty string ok, or should it be null?
-                this.integration.settings[input.name] = '';
+                this.settings[input.name] = {
+                  name: input.name,
+                  value: input.multiple ? [] : null,
+                  type: input.type,
+                  multiple: input.multiple
+                };
+              } else {
+                // check if multiple changed
+                if (this.settings[input.name].multiple != input.multiple) {
+                  // update setting
+                  this.settings[input.name].multiple = input.multiple;
+                  // we are changing to true, check value
+                  if (input.multiple) {
+                    if (
+                      this.settings[input.name].value === null ||
+                      this.settings[input.name].value === ''
+                    ) {
+                      this.settings[input.name].value = [];
+                    } else if (
+                      !Array.isArray(this.settings[input.name].value)
+                    ) {
+                      this.settings[input.name].value = Array.from(
+                        this.settings[input.name].value
+                      );
+                    }
+                  }
+                  //TODO: handle multiple going from true to false
+                }
               }
             }
           }
@@ -477,6 +503,17 @@ export default {
       .then(data => {
         if (typeof data !== 'undefined' && data != null) {
           this.integration = data;
+          if (this.settings == null) {
+            this.settings = {};
+          }
+        }
+      });
+
+    fetch(`/api/integrations/${this.integrationId}/settings`)
+      .then(response => response.json())
+      .then(data => {
+        if (typeof data !== 'undefined' && data != null) {
+          this.settings = data;
         }
       })
       .then(this.loadPreferencesLayout());

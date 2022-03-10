@@ -20,7 +20,7 @@ package com.parrotha.internal.integration;
 
 import com.parrotha.service.IntegrationConfigurationService;
 
-import java.util.Map;
+import java.util.List;
 
 public class IntegrationConfigurationServiceImpl implements IntegrationConfigurationService {
     ConfigurationService configurationService;
@@ -35,7 +35,7 @@ public class IntegrationConfigurationServiceImpl implements IntegrationConfigura
     }
 
     @Override
-    public Map<String, Object> getConfiguration(String integrationId) {
+    public List<IntegrationSetting> getConfiguration(String integrationId) {
         return configurationService.getIntegrationConfiguration(integrationId);
     }
 
@@ -45,7 +45,7 @@ public class IntegrationConfigurationServiceImpl implements IntegrationConfigura
     }
 
     @Override
-    public void updateConfigurationValue(String integrationId, String configurationKey, String configurationValue) {
-        configurationService.updateIntegrationConfigurationValue(integrationId, configurationKey, configurationValue);
+    public void updateConfigurationValue(String integrationId, String configurationKey, Object configurationValue, String type, boolean multiple) {
+        configurationService.updateIntegrationConfigurationValue(integrationId, configurationKey, configurationValue, type, multiple);
     }
 }

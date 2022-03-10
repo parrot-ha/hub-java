@@ -20,8 +20,10 @@ package com.parrotha.internal.integration;
 
 import com.parrotha.device.Protocol;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.beans.Transient;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
 
 public class IntegrationConfiguration {
     private String id;
@@ -30,10 +32,35 @@ public class IntegrationConfiguration {
     private String className;
     private Protocol protocol;
 
+    private ArrayList<IntegrationSetting> settings;
+
     private transient String name;
     private transient String description;
+    private transient LinkedHashMap<String, IntegrationSetting> nameToSettingMap;
 
-    private Map<String, Object> settings;
+
+    @Transient
+    public synchronized LinkedHashMap<String, IntegrationSetting> getNameToSettingMap() {
+        if (nameToSettingMap == null && settings != null) {
+            LinkedHashMap<String, IntegrationSetting> newNameToSettingMap = new LinkedHashMap<>();
+            for (IntegrationSetting setting : this.settings) {
+                newNameToSettingMap.put(setting.getName(), setting);
+            }
+            nameToSettingMap = newNameToSettingMap;
+        } else if (settings == null) {
+            nameToSettingMap = new LinkedHashMap<>();
+        }
+        return nameToSettingMap;
+    }
+
+    @Transient
+    public IntegrationSetting getSettingByName(String name) {
+        if (getNameToSettingMap() != null) {
+            return getNameToSettingMap().get(name);
+        } else {
+            return null;
+        }
+    }
 
     public String getId() {
         return id;
@@ -75,27 +102,25 @@ public class IntegrationConfiguration {
         this.protocol = protocol;
     }
 
-    public Map<String, Object> getSettings() {
+    public List<IntegrationSetting> getSettings() {
         return settings;
     }
 
-    public void setSettings(Map<String, Object> settings) {
-        this.settings = settings;
+    public void setSettings(List<IntegrationSetting> settings) {
+        if (settings != null) {
+            this.settings = new ArrayList<>(settings);
+        }
     }
 
-    public void addSetting(String name, Object value) {
+    public void addSetting(IntegrationSetting setting) {
         if (this.settings == null) {
-            this.settings = new HashMap<>();
+            this.settings = new ArrayList<>();
         }
-        this.settings.put(name, value);
-    }
-
-    public Object getSettingByName(String name) {
-        if (this.settings != null) {
-            return this.settings.get(name);
-        } else {
-            return null;
+        if (nameToSettingMap == null) {
+            this.nameToSettingMap = new LinkedHashMap<>();
         }
+        this.settings.add(setting);
+        this.nameToSettingMap.put(setting.getName(), setting);
     }
 
     public String getName() {

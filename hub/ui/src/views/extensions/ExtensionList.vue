@@ -8,15 +8,16 @@
             <v-card-text>
               <router-link :to="{ name: 'ExtensionAdd' }"
                 >Add Extension</router-link
-              >
+              ><br />
               <router-link :to="{ name: 'ExtensionSettings' }"
                 >Extension Settings</router-link
               >
               <v-simple-table>
                 <thead>
                   <tr>
-                    <th scope="col" style="width:48%">Name</th>
-                    <th scope="col" style="width:52%">Description</th>
+                    <th scope="col" style="width:20%">Name</th>
+                    <th scope="col" style="width:40%">Description</th>
+                    <th scope="col" style="width:40%">Location</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -27,9 +28,11 @@
                           name: 'Extension',
                           params: { id: extension.id }
                         }"
-                        >{{ extension.name }}</router-link>
+                        >{{ extension.name }}</router-link
+                      >
                     </td>
                     <td>{{ extension.description }}</td>
+                    <td>{{ extension.location }}</td>
                   </tr>
                 </tbody>
               </v-simple-table>

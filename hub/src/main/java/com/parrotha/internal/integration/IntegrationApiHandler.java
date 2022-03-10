@@ -19,20 +19,21 @@
 package com.parrotha.internal.integration;
 
 import com.parrotha.integration.DeviceIntegration;
-import groovy.json.JsonBuilder;
-import groovy.json.JsonSlurper;
-import io.javalin.Javalin;
-import com.parrotha.integration.extension.DeviceScanIntegrationExtension;
 import com.parrotha.integration.extension.DeviceExcludeIntegrationExtension;
+import com.parrotha.integration.extension.DeviceScanIntegrationExtension;
 import com.parrotha.integration.extension.ItemListIntegrationExtension;
 import com.parrotha.integration.extension.ResetIntegrationExtension;
 import com.parrotha.internal.BaseApiHandler;
+import groovy.json.JsonBuilder;
+import groovy.json.JsonSlurper;
+import io.javalin.Javalin;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class IntegrationApiHandler extends BaseApiHandler {
     IntegrationService integrationService;
@@ -75,7 +76,7 @@ public class IntegrationApiHandler extends BaseApiHandler {
                                             integration.getLabel() != null ? integration.getLabel() : integration.getName());
                                     break;
                                 case "tags":
-                                    integrationMap.put("tags", ((DeviceIntegration)abstractIntegration).getTags());
+                                    integrationMap.put("tags", ((DeviceIntegration) abstractIntegration).getTags());
                             }
                         }
 
@@ -127,7 +128,7 @@ public class IntegrationApiHandler extends BaseApiHandler {
                 integrationModel.put("label", abstractIntegration.getLabel());
 
                 integrationModel.put("information", abstractIntegration.getDisplayInformation());
-                integrationModel.put("settings", abstractIntegration.getSettings());
+//                integrationModel.put("settings", abstractIntegration.getSettings());
 
                 Map<String, Map> features = new HashMap<>();
                 if (abstractIntegration instanceof DeviceScanIntegrationExtension) {
@@ -149,6 +150,23 @@ public class IntegrationApiHandler extends BaseApiHandler {
             ctx.status(200);
             ctx.contentType("application/json");
             ctx.result(new JsonBuilder(integrationModel).toString());
+        });
+
+        app.get("/api/integrations/:id/settings", ctx -> {
+            String id = ctx.pathParam("id");
+            Map<String, Map> settingsMap = new HashMap<>();
+            AbstractIntegration abstractIntegration = integrationService.getIntegrationById(id);
+
+            if (abstractIntegration != null) {
+                List<IntegrationSetting> settings = abstractIntegration.getSettings();
+                if (settings != null) {
+                    settingsMap = settings.stream().
+                            collect(Collectors.toMap(data -> data.getName(), data -> data.toMap(true)));
+                }
+            }
+            ctx.status(200);
+            ctx.contentType("application/json");
+            ctx.result(new JsonBuilder(settingsMap).toString());
         });
 
         app.delete("/api/integrations/:id", ctx -> {

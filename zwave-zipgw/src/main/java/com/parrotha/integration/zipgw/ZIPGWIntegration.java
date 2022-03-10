@@ -50,25 +50,25 @@ public class ZIPGWIntegration extends DeviceIntegration implements DeviceExclude
     @Override
     public void start() {
 
-        boolean disabled = "true".equals(getSetting("disabled"));
+        boolean disabled = "true".equals(getSettingAsString("disabled"));
         if (disabled) {
             return;
         }
 
-        String address = getSetting("zipGWAddress");
+        String address = getSettingAsString("zipGWAddress");
         // default address of z/ip gateway from config file
         if (address == null || address.length() == 0) {
             address = "fd00:aaaa::3";
         }
 
-        String pskPassword = getSetting("pskPassword");
+        String pskPassword = getSettingAsString("pskPassword");
         // default psk of z/ip gateway from config file
         if (pskPassword == null || pskPassword.length() == 0) {
             pskPassword = "123456789012345678901234567890AA";
         }
 
         // make this true by default unless user specifies false
-        boolean useDtls = !"false".equals(getSetting("useDtls"));
+        boolean useDtls = !"false".equals(getSettingAsString("useDtls"));
 
         zipgwHandler = new ZIPGWHandler(this, address, pskPassword, useDtls);
         try {

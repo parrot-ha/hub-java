@@ -304,6 +304,8 @@ public class DeviceYamlDataStore implements DeviceDataStore {
                         }
                     } catch (FileNotFoundException e) {
                         e.printStackTrace();
+                    } catch (Exception e) {
+                        e.printStackTrace();
                     }
                 }
             }

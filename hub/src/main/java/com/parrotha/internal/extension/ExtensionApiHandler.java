@@ -22,5 +22,9 @@ public class ExtensionApiHandler extends BaseApiHandler {
             ctx.contentType("application/json");
             ctx.result(new JsonBuilder(extensionList).toString());
         });
+
+        app.get("/api/extensions/locations", ctx -> {
+
+        });
     }
 }

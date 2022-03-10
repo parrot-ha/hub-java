@@ -125,7 +125,7 @@ public class LutronIntegration extends DeviceIntegration implements TelnetInputL
 
     @Override
     public void start() {
-        String bridgeAddress = getSetting("bridgeAddress");
+        String bridgeAddress = getSettingAsString("bridgeAddress");
         if (bridgeAddress != null && bridgeAddress.length() > 0) {
             tc = new TelnetClient("VT100");
             tc.registerInputListener(this);
