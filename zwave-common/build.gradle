@@ -10,7 +10,19 @@ publishing {
     publications {
         maven(MavenPublication) {
             groupId = 'com.parrotha'
+            artifactId = 'parrothub-zwave-common'
             from components.java
+        }
+    }
+
+    repositories {
+        maven {
+            name = "GitHubPackages"
+            url = "https://maven.pkg.github.com/parrot-ha/hub"
+            credentials {
+                username = System.getenv("GITHUB_ACTOR")
+                password = System.getenv("GITHUB_TOKEN")
+            }
         }
     }
 }
