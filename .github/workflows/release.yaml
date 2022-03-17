@@ -1,4 +1,4 @@
-name: release
+name: Release
 
 on:
   push:
@@ -27,7 +27,13 @@ jobs:
         working-directory: ./hub/ui
       - name: Build with Gradle
         run: ./gradlew build
-      - name: Release
+      - name: Upload Release
         uses: softprops/action-gh-release@v1
         with:
           files: ./hub/build/distributions/parrot-hub-*.zip
+      - name: Publish Package
+        uses: gradle/gradle-build-action@v2
+        with:
+          arguments: publish
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
