@@ -346,13 +346,7 @@ public class IntegrationService {
                         .forName((String) integrationTypeMap.get(integrationTypeId).get("className"), true, integrationClassLoader)
                         .asSubclass(AbstractIntegration.class);
                 abstractIntegration = integrationClass.getDeclaredConstructor().newInstance();
-            } catch (ClassNotFoundException | NoSuchMethodException e) {
-                e.printStackTrace();
-            } catch (InvocationTargetException e) {
-                e.printStackTrace();
-            } catch (InstantiationException e) {
-                e.printStackTrace();
-            } catch (IllegalAccessException e) {
+            } catch (Exception e) {
                 e.printStackTrace();
             }
         }
