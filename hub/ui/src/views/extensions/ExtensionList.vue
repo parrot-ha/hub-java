@@ -6,36 +6,100 @@
           <v-card>
             <v-card-title>Extensions</v-card-title>
             <v-card-text>
-              <router-link :to="{ name: 'ExtensionAdd' }"
-                >Add Extension</router-link
-              ><br />
-              <router-link :to="{ name: 'ExtensionSettings' }"
-                >Extension Settings</router-link
-              >
-              <v-simple-table>
-                <thead>
-                  <tr>
-                    <th scope="col" style="width:20%">Name</th>
-                    <th scope="col" style="width:40%">Description</th>
-                    <th scope="col" style="width:40%">Location</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr v-for="extension in extensions" :key="extension.id">
-                    <td>
-                      <router-link
-                        :to="{
-                          name: 'Extension',
-                          params: { id: extension.id }
-                        }"
-                        >{{ extension.name }}</router-link
-                      >
-                    </td>
-                    <td>{{ extension.description }}</td>
-                    <td>{{ extension.location }}</td>
-                  </tr>
-                </tbody>
-              </v-simple-table>
+              <v-tabs v-model="tab">
+                <v-tab>Installed</v-tab>
+                <v-tab>Available</v-tab>
+                <v-tab>Settings</v-tab>
+              </v-tabs>
+              <v-tabs-items v-model="tab">
+                <v-tab-item>
+                  <v-card>
+                    <v-card-text
+                      >Installed Extensions
+                      <v-simple-table>
+                        <thead>
+                          <tr>
+                            <th scope="col" style="width:20%">Name</th>
+                            <th scope="col" style="width:40%">Description</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr
+                            v-for="extension in extensions.installed"
+                            :key="extension.id"
+                          >
+                            <td>
+                              <router-link
+                                :to="{
+                                  name: 'Extension',
+                                  params: { id: extension.id }
+                                }"
+                                >{{ extension.name }}</router-link
+                              >
+                            </td>
+                            <td>{{ extension.description }}</td>
+                          </tr>
+                        </tbody>
+                      </v-simple-table>
+                    </v-card-text>
+                  </v-card>
+                </v-tab-item>
+                <v-tab-item>
+                  <v-card>
+                    <v-card-text
+                      >Available Extensions
+                      <v-simple-table>
+                        <thead>
+                          <tr>
+                            <th scope="col" style="width:20%">Name</th>
+                            <th scope="col" style="width:40%">Description</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr
+                            v-for="extension in extensions.available"
+                            :key="extension.id"
+                          >
+                            <td>
+                              <router-link
+                                :to="{
+                                  name: 'Extension',
+                                  params: { id: extension.id }
+                                }"
+                                >{{ extension.name }}</router-link
+                              >
+                            </td>
+                            <td>{{ extension.description }}</td>
+                          </tr>
+                        </tbody>
+                      </v-simple-table>
+                    </v-card-text>
+                  </v-card>
+                </v-tab-item>
+                <v-tab-item>
+                  <v-card>
+                    <v-card-text
+                      >Settings
+                      <v-simple-table>
+                        <thead>
+                          <tr>
+                            <th scope="col" style="width:20%">Name</th>
+                            <th scope="col" style="width:20%">Type</th>
+                            <th scope="col" style="width:60%">Location</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr v-for="setting in settings" :key="setting.id">
+                            <td>{{ setting.name }}</td>
+                            <td>{{ setting.type }}</td>
+                            <td>{{ setting.location }}</td>
+                          </tr>
+                        </tbody>
+                      </v-simple-table>
+                    </v-card-text>
+                  </v-card>
+                </v-tab-item>
+              </v-tabs-items>
             </v-card-text>
             <v-card-actions> </v-card-actions>
           </v-card>
@@ -49,7 +113,12 @@ export default {
   name: 'ExtensionList',
   data() {
     return {
-      extensions: []
+      tab: null,
+      extensions: {
+        installed: [],
+        available: []
+      },
+      settings: []
     };
   },
   mounted: function() {
@@ -58,6 +127,13 @@ export default {
       .then(data => {
         if (typeof data !== 'undefined' && data != null) {
           this.extensions = data;
+        }
+      });
+    fetch('/api/extensions/settings')
+      .then(response => response.json())
+      .then(data => {
+        if (typeof data !== 'undefined' && data != null) {
+          this.settings = data;
         }
       });
   }

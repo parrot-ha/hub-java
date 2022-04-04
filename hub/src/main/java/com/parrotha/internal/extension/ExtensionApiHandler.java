@@ -20,8 +20,11 @@ package com.parrotha.internal.extension;
 
 import com.parrotha.internal.BaseApiHandler;
 import groovy.json.JsonBuilder;
+import groovy.json.JsonSlurper;
 import io.javalin.Javalin;
+import org.apache.commons.lang3.StringUtils;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -51,13 +54,63 @@ public class ExtensionApiHandler extends BaseApiHandler {
             ctx.result(new JsonBuilder(extensions).toString());
         });
 
-        app.get("/api/extensions/locations", ctx -> {
-            List extensionLocations = extensionService.getExtensionLocations();
+        app.get("/api/extensions/settings", ctx -> {
+            List extensionLocations = extensionService.getExtensionSettings();
 
             ctx.status(200);
             ctx.contentType("application/json");
             ctx.result(new JsonBuilder(extensionLocations).toString());
         });
 
+        app.post("/api/extensions/settings", ctx -> {
+            boolean settingAdded = false;
+            String body = ctx.body();
+            String settingId = null;
+
+            if (StringUtils.isNotBlank(body)) {
+                Object jsonBodyObj = new JsonSlurper().parseText(body);
+                if (jsonBodyObj instanceof Map) {
+                    Map<String, Object> jsonBodyMap = (Map<String, Object>) jsonBodyObj;
+                    Map<String, Object> settingMap = (Map<String, Object>) jsonBodyMap.get("setting");
+
+                    String settingName = null;
+                    if (settingMap.containsKey("name")) {
+                        settingName = (String) settingMap.get("name");
+                    }
+                    String settingType = null;
+                    if (settingMap.containsKey("type")) {
+                        settingType = (String) settingMap.get("type");
+                    }
+                    String settingLocation = null;
+                    if (settingMap.containsKey("location")) {
+                        settingLocation = (String) settingMap.get("location");
+                    }
+
+                    if (StringUtils.isNotBlank(settingName) && StringUtils.isNotBlank(settingType) && StringUtils.isNotBlank(settingLocation)) {
+                        settingId = extensionService.addSetting(settingName, settingType, settingLocation);
+                        settingAdded = settingId != null;
+                    } else {
+                        settingAdded = false;
+                    }
+                }
+            }
+
+            Map<String, Object> model = new HashMap<>();
+            model.put("success", settingAdded);
+            if (settingAdded) {
+                model.put("settingId", settingId);
+            }
+            ctx.status(200);
+            ctx.contentType("application/json");
+            ctx.result(new JsonBuilder(model).toString());
+        });
+
+        app.patch("/api/extensions/settings/:id", ctx -> {
+            String id = ctx.pathParam("id");
+            //TODO: pass rest of values
+            extensionService.updateSetting(id, null, null, null);
+
+
+        });
     }
 }

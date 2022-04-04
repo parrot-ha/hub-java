@@ -18,6 +18,7 @@
  */
 package com.parrotha.internal.extension;
 
+import com.parrotha.internal.common.FileSystemUtils;
 import groovy.json.JsonBuilder;
 import groovy.json.JsonSlurper;
 import org.apache.commons.io.IOUtils;
@@ -42,6 +43,17 @@ import java.util.Map;
 public class ExtensionService {
     private List<Map<String, String>> extensionsList;
     private List<Map> availableExtensionsList;
+
+    private ExtensionDataStore extensionDataStore;
+
+    public ExtensionService() {
+        this.extensionDataStore = new ExtensionYamlDataStore();
+    }
+
+    public ExtensionService(ExtensionDataStore extensionDataStore) {
+        this.extensionDataStore = extensionDataStore;
+    }
+
 
     public List getInstalledExtensions() {
         if (extensionsList == null) {
@@ -93,21 +105,25 @@ public class ExtensionService {
         return tmpAvailableExtensionsList;
     }
 
-    public List<Map> getExtensionLocations() {
-        //TODO: make this configurable from UI
-        List extensionLocations = new ArrayList();
-        extensionLocations.add(Map.of("name", "Zwave-JS",
-                "type", "GithubRelease",
-                "location", "parrot-ha/zwavejs-integration"));
+    private Map<String, Map> extensionSettings;
 
-        return extensionLocations;
+    public List getExtensionSettings() {
+        return extensionDataStore.getExtensionSettings();
+    }
+
+    public String addSetting(String name, String type, String location) {
+        return extensionDataStore.addSetting(name, type, location);
+    }
+
+    public boolean updateSetting(String id, String name, String type, String location) {
+        return extensionDataStore.updateSetting(id, name, type, location);
     }
 
     public List refreshExtensionList() {
-        createDirectory("./extensions");
-        createDirectory("./extensions/.extensions");
+        FileSystemUtils.createDirectory("./extensions");
+        FileSystemUtils.createDirectory("./extensions/.extensions");
 
-        List<Map> extLocs = getExtensionLocations();
+        List<Map> extLocs = getExtensionSettings();
 
         for (Map extLoc : extLocs) {
             String type = (String) extLoc.get("type");
@@ -132,7 +148,7 @@ public class ExtensionService {
                             Map extensionInformation = yaml.load(extInfStr);
                             String extensionId = (String) extensionInformation.get("id");
 
-                            createDirectory("./extensions/.extensions/" + extensionId);
+                            FileSystemUtils.createDirectory("./extensions/.extensions/" + extensionId);
 
                             File file = new File("./extensions/.extensions/" + extensionId + "/extensionInformation.yaml");
                             FileOutputStream fos = new FileOutputStream(file);
@@ -154,13 +170,6 @@ public class ExtensionService {
         }
 
         return null;
-    }
-
-    private void createDirectory(String directory) {
-        File directoryFile = new File(directory);
-        if (!directoryFile.exists()) {
-            directoryFile.mkdir();
-        }
     }
 
 
