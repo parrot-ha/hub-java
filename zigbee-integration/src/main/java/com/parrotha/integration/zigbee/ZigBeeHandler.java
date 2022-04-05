@@ -18,6 +18,7 @@
  */
 package com.parrotha.integration.zigbee;
 
+import com.parrotha.internal.utils.HexUtils;
 import com.zsmartsystems.zigbee.*;
 import com.zsmartsystems.zigbee.app.basic.ZigBeeBasicServerExtension;
 import com.zsmartsystems.zigbee.app.discovery.ZigBeeDiscoveryExtension;
@@ -51,7 +52,6 @@ import com.zsmartsystems.zigbee.zcl.clusters.ZclWindowCoveringCluster;
 import com.zsmartsystems.zigbee.zdo.ZdoStatus;
 import com.zsmartsystems.zigbee.zdo.command.SimpleDescriptorResponse;
 import org.apache.commons.lang3.StringUtils;
-import com.parrotha.internal.utils.HexUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -70,6 +70,9 @@ public class ZigBeeHandler implements ZigBeeNetworkStateListener, ZigBeeAnnounce
     private String serialPortName = "/dev/ttyUSB1";
     private int serialBaud = 57600;
     private ZigBeePort.FlowControl flowControl = ZigBeePort.FlowControl.FLOWCONTROL_OUT_RTSCTS;
+    // flag for keeping track of the state of the zigbee integration
+    private boolean running = false;
+    private int restartCount = 0;
 
     private ZigBeeNetworkManager networkManager;
     private ZigBeeIntegration zigBeeIntegration;
@@ -78,13 +81,15 @@ public class ZigBeeHandler implements ZigBeeNetworkStateListener, ZigBeeAnnounce
 
 
     public ZigBeeHandler(String serialPortName, int serialBaud, ZigBeePort.FlowControl flowControl, ZigBeeIntegration zigBeeIntegration) {
-        if (serialPortName != null)
+        if (serialPortName != null) {
             this.serialPortName = serialPortName;
+        }
         if (flowControl != null) {
             this.flowControl = flowControl;
         }
-        if (serialBaud > 0)
+        if (serialBaud > 0) {
             this.serialBaud = serialBaud;
+        }
         this.zigBeeIntegration = zigBeeIntegration;
     }
 
@@ -126,9 +131,14 @@ public class ZigBeeHandler implements ZigBeeNetworkStateListener, ZigBeeAnnounce
     @Override
     public void commandReceived(ZigBeeCommand command) {
         if (command instanceof SimpleDescriptorResponse && ((SimpleDescriptorResponse) command).getStatus() == ZdoStatus.SUCCESS) {
-            if (simpleDescriptorResponseMap == null) simpleDescriptorResponseMap = new HashMap<>();
-            String simpleDescriptorSource = String.format("%04X/%d", command.getSourceAddress().getAddress(), ((SimpleDescriptorResponse) command).getSimpleDescriptor().getEndpoint());
-            if (logger.isDebugEnabled()) logger.debug("Got simple descriptor response for " + simpleDescriptorSource);
+            if (simpleDescriptorResponseMap == null) {
+                simpleDescriptorResponseMap = new HashMap<>();
+            }
+            String simpleDescriptorSource = String.format("%04X/%d", command.getSourceAddress().getAddress(),
+                    ((SimpleDescriptorResponse) command).getSimpleDescriptor().getEndpoint());
+            if (logger.isDebugEnabled()) {
+                logger.debug("Got simple descriptor response for " + simpleDescriptorSource);
+            }
             simpleDescriptorResponseMap.put(simpleDescriptorSource, (SimpleDescriptorResponse) command);
         }
     }
@@ -163,6 +173,7 @@ public class ZigBeeHandler implements ZigBeeNetworkStateListener, ZigBeeAnnounce
     }
 
     public void startWithReset(boolean resetNetwork) {
+        running = true;
         this.networkManager = initializeZigbee(resetNetwork);
         if (this.networkManager != null) {
             this.networkManager.addNetworkStateListener(this);
@@ -173,8 +184,10 @@ public class ZigBeeHandler implements ZigBeeNetworkStateListener, ZigBeeAnnounce
     }
 
     public void stop() {
-        if (networkManager != null)
+        running = false;
+        if (networkManager != null) {
             networkManager.shutdown();
+        }
         networkManager = null;
     }
 
@@ -186,7 +199,14 @@ public class ZigBeeHandler implements ZigBeeNetworkStateListener, ZigBeeAnnounce
 
     @Override
     public void networkStateUpdated(ZigBeeNetworkState state) {
-
+        logger.info("Network State Updated: " + state.toString());
+        if (state == ZigBeeNetworkState.ONLINE) {
+            this.restartCount = 0;
+        } else if (state == ZigBeeNetworkState.SHUTDOWN && this.running && this.restartCount < 5) {
+            // zigbee shutdown, but it should be running
+            this.restartCount++;
+            this.startWithReset(false);
+        }
     }
 
     @Override
@@ -261,12 +281,14 @@ public class ZigBeeHandler implements ZigBeeNetworkStateListener, ZigBeeAnnounce
                 SimpleDescriptorResponse simpleDescriptorResponse = simpleDescriptorResponseMap.get(simpleDescriptorSource);
 
                 if (simpleDescriptorResponse.getSimpleDescriptor().getInputClusterList().size() > 0) {
-                    fingerprint.put("inClusters", HexUtils.integerArrayToHexStringCommaDelimited(simpleDescriptorResponse.getSimpleDescriptor().getInputClusterList(), 2));
+                    fingerprint.put("inClusters",
+                            HexUtils.integerArrayToHexStringCommaDelimited(simpleDescriptorResponse.getSimpleDescriptor().getInputClusterList(), 2));
                 } else {
                     fingerprint.put("inClusters", "");
                 }
                 if (simpleDescriptorResponse.getSimpleDescriptor().getOutputClusterList().size() > 0) {
-                    fingerprint.put("outClusters", HexUtils.integerArrayToHexStringCommaDelimited(simpleDescriptorResponse.getSimpleDescriptor().getOutputClusterList(), 2));
+                    fingerprint.put("outClusters",
+                            HexUtils.integerArrayToHexStringCommaDelimited(simpleDescriptorResponse.getSimpleDescriptor().getOutputClusterList(), 2));
                 } else {
                     fingerprint.put("outClusters", "");
                 }
@@ -304,7 +326,8 @@ public class ZigBeeHandler implements ZigBeeNetworkStateListener, ZigBeeAnnounce
                 if (StringUtils.isNotBlank(model)) {
                     deviceData.put("model", model);
                 }
-                zigBeeIntegration.addDevice(deviceHandlerInfo[0], deviceHandlerInfo[1], HexUtils.integerToHexString(node.getNetworkAddress(), 2), deviceData, additionalParams);
+                zigBeeIntegration.addDevice(deviceHandlerInfo[0], deviceHandlerInfo[1], HexUtils.integerToHexString(node.getNetworkAddress(), 2),
+                        deviceData, additionalParams);
                 return;
             }
         }
@@ -315,8 +338,9 @@ public class ZigBeeHandler implements ZigBeeNetworkStateListener, ZigBeeAnnounce
         ZclAttribute zclAttribute = zigBeeEndpoint.getInputCluster(0).getAttribute(attributeId);
         if (zclAttribute != null) {
             Object attributeValue = zclAttribute.readValue(5000);
-            if (attributeValue != null)
+            if (attributeValue != null) {
                 value = attributeValue.toString();
+            }
         }
         return value;
     }
