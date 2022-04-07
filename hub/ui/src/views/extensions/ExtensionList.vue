@@ -78,8 +78,7 @@
                 </v-tab-item>
                 <v-tab-item>
                   <v-card>
-                    <v-card-text
-                      >Settings
+                    <v-card-text>
                       <v-simple-table>
                         <thead>
                           <tr>
