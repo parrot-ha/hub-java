@@ -202,7 +202,7 @@ public class ZigBeeHandler implements ZigBeeNetworkStateListener, ZigBeeAnnounce
         logger.info("Network State Updated: " + state.toString());
         if (state == ZigBeeNetworkState.ONLINE) {
             this.restartCount = 0;
-        } else if (state == ZigBeeNetworkState.SHUTDOWN && this.running && this.restartCount < 5) {
+        } else if ((state == ZigBeeNetworkState.OFFLINE || state == ZigBeeNetworkState.SHUTDOWN) && this.running && this.restartCount < 5) {
             // zigbee shutdown, but it should be running
             this.restartCount++;
             this.startWithReset(false);
