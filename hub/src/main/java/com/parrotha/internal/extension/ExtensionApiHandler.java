@@ -24,6 +24,7 @@ import groovy.json.JsonSlurper;
 import io.javalin.Javalin;
 import org.apache.commons.lang3.StringUtils;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -37,6 +38,10 @@ public class ExtensionApiHandler extends BaseApiHandler {
 
     @Override
     public void setupApi(Javalin app) {
+        app.get("/api/extensions/clear", ctx -> {
+            extensionService.clearExtensions();
+        });
+
         app.get("/api/extensions", ctx -> {
             boolean refresh = ctx.queryParam("refresh", "false").equals("true");
 
@@ -45,16 +50,28 @@ public class ExtensionApiHandler extends BaseApiHandler {
                 extensionService.refreshExtensionList();
             }
 
-            List extensionList = extensionService.getInstalledExtensions();
-            List availableExtensions = extensionService.getAvailableExtensions();
+            Collection<Map> extensions = extensionService.getExtensionList();
 
-            Map extensions = Map.of("installed", extensionList, "available", availableExtensions);
             ctx.status(200);
             ctx.contentType("application/json");
             ctx.result(new JsonBuilder(extensions).toString());
         });
 
-        app.get("/api/extensions/settings", ctx -> {
+        app.post("/api/extensions/:id", ctx -> {
+            String id = ctx.pathParam("id");
+            if ("download".equals(ctx.queryParam("action"))) {
+                // download extension
+                extensionService.downloadExtension(id);
+            }
+
+            ctx.status(201);
+        });
+
+        app.get("/api/extensions/:id/status", ctx -> {
+
+        });
+
+        app.get("/api/extension_settings", ctx -> {
             List extensionLocations = extensionService.getExtensionSettings();
 
             ctx.status(200);
@@ -62,7 +79,7 @@ public class ExtensionApiHandler extends BaseApiHandler {
             ctx.result(new JsonBuilder(extensionLocations).toString());
         });
 
-        app.post("/api/extensions/settings", ctx -> {
+        app.post("/api/extension_settings", ctx -> {
             boolean settingAdded = false;
             String body = ctx.body();
             String settingId = null;
@@ -105,7 +122,7 @@ public class ExtensionApiHandler extends BaseApiHandler {
             ctx.result(new JsonBuilder(model).toString());
         });
 
-        app.patch("/api/extensions/settings/:id", ctx -> {
+        app.patch("/api/extension_settings/:id", ctx -> {
             String id = ctx.pathParam("id");
             //TODO: pass rest of values
             extensionService.updateSetting(id, null, null, null);

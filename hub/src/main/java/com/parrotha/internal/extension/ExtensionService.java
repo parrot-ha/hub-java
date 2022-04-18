@@ -21,7 +21,9 @@ package com.parrotha.internal.extension;
 import com.parrotha.internal.common.FileSystemUtils;
 import groovy.json.JsonBuilder;
 import groovy.json.JsonSlurper;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.yaml.snakeyaml.Yaml;
 
 import java.io.File;
@@ -33,17 +35,14 @@ import java.io.FilenameFilter;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.net.URLClassLoader;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 public class ExtensionService {
-    private List<Map<String, String>> extensionsList;
-    private List<Map> availableExtensionsList;
-
     private ExtensionDataStore extensionDataStore;
 
     public ExtensionService() {
@@ -54,58 +53,27 @@ public class ExtensionService {
         this.extensionDataStore = extensionDataStore;
     }
 
-
-    public List getInstalledExtensions() {
-        if (extensionsList == null) {
-            loadExtensions();
-        }
-        return extensionsList;
+    public void clearExtensions() {
+        this.extensions.clear();
+        this.extensions = null;
     }
 
+    private Map<String, Map> extensions;
 
-    synchronized public List getAvailableExtensions() {
-        if (availableExtensionsList == null) {
-            availableExtensionsList = loadAvailableExtensions();
-        }
-        return availableExtensionsList;
+    public Map getExtension(String id) {
+        return getExtensions().get(id);
     }
 
-    private List loadAvailableExtensions() {
-        List<Map> tmpAvailableExtensionsList = new ArrayList<>();
-        File extensionDirectory = new File("./extensions/.extensions");
-        if (extensionDirectory.isDirectory()) {
-            File extDirs[] = extensionDirectory.listFiles(new FileFilter() {
-                @Override
-                public boolean accept(File file) {
-                    return file.isDirectory();
-                }
-            });
-
-            for (File extDir : extDirs) {
-
-                File[] extInfFiles = extDir.listFiles(new FilenameFilter() {
-                    @Override
-                    public boolean accept(File file, String s) {
-                        return "extensionInformation.yaml".equals(s);
-                    }
-                });
-
-                if (extInfFiles.length > 0) {
-                    File extInfFile = extInfFiles[0];
-                    Yaml yaml = new Yaml();
-                    try {
-                        Map extInf = yaml.load(new FileInputStream(extInfFile));
-                        tmpAvailableExtensionsList.add(extInf);
-                    } catch (FileNotFoundException e) {
-                        e.printStackTrace();
-                    }
-                }
-            }
-        }
-        return tmpAvailableExtensionsList;
+    public Collection<Map> getExtensionList() {
+        return getExtensions().values();
     }
 
-    private Map<String, Map> extensionSettings;
+    public synchronized Map<String, Map> getExtensions() {
+        if (extensions == null) {
+            extensions = loadExtensions();
+        }
+        return extensions;
+    }
 
     public List getExtensionSettings() {
         return extensionDataStore.getExtensionSettings();
@@ -117,6 +85,42 @@ public class ExtensionService {
 
     public boolean updateSetting(String id, String name, String type, String location) {
         return extensionDataStore.updateSetting(id, name, type, location);
+    }
+
+    public boolean downloadExtension(String id) {
+        Map extension = getExtension(id);
+        for (String key : ((Map<String, Object>) extension).keySet()) {
+            System.out.println("key: [" + key + "] value: [" + extension.get(key) + "]");
+        }
+        //TODO: handle other extension types
+        File file = new File("./extensions/.extensions/" + id + "/githubReleaseInformation.json");
+        if (file.exists()) {
+            Object githubInfoObject = new JsonSlurper().parse(file);
+            if (githubInfoObject instanceof Map) {
+                Map githubInfo = (Map) githubInfoObject;
+                List<Map> assetList = (List<Map>) githubInfo.get("assets");
+
+                FileSystemUtils.createDirectory("./extensions/" + id);
+
+                for (Map asset : assetList) {
+                    String assetName = (String) asset.get("name");
+                    if (!"extensionInformation.yaml".equals(assetName) && !"integrationInformation.yaml".equals(assetName)) {
+                        String extFileUrlStr = (String) asset.get("browser_download_url");
+                        try {
+                            FileUtils.copyURLToFile(new URL(extFileUrlStr), new File("./extensions/" + id + "/" + assetName));
+
+                            // extract file if zip
+                            if (assetName.endsWith(".zip")) {
+                                FileSystemUtils.unzipFile("./extensions/" + id + "/" + assetName, "./extensions/" + id);
+                            }
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+            }
+        }
+        return false;
     }
 
     public List refreshExtensionList() {
@@ -143,7 +147,6 @@ public class ExtensionService {
                         if ("extensionInformation.yaml".equals(assetName)) {
                             String extInfUrlStr = (String) asset.get("browser_download_url");
                             String extInfStr = IOUtils.toString(new URL(extInfUrlStr), "UTF8");
-                            System.out.println(extInfStr);
                             Yaml yaml = new Yaml();
                             Map extensionInformation = yaml.load(extInfStr);
                             String extensionId = (String) extensionInformation.get("id");
@@ -173,7 +176,8 @@ public class ExtensionService {
     }
 
 
-    private void loadExtensions() {
+    private synchronized Map<String, Map> loadExtensions() {
+        // load extensions from file system
         File extensionDirectory = new File("./extensions");
         if (!extensionDirectory.exists()) {
             extensionDirectory.mkdir();
@@ -185,35 +189,81 @@ public class ExtensionService {
             }
         });
 
-        List<Map<String, String>> extensions = new ArrayList<>();
+        Map<String, Map> tmpExtensions = new HashMap<>();
         for (File extDir : extDirs) {
-            try {
-                File jarFiles[] = extDir.listFiles(new FileFilter() {
+            tmpExtensions.putAll(loadJarFiles(extDir));
+        }
+
+        // load extensions from configuration directory
+        File availableExtensionDirectory = new File("./extensions/.extensions");
+        if (availableExtensionDirectory.isDirectory()) {
+            File avExtDirs[] = availableExtensionDirectory.listFiles(new FileFilter() {
+                @Override
+                public boolean accept(File file) {
+                    return file.isDirectory();
+                }
+            });
+
+            for (File extDir : avExtDirs) {
+                File[] extInfFiles = extDir.listFiles(new FilenameFilter() {
                     @Override
-                    public boolean accept(File file) {
-                        return file.getName().endsWith(".jar");
+                    public boolean accept(File file, String s) {
+                        return "extensionInformation.yaml".equals(s);
                     }
                 });
-                ArrayList<URL> urls = new ArrayList<>();
-                urls.add(extDir.toURI().toURL());
-                for (File jarFile : jarFiles) {
-                    urls.add(jarFile.toURI().toURL());
+
+                if (extInfFiles.length > 0) {
+                    File extInfFile = extInfFiles[0];
+                    Yaml yaml = new Yaml();
+                    try {
+                        Map extInf = yaml.load(new FileInputStream(extInfFile));
+                        String extInfId = (String) extInf.get("id");
+                        if (tmpExtensions.containsKey(extInfId)) {
+                            Map extension = tmpExtensions.get(extInfId);
+                            if (!StringUtils.equals((String) extension.get("version"), (String) extInf.get("version"))) {
+                                extension.put("updateAvailable", true);
+                                extension.put("updateInfo", extInf);
+                            } else {
+                                extension.put("updateAvailable", false);
+                            }
+                        } else {
+                            extInf.put("installed", false);
+                            tmpExtensions.put((String) extInf.get("id"), extInf);
+                        }
+                    } catch (FileNotFoundException e) {
+                        e.printStackTrace();
+                    }
                 }
-
-                ClassLoader myClassLoader = new URLClassLoader(urls.toArray(new URL[0]));
-
-                List<Map<String, String>> tmpIntegrations = getExtensionFromClassloader(myClassLoader, extDir.getPath());
-                extensions.addAll(tmpIntegrations);
-            } catch (MalformedURLException e) {
-                e.printStackTrace();
             }
         }
 
-        extensionsList = extensions;
+        return tmpExtensions;
     }
 
-    private List<Map<String, String>> getExtensionFromClassloader(ClassLoader classLoader, String extensionDirectory) {
-        List<Map<String, String>> extensions = new ArrayList<>();
+    public Map<String, Map> loadJarFiles(File extDir) {
+        Map<String, Map> extensions = new HashMap<>();
+
+        File additionalDirectories[] = extDir.listFiles(new FileFilter() {
+            @Override
+            public boolean accept(File file) {
+                return file.isDirectory();
+            }
+        });
+        // recurse through directories
+        for (File addDir : additionalDirectories) {
+            extensions.putAll(loadJarFiles(addDir));
+        }
+
+        ClassLoader myClassLoader = FileSystemUtils.getClassloaderForJarFiles(extDir);
+        if (myClassLoader != null) {
+            extensions.putAll(getExtensionFromClassloader(myClassLoader, extDir.getPath()));
+        }
+
+        return extensions;
+    }
+
+    private Map<String, Map> getExtensionFromClassloader(ClassLoader classLoader, String extensionDirectory) {
+        Map<String, Map> extensions = new HashMap<>();
         try {
             Enumeration<URL> resources = classLoader.getResources("extensionInformation.yaml");
             while (resources.hasMoreElements()) {
@@ -223,7 +273,11 @@ public class ExtensionService {
                 String id = (String) extensionInformation.get("id");
                 String name = (String) extensionInformation.get("name");
                 String description = (String) extensionInformation.get("description");
-                extensions.add(Map.of("id", id, "name", name, "description", description, "location", extensionDirectory));
+                String version = (String) extensionInformation.get("version");
+                // create mutable map
+                extensions.put(id,
+                        new HashMap<>(Map.of("id", id, "name", name, "description", description, "location", extensionDirectory, "version", version,
+                                "installed", true)));
             }
         } catch (IOException e) {
             e.printStackTrace();

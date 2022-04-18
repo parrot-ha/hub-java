@@ -19,47 +19,17 @@
                       <v-simple-table>
                         <thead>
                           <tr>
+                            <th scope="col" style="width:5%">Actions</th>
                             <th scope="col" style="width:20%">Name</th>
-                            <th scope="col" style="width:40%">Description</th>
+                            <th scope="col" style="width:75%">Description</th>
                           </tr>
                         </thead>
                         <tbody>
                           <tr
-                            v-for="extension in extensions.installed"
+                            v-for="extension in installedExtensions"
                             :key="extension.id"
                           >
-                            <td>
-                              <router-link
-                                :to="{
-                                  name: 'Extension',
-                                  params: { id: extension.id }
-                                }"
-                                >{{ extension.name }}</router-link
-                              >
-                            </td>
-                            <td>{{ extension.description }}</td>
-                          </tr>
-                        </tbody>
-                      </v-simple-table>
-                    </v-card-text>
-                  </v-card>
-                </v-tab-item>
-                <v-tab-item>
-                  <v-card>
-                    <v-card-text
-                      >Available Extensions
-                      <v-simple-table>
-                        <thead>
-                          <tr>
-                            <th scope="col" style="width:20%">Name</th>
-                            <th scope="col" style="width:40%">Description</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          <tr
-                            v-for="extension in extensions.available"
-                            :key="extension.id"
-                          >
+                            <td><v-icon>mdi-delete-outline</v-icon></td>
                             <td>
                               <router-link
                                 :to="{
@@ -82,13 +52,50 @@
                       <v-simple-table>
                         <thead>
                           <tr>
+                            <th scope="col" style="width:5%">Actions</th>
+                            <th scope="col" style="width:20%">Name</th>
+                            <th scope="col" style="width:75%">Description</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr
+                            v-for="extension in availableExtensions"
+                            :key="extension.id"
+                          >
+                            <td>
+                              <v-btn
+                                class="ma-2"
+                                text
+                                icon
+                                color="blue lighten-2"
+                                @click="downloadExtension(extension.id)"
+                              >
+                                <v-icon>mdi-cloud-download-outline</v-icon>
+                              </v-btn>
+                            </td>
+                            <td>{{ extension.name }}</td>
+                            <td>{{ extension.description }}</td>
+                          </tr>
+                        </tbody>
+                      </v-simple-table>
+                    </v-card-text>
+                  </v-card>
+                </v-tab-item>
+                <v-tab-item>
+                  <v-card>
+                    <v-card-text>
+                      <v-simple-table>
+                        <thead>
+                          <tr>
+                            <th scope="col" style="width:5%">Actions</th>
                             <th scope="col" style="width:20%">Name</th>
                             <th scope="col" style="width:20%">Type</th>
-                            <th scope="col" style="width:60%">Location</th>
+                            <th scope="col" style="width:55%">Location</th>
                           </tr>
                         </thead>
                         <tbody>
                           <tr v-for="setting in settings" :key="setting.id">
+                            <td><v-icon>mdi-pencil-outline</v-icon></td>
                             <td>{{ setting.name }}</td>
                             <td>{{ setting.type }}</td>
                             <td>{{ setting.location }}</td>
@@ -113,12 +120,35 @@ export default {
   data() {
     return {
       tab: null,
-      extensions: {
-        installed: [],
-        available: []
-      },
-      settings: []
+      extensions: [],
+      settings: [],
     };
+  },
+  computed: {
+    installedExtensions: function() {
+      return this.extensions.filter(function(ext) {
+        console.log("ext id " + ext.id);
+        console.log("ext installed " + ext.installed);
+        return ext.installed === true;
+      })
+    },
+    availableExtensions: function() {
+      return this.extensions.filter(function(ext) {
+        return ext.installed !== true;
+      })
+    },
+  },
+  methods: {
+    downloadExtension: function(extensionId) {
+      var url = `/api/extensions/${extensionId}?action=download`;
+      //TODO: handle response
+      fetch(url, {
+        method: 'POST',
+        body: null
+      })
+        .then(handleErrors)
+        .then(response => {});
+    }
   },
   mounted: function() {
     fetch('/api/extensions')
@@ -128,7 +158,7 @@ export default {
           this.extensions = data;
         }
       });
-    fetch('/api/extensions/settings')
+    fetch('/api/extension_settings')
       .then(response => response.json())
       .then(data => {
         if (typeof data !== 'undefined' && data != null) {
