@@ -21,13 +21,12 @@ package com.parrotha.internal;
 import com.parrotha.internal.app.AutomationAppApiHandler;
 import com.parrotha.internal.device.DeviceApiHandler;
 import com.parrotha.internal.device.DeviceService;
+import com.parrotha.internal.entity.EntityService;
 import com.parrotha.internal.extension.ExtensionApiHandler;
 import com.parrotha.internal.hub.LocationApiHandler;
 import com.parrotha.internal.hub.ScheduleService;
 import com.parrotha.internal.hub.SettingsApiHandler;
 import com.parrotha.internal.integration.IntegrationApiHandler;
-import com.parrotha.internal.integration.IntegrationService;
-import com.parrotha.internal.entity.EntityService;
 import com.parrotha.internal.ui.UIFramework;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,8 +51,7 @@ public class Main {
 
         DeviceService deviceService = ServiceFactory.getDeviceService();
 
-        IntegrationService integrationService = ServiceFactory.getIntegrationService();
-        integrationService.start();
+        ServiceFactory.getIntegrationService().start();
 
         // start scheduler
         ScheduleService scheduleService = ServiceFactory.getScheduleService();
@@ -70,9 +68,9 @@ public class Main {
         Thread myShutdownHook = new Thread(() -> {
             logger.info("In the middle of a shutdown");
 
-            scheduleService.shutdown();
+            ServiceFactory.getScheduleService().shutdown();
             uiFramework.stop();
-            integrationService.stop();
+            ServiceFactory.getIntegrationService().stop();
         }
         );
 

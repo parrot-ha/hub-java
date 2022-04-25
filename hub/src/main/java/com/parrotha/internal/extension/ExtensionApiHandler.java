@@ -61,10 +61,20 @@ public class ExtensionApiHandler extends BaseApiHandler {
             String id = ctx.pathParam("id");
             if ("download".equals(ctx.queryParam("action"))) {
                 // download extension
-                extensionService.downloadExtension(id);
+                extensionService.downloadAndInstallExtension(id);
+            } else if ("update".equals(ctx.queryParam("action"))) {
+                // update extension
+                extensionService.updateExtension(id);
             }
 
-            ctx.status(201);
+            ctx.status(202);
+        });
+
+        app.delete("/api/extensions/:id", ctx -> {
+            String id = ctx.pathParam("id");
+            boolean status = extensionService.deleteExtension(id);
+
+            ctx.status(200);
         });
 
         app.get("/api/extensions/:id/status", ctx -> {

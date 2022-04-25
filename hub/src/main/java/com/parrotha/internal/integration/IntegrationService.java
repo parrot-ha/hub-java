@@ -127,7 +127,7 @@ public class IntegrationService {
     private List<Map<String, Object>> getIntegrationsFromClassloader(ClassLoader classLoader, String baseDirectory) {
         List<Map<String, String>> integrationClasses = new ArrayList<>();
         try {
-            Enumeration<URL> resources = classLoader.getResources("integrationInformation.yaml");
+            Enumeration<URL> resources = classLoader.getResources("parrotIntegration.yaml");
             while (resources.hasMoreElements()) {
                 URL url = resources.nextElement();
                 Yaml yaml = new Yaml();

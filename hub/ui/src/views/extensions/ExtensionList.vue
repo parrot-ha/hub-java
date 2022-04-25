@@ -29,7 +29,76 @@
                             v-for="extension in installedExtensions"
                             :key="extension.id"
                           >
-                            <td><v-icon>mdi-delete-outline</v-icon></td>
+                            <td>
+                              <div>
+                                <v-tooltip
+                                  bottom
+                                  v-if="extension.updateAvailable"
+                                  ><template v-slot:activator="{ on }">
+                                    <v-btn
+                                      class="ma-2"
+                                      text
+                                      icon
+                                      color="blue lighten-2"
+                                      @click="updateExtension(extension.id)"
+                                      v-on="on"
+                                    >
+                                      <v-icon
+                                        >mdi-cloud-download-outline</v-icon
+                                      >
+                                    </v-btn>
+                                  </template>
+                                  <span>Update</span>
+                                </v-tooltip>
+
+                                <v-dialog v-model="deleteDialog" width="500">
+                                  <template v-slot:activator="{ on, attrs }">
+                                    <v-btn
+                                      class="ma-2"
+                                      text
+                                      icon
+                                      color="blue lighten-2"
+                                      v-bind="attrs"
+                                      v-on="on"
+                                    >
+                                      <v-icon>mdi-delete-outline</v-icon>
+                                    </v-btn>
+                                  </template>
+                                  <v-card>
+                                    <v-card-title
+                                      class="text-h5 grey lighten-2"
+                                    >
+                                      Delete Extension
+                                    </v-card-title>
+
+                                    <v-card-text>
+                                      Are you sure you want to delete this
+                                      extension?
+                                    </v-card-text>
+
+                                    <v-divider></v-divider>
+
+                                    <v-card-actions>
+                                      <v-spacer></v-spacer>
+                                      <v-btn
+                                        color="primary"
+                                        text
+                                        @click="deleteDialog = false"
+                                      >
+                                        Delete
+                                      </v-btn>
+                                      <v-btn
+                                        color="primary"
+                                        text
+                                        @click="deleteDialog = false"
+                                      >
+                                        Cancel
+                                      </v-btn>
+                                    </v-card-actions>
+                                  </v-card>
+                                </v-dialog>
+                              </div>
+                            </td>
                             <td>
                               <router-link
                                 :to="{
@@ -122,28 +191,49 @@ export default {
       tab: null,
       extensions: [],
       settings: [],
+      deleteDialog: false
     };
   },
   computed: {
     installedExtensions: function() {
       return this.extensions.filter(function(ext) {
-        console.log("ext id " + ext.id);
-        console.log("ext installed " + ext.installed);
+        console.log('ext id ' + ext.id);
+        console.log('ext installed ' + ext.installed);
         return ext.installed === true;
-      })
+      });
     },
     availableExtensions: function() {
       return this.extensions.filter(function(ext) {
         return ext.installed !== true;
-      })
-    },
+      });
+    }
   },
   methods: {
+    updateExtension: function(extensionId) {
+      var url = `/api/extensions/${extensionId}?action=update`;
+      //TODO: handle response
+      fetch(url, {
+        method: 'POST',
+        body: null
+      })
+        .then(handleErrors)
+        .then(response => {});
+    },
     downloadExtension: function(extensionId) {
       var url = `/api/extensions/${extensionId}?action=download`;
       //TODO: handle response
       fetch(url, {
         method: 'POST',
+        body: null
+      })
+        .then(handleErrors)
+        .then(response => {});
+    },
+    deleteExtension: function(extensionId) {
+      var url = `/api/extensions/${extensionId}`;
+      //TODO: handle response
+      fetch(url, {
+        method: 'DELETE',
         body: null
       })
         .then(handleErrors)

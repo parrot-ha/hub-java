@@ -18,24 +18,25 @@
  */
 package com.parrotha.internal.extension;
 
+import com.parrotha.internal.ServiceFactory;
 import com.parrotha.internal.common.FileSystemUtils;
-import groovy.json.JsonBuilder;
 import groovy.json.JsonSlurper;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.yaml.snakeyaml.Yaml;
 
 import java.io.File;
 import java.io.FileFilter;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.FilenameFilter;
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.net.URL;
-import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -43,6 +44,7 @@ import java.util.List;
 import java.util.Map;
 
 public class ExtensionService {
+    private static final Logger logger = LoggerFactory.getLogger(ExtensionService.class);
     private ExtensionDataStore extensionDataStore;
 
     public ExtensionService() {
@@ -87,94 +89,207 @@ public class ExtensionService {
         return extensionDataStore.updateSetting(id, name, type, location);
     }
 
-    public boolean downloadExtension(String id) {
+    public boolean downloadAndInstallExtension(String id) {
+        boolean success = true;
         Map extension = getExtension(id);
-        for (String key : ((Map<String, Object>) extension).keySet()) {
-            System.out.println("key: [" + key + "] value: [" + extension.get(key) + "]");
+        List<String> files = null;
+        try {
+            files = downloadExtension(extension, "./extensions/tmp/" + id);
+            if (files.size() == 0) {
+                success = false;
+            }
+            installExtension(files, "./extensions/" + id);
+        } catch (IOException e) {
+            success = false;
+            e.printStackTrace();
         }
-        //TODO: handle other extension types
-        File file = new File("./extensions/.extensions/" + id + "/githubReleaseInformation.json");
-        if (file.exists()) {
-            Object githubInfoObject = new JsonSlurper().parse(file);
+
+        if (!success) {
+            //TODO: wipe out downloads
+
+        }
+        return success;
+    }
+
+    private List<String> downloadExtension(Map extension, String downloadDirectory) throws IOException {
+        String id = (String) extension.get("id");
+        String locationType = (String) extension.get("locationType");
+        String locationURL = (String) extension.get("locationURL");
+        List<String> downloadedFiles = new ArrayList<>();
+
+        if ("GithubRelease".equals(locationType)) {
+            URL github = new URL(locationURL);
+            String githubResponse = IOUtils.toString(github, "UTF8");
+            Object githubInfoObject = new JsonSlurper().parseText(githubResponse);
             if (githubInfoObject instanceof Map) {
                 Map githubInfo = (Map) githubInfoObject;
                 List<Map> assetList = (List<Map>) githubInfo.get("assets");
 
-                FileSystemUtils.createDirectory("./extensions/" + id);
+                FileSystemUtils.createDirectory(downloadDirectory);
 
                 for (Map asset : assetList) {
                     String assetName = (String) asset.get("name");
-                    if (!"extensionInformation.yaml".equals(assetName) && !"integrationInformation.yaml".equals(assetName)) {
+                    if (!"parrotExtension.yaml".equals(assetName) && !"parrotIntegration.yaml".equals(assetName)) {
                         String extFileUrlStr = (String) asset.get("browser_download_url");
                         try {
-                            FileUtils.copyURLToFile(new URL(extFileUrlStr), new File("./extensions/" + id + "/" + assetName));
-
-                            // extract file if zip
-                            if (assetName.endsWith(".zip")) {
-                                FileSystemUtils.unzipFile("./extensions/" + id + "/" + assetName, "./extensions/" + id);
-                            }
+                            FileUtils.copyURLToFile(new URL(extFileUrlStr), new File(downloadDirectory + "/" + assetName));
+                            downloadedFiles.add(downloadDirectory + "/" + assetName);
                         } catch (IOException e) {
                             e.printStackTrace();
                         }
                     }
                 }
             }
+        } else if ("URL".equals(locationType)) {
+            // extension should include a list of files.
         }
+        return downloadedFiles;
+    }
+
+    private void installExtension(List<String> files, String destinationDirectory) throws IOException {
+        File destDirFile = new File(destinationDirectory);
+        for (String fileName : files) {
+            // extract file if zip
+            if (fileName.endsWith(".zip")) {
+                FileSystemUtils.unzipFile(fileName, destinationDirectory);
+            } else {
+                // just copy file
+                FileUtils.copyFileToDirectory(new File(fileName), destDirFile);
+            }
+        }
+    }
+
+    public boolean updateExtension(String id) {
+        try {
+            Map extension = getExtension(id);
+
+            synchronized (this) {
+                List<String> files = downloadExtension(extension, "./extensions/tmp/" + id);
+
+                // stop services after download is complete
+                stopServices();
+
+                // copy updated extensions
+                installExtension(files, "./extensions/" + id);
+
+                startServices();
+            }
+
+            return true;
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
         return false;
     }
 
-    public List refreshExtensionList() {
+    public boolean deleteExtension(String id) {
+        synchronized (this) {
+            stopServices();
+
+            // delete extension
+            try {
+                FileUtils.deleteDirectory(new File("./extensions/" + id));
+            } catch (IOException e) {
+                e.printStackTrace();
+                return false;
+            } finally {
+                startServices();
+            }
+        }
+
+        return false;
+    }
+
+    private void stopServices() {
+        ServiceFactory.getScheduleService().shutdown();
+        ServiceFactory.getIntegrationService().stop();
+    }
+
+    private void startServices() {
+        ServiceFactory.getScheduleService().start();
+        ServiceFactory.getIntegrationService().start();
+    }
+
+    public void refreshExtensionList() {
         FileSystemUtils.createDirectory("./extensions");
         FileSystemUtils.createDirectory("./extensions/.extensions");
 
         List<Map> extLocs = getExtensionSettings();
 
         for (Map extLoc : extLocs) {
-            String type = (String) extLoc.get("type");
-            String location = (String) extLoc.get("location");
-
-            if (type.equalsIgnoreCase("GithubRelease")) {
-                try {
-                    String url = "https://api.github.com/repos/" + location + "/releases/latest";
-                    URL github = new URL(url);
-                    String githubResponse = IOUtils.toString(github, "UTF8");
-
-                    Map parsedData = (Map) new JsonSlurper().parseText(githubResponse);
-                    List<Map> assetList = (List<Map>) parsedData.get("assets");
-
-                    for (Map asset : assetList) {
-                        String assetName = (String) asset.get("name");
-                        if ("extensionInformation.yaml".equals(assetName)) {
-                            String extInfUrlStr = (String) asset.get("browser_download_url");
-                            String extInfStr = IOUtils.toString(new URL(extInfUrlStr), "UTF8");
-                            Yaml yaml = new Yaml();
-                            Map extensionInformation = yaml.load(extInfStr);
-                            String extensionId = (String) extensionInformation.get("id");
-
-                            FileSystemUtils.createDirectory("./extensions/.extensions/" + extensionId);
-
-                            File file = new File("./extensions/.extensions/" + extensionId + "/extensionInformation.yaml");
-                            FileOutputStream fos = new FileOutputStream(file);
-                            fos.write(extInfStr.getBytes(StandardCharsets.UTF_8));
-                            fos.close();
-
-                            file = new File("./extensions/.extensions/" + extensionId + "/githubReleaseInformation.json");
-                            fos = new FileOutputStream(file);
-                            fos.write(new JsonBuilder(parsedData).toPrettyString().getBytes(StandardCharsets.UTF_8));
-                            fos.close();
-                        }
-                    }
-                } catch (MalformedURLException e) {
-                    e.printStackTrace();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+            try {
+                loadExtensionLocation(extLoc);
+            } catch (IOException e) {
+                e.printStackTrace();
             }
         }
-
-        return null;
     }
 
+    private void loadExtensionLocation(Map extLoc) throws IOException {
+        String type = (String) extLoc.get("type");
+        String location = (String) extLoc.get("location");
+
+        if ("GithubRelease".equalsIgnoreCase(type)) {
+            String url = "https://api.github.com/repos/" + location + "/releases/latest";
+            URL github = new URL(url);
+            String githubResponse = IOUtils.toString(github, "UTF8");
+
+            Map parsedData = (Map) new JsonSlurper().parseText(githubResponse);
+            List<Map> assetList = (List<Map>) parsedData.get("assets");
+
+            for (Map asset : assetList) {
+                String assetName = (String) asset.get("name");
+                if ("parrotExtension.yaml".equals(assetName)) {
+                    String extInfUrlStr = (String) asset.get("browser_download_url");
+                    loadExtensionFile(extInfUrlStr, url, "GithubRelease");
+                } else if ("parrotRepository.yaml".equals(assetName)) {
+                    // we have a list of parrotExtension locations
+                    loadRepositoryFile((String) asset.get("browser_download_url"));
+                }
+            }
+        } else if ("URL".equalsIgnoreCase(type)) {
+            if (location.endsWith("parrotExtension.yaml")) {
+                loadExtensionFile(location, location, "URL");
+            } else if (location.endsWith("parrotRepository.yaml")) {
+                // we have a list of parrotExtension locations
+                loadRepositoryFile(location);
+            } else {
+                logger.info("Unknown file: " + location);
+            }
+        } else {
+            logger.info("Unknown extension type : " + type);
+        }
+    }
+
+    private void loadExtensionFile(String fileURL, String locationURL, String locationType) throws IOException {
+        String extInfStr = IOUtils.toString(new URL(fileURL), "UTF8");
+        Yaml yaml = new Yaml();
+        Map extensionInformation = yaml.load(extInfStr);
+        extensionInformation.put("locationURL", locationURL);
+        extensionInformation.put("locationType", locationType);
+        String extensionId = (String) extensionInformation.get("id");
+
+        FileSystemUtils.createDirectory("./extensions/.extensions/" + extensionId);
+
+        File file = new File("./extensions/.extensions/" + extensionId + "/parrotExtension.yaml");
+        FileWriter fileWriter = new FileWriter(file);
+        yaml.dump(extensionInformation, fileWriter);
+    }
+
+    private void loadRepositoryFile(String fileURL) throws IOException {
+        String repoInfStr = IOUtils.toString(new URL(fileURL), "UTF8");
+        Yaml yaml = new Yaml();
+        Map repositoryInformation = yaml.load(repoInfStr);
+        List<Map> repos = (List<Map>) repositoryInformation.get("repositories");
+        for (Map repo : repos) {
+            loadExtensionLocation(repo);
+        }
+        List<Map> extensions = (List<Map>) repositoryInformation.get("extensions");
+        for (Map extension : extensions) {
+            loadExtensionLocation(extension);
+        }
+    }
 
     private synchronized Map<String, Map> loadExtensions() {
         // load extensions from file system
@@ -208,7 +323,7 @@ public class ExtensionService {
                 File[] extInfFiles = extDir.listFiles(new FilenameFilter() {
                     @Override
                     public boolean accept(File file, String s) {
-                        return "extensionInformation.yaml".equals(s);
+                        return "parrotExtension.yaml".equals(s);
                     }
                 });
 
@@ -240,7 +355,7 @@ public class ExtensionService {
         return tmpExtensions;
     }
 
-    public Map<String, Map> loadJarFiles(File extDir) {
+    private Map<String, Map> loadJarFiles(File extDir) {
         Map<String, Map> extensions = new HashMap<>();
 
         File additionalDirectories[] = extDir.listFiles(new FileFilter() {
@@ -265,7 +380,7 @@ public class ExtensionService {
     private Map<String, Map> getExtensionFromClassloader(ClassLoader classLoader, String extensionDirectory) {
         Map<String, Map> extensions = new HashMap<>();
         try {
-            Enumeration<URL> resources = classLoader.getResources("extensionInformation.yaml");
+            Enumeration<URL> resources = classLoader.getResources("parrotExtension.yaml");
             while (resources.hasMoreElements()) {
                 URL url = resources.nextElement();
                 Yaml yaml = new Yaml();
