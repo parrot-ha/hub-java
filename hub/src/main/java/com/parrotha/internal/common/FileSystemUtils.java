@@ -39,6 +39,11 @@ public class FileSystemUtils {
         }
     }
 
+    public static void unzipFile(String fileZip, String destDir) throws IOException {
+        File destDirFile = new File(destDir);
+        unzipFile(fileZip, destDirFile);
+    }
+
     /**
      * Unzip a file on the file system. Thanks to https://www.baeldung.com/java-compress-and-uncompress
      *
@@ -46,13 +51,12 @@ public class FileSystemUtils {
      * @param destDir The directory to unzip the file to.
      * @throws IOException
      */
-    public static void unzipFile(String fileZip, String destDir) throws IOException {
-        File destDirFile = new File(destDir);
+    public static void unzipFile(String fileZip, File destDir) throws IOException {
         byte[] buffer = new byte[1024];
         ZipInputStream zis = new ZipInputStream(new FileInputStream(fileZip));
         ZipEntry zipEntry = zis.getNextEntry();
         while (zipEntry != null) {
-            File newFile = newFile(destDirFile, zipEntry);
+            File newFile = newFile(destDir, zipEntry);
             if (zipEntry.isDirectory()) {
                 if (!newFile.isDirectory() && !newFile.mkdirs()) {
                     throw new IOException("Failed to create directory " + newFile);

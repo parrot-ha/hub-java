@@ -98,10 +98,10 @@ public class ExtensionService {
             if (files.size() == 0) {
                 success = false;
             }
-            installExtension(files, "./extensions/" + id);
+            installExtension(extension, files);
         } catch (IOException e) {
             success = false;
-            e.printStackTrace();
+            logger.warn("Exception when downloading and installing extension: " + id, e);
         }
 
         if (!success) {
@@ -129,7 +129,8 @@ public class ExtensionService {
 
                 for (Map asset : assetList) {
                     String assetName = (String) asset.get("name");
-                    if (!"parrotExtension.yaml".equals(assetName) && !"parrotIntegration.yaml".equals(assetName)) {
+                    if (!"parrotRepository.yaml".equals(assetName) && !"parrotExtension.yaml".equals(assetName) &&
+                            !"parrotIntegration.yaml".equals(assetName)) {
                         String extFileUrlStr = (String) asset.get("browser_download_url");
                         try {
                             FileUtils.copyURLToFile(new URL(extFileUrlStr), new File(downloadDirectory + "/" + assetName));
@@ -146,15 +147,33 @@ public class ExtensionService {
         return downloadedFiles;
     }
 
-    private void installExtension(List<String> files, String destinationDirectory) throws IOException {
-        File destDirFile = new File(destinationDirectory);
-        for (String fileName : files) {
-            // extract file if zip
-            if (fileName.endsWith(".zip")) {
-                FileSystemUtils.unzipFile(fileName, destinationDirectory);
-            } else {
-                // just copy file
-                FileUtils.copyFileToDirectory(new File(fileName), destDirFile);
+    private void installExtension(Map extensionInfo, List<String> files) throws IOException {
+
+        String type = (String) extensionInfo.get("type");
+        String id = (String) extensionInfo.get("id");
+        if ("source".equalsIgnoreCase(type)) {
+            List<Map> sourceFiles = (List<Map>) extensionInfo.get("sourcefiles");
+            for (Map sourceFileInfo : sourceFiles) {
+                String sourceFileName = (String) sourceFileInfo.get("file");
+                String sourceFileType = (String) sourceFileInfo.get("type");
+                // if source file has a full url or directory structure to it, strip that off.
+                if (sourceFileName.contains("/")) {
+                    sourceFileName = sourceFileName.substring(sourceFileName.lastIndexOf("/"));
+                }
+                //TODO: copy source files to appropriate directories
+                //FileUtils.copyFile();
+            }
+        } else {
+            String destinationDirectory = "./extensions/" + id;
+            File destDirFile = new File(destinationDirectory);
+            for (String fileName : files) {
+                // extract file if zip
+                if (fileName.endsWith(".zip")) {
+                    FileSystemUtils.unzipFile(fileName, destinationDirectory);
+                } else {
+                    // just copy file
+                    FileUtils.copyFileToDirectory(new File(fileName), destDirFile);
+                }
             }
         }
     }
@@ -162,17 +181,21 @@ public class ExtensionService {
     public boolean updateExtension(String id) {
         try {
             Map extension = getExtension(id);
-
+            String type = (String) extension.get("type");
             synchronized (this) {
                 List<String> files = downloadExtension(extension, "./extensions/tmp/" + id);
 
-                // stop services after download is complete
-                stopServices();
+                if (!"source".equalsIgnoreCase(type)) {
+                    // stop services after download is complete
+                    stopServices();
+                }
 
                 // copy updated extensions
-                installExtension(files, "./extensions/" + id);
+                installExtension(extension, files);
 
-                startServices();
+                if (!"source".equalsIgnoreCase(type)) {
+                    startServices();
+                }
             }
 
             return true;
@@ -185,7 +208,12 @@ public class ExtensionService {
 
     public boolean deleteExtension(String id) {
         synchronized (this) {
-            stopServices();
+            Map extension = getExtension(id);
+            String type = (String) extension.get("type");
+
+            if (!"source".equalsIgnoreCase(type)) {
+                stopServices();
+            }
 
             // delete extension
             try {
@@ -194,7 +222,9 @@ public class ExtensionService {
                 e.printStackTrace();
                 return false;
             } finally {
-                startServices();
+                if (!"source".equalsIgnoreCase(type)) {
+                    startServices();
+                }
             }
         }
 
@@ -219,14 +249,21 @@ public class ExtensionService {
 
         for (Map extLoc : extLocs) {
             try {
-                loadExtensionLocation(extLoc);
+                loadExtensionLocation(extLoc, 0);
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }
     }
 
-    private void loadExtensionLocation(Map extLoc) throws IOException {
+    private void loadExtensionLocation(Map extLoc, int level) throws IOException {
+        // this will stop us from entering an infinite loop should 2 repository files point to each other.
+        if (level++ > 10) {
+            // we've recursed too many times
+            logger.warn("Possible loop in repository files, only 10 levels of repository files are supported");
+            return;
+        }
+
         String type = (String) extLoc.get("type");
         String location = (String) extLoc.get("location");
 
@@ -245,7 +282,7 @@ public class ExtensionService {
                     loadExtensionFile(extInfUrlStr, url, "GithubRelease");
                 } else if ("parrotRepository.yaml".equals(assetName)) {
                     // we have a list of parrotExtension locations
-                    loadRepositoryFile((String) asset.get("browser_download_url"));
+                    loadRepositoryFile((String) asset.get("browser_download_url"), level);
                 }
             }
         } else if ("URL".equalsIgnoreCase(type)) {
@@ -253,7 +290,7 @@ public class ExtensionService {
                 loadExtensionFile(location, location, "URL");
             } else if (location.endsWith("parrotRepository.yaml")) {
                 // we have a list of parrotExtension locations
-                loadRepositoryFile(location);
+                loadRepositoryFile(location, level);
             } else {
                 logger.info("Unknown file: " + location);
             }
@@ -277,17 +314,17 @@ public class ExtensionService {
         yaml.dump(extensionInformation, fileWriter);
     }
 
-    private void loadRepositoryFile(String fileURL) throws IOException {
+    private void loadRepositoryFile(String fileURL, int level) throws IOException {
         String repoInfStr = IOUtils.toString(new URL(fileURL), "UTF8");
         Yaml yaml = new Yaml();
         Map repositoryInformation = yaml.load(repoInfStr);
         List<Map> repos = (List<Map>) repositoryInformation.get("repositories");
         for (Map repo : repos) {
-            loadExtensionLocation(repo);
+            loadExtensionLocation(repo, level);
         }
         List<Map> extensions = (List<Map>) repositoryInformation.get("extensions");
         for (Map extension : extensions) {
-            loadExtensionLocation(extension);
+            loadExtensionLocation(extension, level);
         }
     }
 
