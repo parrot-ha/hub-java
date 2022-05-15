@@ -294,11 +294,8 @@ public class DeviceScriptDelegateImpl extends EntityScriptDelegateCommon impleme
         // create a cron schedule that starts randomly in the next minutes
         Random rand = new Random();
         int seconds = rand.nextInt(60);
-        // pick a randam time to start
-        int minutes = LocalTime.now().getMinute() + rand.nextInt(minutesParam);
-        if (minutes > 59) {
-            minutes = minutes - 60;
-        }
+        // pick a random time to start
+        int minutes = rand.nextInt(minutesParam);
         String cronExpression = String.format("%d %d/%d * * * ?", seconds, minutes, minutesParam);
         scheduleService.schedule("DEV", getDevice().getId(), cronExpression, handlerMethod, null);
     }
