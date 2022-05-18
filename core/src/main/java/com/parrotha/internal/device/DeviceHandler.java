@@ -36,6 +36,14 @@ public class DeviceHandler {
     private List<Command> commandList;
     private List<Attribute> attributeList;
     private List<Fingerprint> fingerprints;
+    private Type type;
+
+    public enum Type {
+        USER,
+        SYSTEM,
+        EXTENSION,
+        EXTENSION_SOURCE;
+    }
 
     public DeviceHandler() {
     }
@@ -70,6 +78,15 @@ public class DeviceHandler {
             this.fingerprints = new ArrayList<>();
             for (Map fingerprintMap : fingerprintMapList) {
                 fingerprints.add(new Fingerprint(fingerprintMap));
+            }
+        }
+
+        Object typeObj = metadata.get("type");
+        if (typeObj != null) {
+            if (typeObj instanceof String) {
+                this.type = Type.valueOf((String) typeObj);
+            } else if (typeObj instanceof Type) {
+                this.type = (Type) typeObj;
             }
         }
     }
@@ -141,6 +158,16 @@ public class DeviceHandler {
             // dh.fingerprints is not null but fingerprints is null, they are not equal
             return false;
         }
+
+        if (type != null) {
+            if (!type.equals(dh.getType())) {
+                return false;
+            }
+        } else if (dh.getType() != null) {
+            // dh.type is not null but type is null, they are not equal
+            return false;
+        }
+
         return true;
     }
 
@@ -237,6 +264,18 @@ public class DeviceHandler {
 
     public void setFingerprints(List<Fingerprint> fingerprints) {
         this.fingerprints = fingerprints;
+    }
+
+    public Type getType() {
+        return type;
+    }
+
+    public void setType(Type type) {
+        this.type = type;
+    }
+
+    public boolean isUserType() {
+        return Type.USER.equals(this.type);
     }
 
     //- metadata:

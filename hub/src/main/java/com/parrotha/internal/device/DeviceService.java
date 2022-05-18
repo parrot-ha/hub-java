@@ -25,8 +25,7 @@ import com.parrotha.device.HubResponse;
 import com.parrotha.device.Protocol;
 import com.parrotha.internal.ChangeTrackingMap;
 import com.parrotha.internal.Main;
-import com.parrotha.internal.app.InstalledAutomationApp;
-import com.parrotha.internal.app.InstalledAutomationAppSetting;
+import com.parrotha.internal.common.FileSystemUtils;
 import com.parrotha.internal.integration.Integration;
 import com.parrotha.internal.integration.IntegrationRegistry;
 import com.parrotha.internal.script.ParrotHubDelegatingScript;
@@ -47,6 +46,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
+import java.net.URLClassLoader;
 import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.Enumeration;
@@ -584,35 +584,8 @@ public class DeviceService {
         // we need to process device handlers
         Map<String, DeviceHandler> deviceHandlerInfo = new HashMap<>();
 
-        // load device handlers from jar files (pre-compiled)
-        try {
-            Enumeration<URL> resources = Main.class.getClassLoader().getResources("deviceHandlerClasses.yaml");
-            while (resources.hasMoreElements()) {
-                URL url = resources.nextElement();
-                Yaml yaml = new Yaml();
-                yaml.setBeanAccess(BeanAccess.FIELD);
-                List<Map> list = yaml.load(url.openStream());
-                for (Map m : list) {
-                    String deviceHandlerId = (String) m.get("id");
-                    String className = (String) m.get("className");
-
-                    Class<ParrotHubDelegatingScript> deviceHandlerScriptClass = (Class<ParrotHubDelegatingScript>) Class.forName(className);
-                    ParrotHubDelegatingScript deviceHandlerScript = deviceHandlerScriptClass.getDeclaredConstructor().newInstance();
-                    Map dhi = extractDeviceHandlerDefinition(deviceHandlerScript);
-                    deviceHandlerInfo.put(deviceHandlerId, new DeviceHandler(deviceHandlerId, "class:" + className, dhi));
-                }
-            }
-        } catch (IOException | ClassNotFoundException e) {
-            e.printStackTrace();
-        } catch (IllegalAccessException illegalAccessException) {
-            illegalAccessException.printStackTrace();
-        } catch (InstantiationException instantiationException) {
-            instantiationException.printStackTrace();
-        } catch (NoSuchMethodException e) {
-            e.printStackTrace();
-        } catch (InvocationTargetException e) {
-            e.printStackTrace();
-        }
+        // load built in device handlers (pre-compiled)
+        deviceHandlerInfo.putAll(getDeviceHandlersFromClassloader(Main.class.getClassLoader(), null));
 
         // load device handlers from text files on local file system
         File deviceHandlerDir = new File("deviceHandlers/");
@@ -634,16 +607,81 @@ public class DeviceService {
 
                         String scriptCode = IOUtils.toString(new FileInputStream(f), StandardCharsets.UTF_8);
                         Map dhi = extractDeviceHandlerDefinition(scriptCode);
-
+                        dhi.put("type", DeviceHandler.Type.USER);
                         deviceHandlerInfo.put(deviceHandlerId, new DeviceHandler(deviceHandlerId, "deviceHandlers/" + f.getName(), dhi));
                     } catch (Exception e) {
                         logger.warn(String.format("Caught exception while processing %s", f.getName()), e);
                     }
                 }
-                return deviceHandlerInfo;
             }
         }
+
+        // scan through extension directory for device handler files
+        File extensionDirectory = new File("./extensions");
+        if (!extensionDirectory.exists()) {
+            extensionDirectory.mkdir();
+        }
+        File extDirs[] = extensionDirectory.listFiles(new FileFilter() {
+            @Override
+            public boolean accept(File file) {
+                return file.isDirectory();
+            }
+        });
+
+        Map<String, Map<String, Object>> integrations = new HashMap<>();
+        for (File extDir : extDirs) {
+            List<URL> urls = FileSystemUtils.listJarsForDirectory(extDir, true);
+            ClassLoader myClassLoader = new URLClassLoader(urls.toArray(new URL[0]));
+            deviceHandlerInfo.putAll(getDeviceHandlersFromClassloader(myClassLoader, extensionDirectory.getAbsolutePath()));
+        }
+
         return deviceHandlerInfo;
+    }
+
+    private Map<String, DeviceHandler> getDeviceHandlersFromClassloader(ClassLoader classLoader, String baseDirectory) {
+        Map<String, DeviceHandler> deviceHandlerInfo = new HashMap<>();
+        try {
+            Enumeration<URL> resources = classLoader.getResources("deviceHandlerClasses.yaml");
+            while (resources.hasMoreElements()) {
+                URL url = resources.nextElement();
+                boolean isExtDH = url.toString().startsWith("jar:file:" + baseDirectory);
+                if (baseDirectory == null || isExtDH) {
+                    Yaml yaml = new Yaml();
+                    yaml.setBeanAccess(BeanAccess.FIELD);
+                    List<Map> list = yaml.load(url.openStream());
+                    for (Map m : list) {
+                        String deviceHandlerId = (String) m.get("id");
+                        String className = (String) m.get("className");
+
+
+                        DeviceHandler.Type deviceHandlerType = DeviceHandler.Type.SYSTEM;
+                        if (baseDirectory != null && isExtDH) {
+                            deviceHandlerType = DeviceHandler.Type.EXTENSION;
+                        }
+
+                        Class<ParrotHubDelegatingScript> deviceHandlerScriptClass = (Class<ParrotHubDelegatingScript>) Class.forName(className, false,
+                                classLoader);
+                        ParrotHubDelegatingScript deviceHandlerScript = deviceHandlerScriptClass.getDeclaredConstructor().newInstance();
+                        Map dhi = extractDeviceHandlerDefinition(deviceHandlerScript);
+                        dhi.put("type", deviceHandlerType);
+                        deviceHandlerInfo.put(deviceHandlerId, new DeviceHandler(deviceHandlerId, "class:" + className, dhi));
+                    }
+                }
+            }
+        } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
+        } catch (IllegalAccessException illegalAccessException) {
+            illegalAccessException.printStackTrace();
+        } catch (InstantiationException instantiationException) {
+            instantiationException.printStackTrace();
+        } catch (NoSuchMethodException e) {
+            e.printStackTrace();
+        } catch (InvocationTargetException e) {
+            e.printStackTrace();
+        }
+
+        return deviceHandlerInfo;
+
     }
 
     private Map extractDeviceHandlerDefinition(String deviceHandlerScript) {
@@ -666,7 +704,7 @@ public class DeviceService {
 
     public Collection<DeviceHandler> getUserDeviceHandlers() {
         return deviceDataStore.getAllDeviceHandlers().stream()
-                .filter(dh -> !dh.getFile().startsWith("class")).collect(Collectors.toList());
+                .filter(dh -> dh.isUserType()).collect(Collectors.toList());
     }
 
     public String getDeviceHandlerSourceCode(String id) {
@@ -683,6 +721,7 @@ public class DeviceService {
         if (definition == null) {
             throw new IllegalArgumentException("No definition found.");
         }
+        definition.put("type", DeviceHandler.Type.USER);
         String dhId = deviceDataStore
                 .addDeviceHandlerSourceCode(sourceCode, new DeviceHandler(null, null, definition));
         return dhId;

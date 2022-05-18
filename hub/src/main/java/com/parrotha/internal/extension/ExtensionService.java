@@ -151,20 +151,30 @@ public class ExtensionService {
 
         String type = (String) extensionInfo.get("type");
         String id = (String) extensionInfo.get("id");
+        String destinationDirectory = "./extensions/" + id;
         if ("source".equalsIgnoreCase(type)) {
             List<Map> sourceFiles = (List<Map>) extensionInfo.get("sourcefiles");
             for (Map sourceFileInfo : sourceFiles) {
+
                 String sourceFileName = (String) sourceFileInfo.get("file");
                 String sourceFileType = (String) sourceFileInfo.get("type");
+                String destFileName = sourceFileName;
                 // if source file has a full url or directory structure to it, strip that off.
-                if (sourceFileName.contains("/")) {
-                    sourceFileName = sourceFileName.substring(sourceFileName.lastIndexOf("/"));
+                if (destFileName.contains("/")) {
+                    destFileName = destFileName.substring(destFileName.lastIndexOf("/"));
                 }
-                //TODO: copy source files to appropriate directories
-                //FileUtils.copyFile();
+                // copy source files to appropriate directories
+                if ("AUTOMATION_APP".equals(sourceFileType)) {
+                    FileSystemUtils.createDirectory(destinationDirectory + "/automationApps");
+                    FileUtils.copyFile(new File(sourceFileName), new File(destinationDirectory + "/automationApps/" + destFileName));
+                } else if ("DEVICE_HANDLER".equals(sourceFileType)) {
+                    FileSystemUtils.createDirectory(destinationDirectory + "/deviceHandlers");
+                    FileUtils.copyFile(new File(sourceFileName), new File(destinationDirectory + "/deviceHandlers/" + destFileName));
+                } else {
+                    logger.warn("Unknown file type " + sourceFileType);
+                }
             }
         } else {
-            String destinationDirectory = "./extensions/" + id;
             File destDirFile = new File(destinationDirectory);
             for (String fileName : files) {
                 // extract file if zip

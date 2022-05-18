@@ -509,7 +509,7 @@ public class DeviceYamlDataStore implements DeviceDataStore {
     @Override
     public String getDeviceHandlerSourceCode(String id) {
         DeviceHandler deviceHandler = getDeviceHandlerInfo().get(id);
-        if (deviceHandler != null && !deviceHandler.getFile().startsWith("class:")) {
+        if (deviceHandler != null && deviceHandler.isUserType()) {
             File f = new File(deviceHandler.getFile());
             try {
                 String scriptCode = IOUtils.toString(new FileInputStream(f), StandardCharsets.UTF_8);
@@ -525,7 +525,7 @@ public class DeviceYamlDataStore implements DeviceDataStore {
     @Override
     public boolean updateDeviceHandlerSourceCode(String id, String sourceCode) {
         DeviceHandler deviceHandler = getDeviceHandlerInfo().get(id);
-        if (deviceHandler != null && !deviceHandler.getFile().startsWith("class:")) {
+        if (deviceHandler != null && deviceHandler.isUserType()) {
             File f = new File(deviceHandler.getFile());
             try {
                 IOUtils.write(sourceCode, new FileOutputStream(f), StandardCharsets.UTF_8);

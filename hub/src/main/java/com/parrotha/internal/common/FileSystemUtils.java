@@ -27,6 +27,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -96,25 +97,47 @@ public class FileSystemUtils {
     }
 
     public static ClassLoader getClassloaderForJarFiles(File directory) {
-        try {
-            File jarFiles[] = directory.listFiles(new FileFilter() {
-                @Override
-                public boolean accept(File file) {
-                    return file.getName().endsWith(".jar");
-                }
-            });
-            ArrayList<URL> urls = new ArrayList<>();
-            for (File jarFile : jarFiles) {
-                urls.add(jarFile.toURI().toURL());
-            }
+        List<URL> urls = listJarsForDirectory(directory, false);
 
-            ClassLoader myClassLoader = new URLClassLoader(urls.toArray(new URL[0]));
-            return myClassLoader;
-
-        } catch (MalformedURLException e) {
-            e.printStackTrace();
+        if (urls.isEmpty()) {
+            return null;
         }
 
-        return null;
+        ClassLoader myClassLoader = new URLClassLoader(urls.toArray(new URL[0]));
+        return myClassLoader;
+    }
+
+    public static List<URL> listJarsForDirectory(File directory, boolean recurse) {
+        List<URL> urls = new ArrayList<>();
+
+        if (recurse) {
+            File additionalDirectories[] = directory.listFiles(new FileFilter() {
+                @Override
+                public boolean accept(File file) {
+                    return file.isDirectory();
+                }
+            });
+            // recurse through directories
+            for (File addDir : additionalDirectories) {
+                urls.addAll(listJarsForDirectory(addDir, recurse));
+            }
+        }
+
+        File jarFiles[] = directory.listFiles(new FileFilter() {
+            @Override
+            public boolean accept(File file) {
+                return file.getName().endsWith(".jar");
+            }
+        });
+
+        for (File jarFile : jarFiles) {
+            try {
+                urls.add(jarFile.toURI().toURL());
+            } catch (MalformedURLException e) {
+                e.printStackTrace();
+            }
+        }
+
+        return urls;
     }
 }
