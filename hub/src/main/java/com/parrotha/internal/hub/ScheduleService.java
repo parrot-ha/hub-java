@@ -78,6 +78,7 @@ public class ScheduleService {
     public void shutdown() {
         try {
             getScheduler().shutdown();
+            this.scheduler = null;
         } catch (SchedulerException schedulerException) {
             schedulerException.printStackTrace();
         }

@@ -78,7 +78,12 @@ public class ExtensionApiHandler extends BaseApiHandler {
         });
 
         app.get("/api/extensions/:id/status", ctx -> {
+            String id = ctx.pathParam("id");
+            String status = extensionService.getExtensionStatus(id);
 
+            ctx.status(200);
+            ctx.contentType("application/json");
+            ctx.result(new JsonBuilder(Map.of("status", status)).toString());
         });
 
         app.get("/api/extension_settings", ctx -> {

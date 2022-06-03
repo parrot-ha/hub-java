@@ -55,9 +55,31 @@ public class ExtensionService {
         this.extensionDataStore = extensionDataStore;
     }
 
+    public void initialize() {
+        new Thread(() -> {
+            this.refreshExtensionList();
+        }).start();
+    }
+
     public void clearExtensions() {
         this.extensions.clear();
         this.extensions = null;
+    }
+
+    private Map<String, String> extensionStatus;
+
+    private void updateExtensionStatus(String id, String status) {
+        if (this.extensionStatus == null) {
+            this.extensionStatus = new HashMap<>();
+        }
+        this.extensionStatus.put(id, status);
+    }
+
+    public String getExtensionStatus(String extensionId) {
+        if (this.extensionStatus != null && this.extensionStatus.size() > 0 && this.extensionStatus.containsKey(extensionId)) {
+            return this.extensionStatus.get(extensionId);
+        }
+        return "IDLE";
     }
 
     private Map<String, Map> extensions;
@@ -70,9 +92,11 @@ public class ExtensionService {
         return getExtensions().values();
     }
 
-    public synchronized Map<String, Map> getExtensions() {
-        if (extensions == null) {
-            extensions = loadExtensions();
+    public Map<String, Map> getExtensions() {
+        synchronized (this) {
+            if (extensions == null) {
+                extensions = loadExtensions();
+            }
         }
         return extensions;
     }
@@ -82,19 +106,24 @@ public class ExtensionService {
     }
 
     public String addSetting(String name, String type, String location) {
-        return extensionDataStore.addSetting(name, type, location);
+        String returnValue = extensionDataStore.addSetting(name, type, location);
+        refreshExtensionList();
+        return returnValue;
     }
 
     public boolean updateSetting(String id, String name, String type, String location) {
-        return extensionDataStore.updateSetting(id, name, type, location);
+        boolean returnValue = extensionDataStore.updateSetting(id, name, type, location);
+        refreshExtensionList();
+        return returnValue;
     }
 
     public boolean downloadAndInstallExtension(String id) {
+        updateExtensionStatus(id, "INSTALLING");
         boolean success = true;
         Map extension = getExtension(id);
         List<String> files = null;
         try {
-            files = downloadExtension(extension, "./extensions/tmp/" + id);
+            files = downloadExtension(extension, "./extensions/staging/" + id);
             if (files.size() == 0) {
                 success = false;
             }
@@ -108,6 +137,9 @@ public class ExtensionService {
             //TODO: wipe out downloads
 
         }
+        updateExtensionStatus(id, "IDLE");
+        refreshExtensionList();
+
         return success;
     }
 
@@ -176,6 +208,8 @@ public class ExtensionService {
             }
         } else {
             File destDirFile = new File(destinationDirectory);
+            // clean out destination
+            FileSystemUtils.cleanDirectory(destinationDirectory);
             for (String fileName : files) {
                 // extract file if zip
                 if (fileName.endsWith(".zip")) {
@@ -193,18 +227,25 @@ public class ExtensionService {
             Map extension = getExtension(id);
             String type = (String) extension.get("type");
             synchronized (this) {
-                List<String> files = downloadExtension(extension, "./extensions/tmp/" + id);
+                if ((boolean) extension.get("updateAvailable") && extension.containsKey("updateInfo")) {
+                    Map updateInfo = (Map) extension.get("updateInfo");
 
-                if (!"source".equalsIgnoreCase(type)) {
-                    // stop services after download is complete
-                    stopServices();
-                }
+                    List<String> files = downloadExtension(updateInfo, "./extensions/staging/" + id);
 
-                // copy updated extensions
-                installExtension(extension, files);
+                    if (!"source".equalsIgnoreCase(type)) {
+                        // stop services after download is complete
+                        stopServices();
+                    }
 
-                if (!"source".equalsIgnoreCase(type)) {
-                    startServices();
+                    // copy updated extensions
+                    installExtension(updateInfo, files);
+
+                    // clean up staging directory
+                    FileSystemUtils.cleanDirectory("./extensions/staging/" + id);
+
+                    if (!"source".equalsIgnoreCase(type)) {
+                        startServices();
+                    }
                 }
             }
 
@@ -217,8 +258,8 @@ public class ExtensionService {
     }
 
     public boolean deleteExtension(String id) {
+        Map extension = getExtension(id);
         synchronized (this) {
-            Map extension = getExtension(id);
             String type = (String) extension.get("type");
 
             if (!"source".equalsIgnoreCase(type)) {
@@ -263,6 +304,9 @@ public class ExtensionService {
             } catch (IOException e) {
                 e.printStackTrace();
             }
+        }
+        synchronized (this) {
+            clearExtensions();
         }
     }
 
@@ -338,7 +382,7 @@ public class ExtensionService {
         }
     }
 
-    private synchronized Map<String, Map> loadExtensions() {
+    private Map<String, Map> loadExtensions() {
         // load extensions from file system
         File extensionDirectory = new File("./extensions");
         if (!extensionDirectory.exists()) {

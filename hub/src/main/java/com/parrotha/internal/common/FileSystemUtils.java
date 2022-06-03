@@ -18,6 +18,8 @@
  */
 package com.parrotha.internal.common;
 
+import org.apache.commons.io.FileUtils;
+
 import java.io.File;
 import java.io.FileFilter;
 import java.io.FileInputStream;
@@ -37,6 +39,17 @@ public class FileSystemUtils {
         File directoryFile = new File(directory);
         if (!directoryFile.exists()) {
             directoryFile.mkdir();
+        }
+    }
+
+    public static void cleanDirectory(String directory) {
+        File directoryFile = new File(directory);
+        if (directoryFile.exists() && directoryFile.isDirectory()) {
+            try {
+                FileUtils.cleanDirectory(directoryFile);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 

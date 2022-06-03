@@ -4,7 +4,24 @@
       <v-row>
         <v-col>
           <v-card>
-            <v-card-title>Extensions</v-card-title>
+            <v-card-title
+              >Extensions
+              <v-tooltip bottom
+                ><template v-slot:activator="{ on }">
+                  <v-btn
+                    class="ma-2"
+                    text
+                    icon
+                    color="blue lighten-2"
+                    @click="loadExtensions(true)"
+                    v-on="on"
+                  >
+                    <v-icon>mdi-refresh</v-icon>
+                  </v-btn>
+                </template>
+                <span>Refresh Extension List</span>
+              </v-tooltip>
+            </v-card-title>
             <v-card-text>
               <v-tabs v-model="tab">
                 <v-tab>Installed</v-tab>
@@ -184,6 +201,13 @@
   </v-container>
 </template>
 <script>
+function handleErrors(response) {
+  if (!response.ok) {
+    throw Error(response.statusText);
+  }
+  return response;
+}
+
 export default {
   name: 'ExtensionList',
   data() {
@@ -209,6 +233,22 @@ export default {
     }
   },
   methods: {
+    loadExtensions: function(doRefresh) {
+      fetch(`/api/extensions?refresh=${doRefresh}`)
+        .then(response => response.json())
+        .then(data => {
+          if (typeof data !== 'undefined' && data != null) {
+            this.extensions = data;
+          }
+        });
+      fetch('/api/extension_settings')
+        .then(response => response.json())
+        .then(data => {
+          if (typeof data !== 'undefined' && data != null) {
+            this.settings = data;
+          }
+        });
+    },
     updateExtension: function(extensionId) {
       var url = `/api/extensions/${extensionId}?action=update`;
       //TODO: handle response
@@ -217,7 +257,9 @@ export default {
         body: null
       })
         .then(handleErrors)
-        .then(response => {});
+        .then(response => {
+          this.loadExtensions(true);
+        });
     },
     downloadExtension: function(extensionId) {
       var url = `/api/extensions/${extensionId}?action=download`;
@@ -227,7 +269,9 @@ export default {
         body: null
       })
         .then(handleErrors)
-        .then(response => {});
+        .then(response => {
+          this.loadExtensions(true);
+        });
     },
     deleteExtension: function(extensionId) {
       var url = `/api/extensions/${extensionId}`;
@@ -237,24 +281,13 @@ export default {
         body: null
       })
         .then(handleErrors)
-        .then(response => {});
+        .then(response => {
+          this.loadExtensions(true);
+        });
     }
   },
   mounted: function() {
-    fetch('/api/extensions')
-      .then(response => response.json())
-      .then(data => {
-        if (typeof data !== 'undefined' && data != null) {
-          this.extensions = data;
-        }
-      });
-    fetch('/api/extension_settings')
-      .then(response => response.json())
-      .then(data => {
-        if (typeof data !== 'undefined' && data != null) {
-          this.settings = data;
-        }
-      });
+    this.loadExtensions(false);
   }
 };
 </script>
