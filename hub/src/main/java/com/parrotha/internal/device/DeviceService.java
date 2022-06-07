@@ -26,6 +26,7 @@ import com.parrotha.device.Protocol;
 import com.parrotha.internal.ChangeTrackingMap;
 import com.parrotha.internal.Main;
 import com.parrotha.internal.common.FileSystemUtils;
+import com.parrotha.internal.extension.ExtensionService;
 import com.parrotha.internal.integration.Integration;
 import com.parrotha.internal.integration.IntegrationRegistry;
 import com.parrotha.internal.script.ParrotHubDelegatingScript;
@@ -46,16 +47,20 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
-import java.net.URLClassLoader;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class DeviceService {
     private static final Logger logger = LoggerFactory.getLogger(DeviceService.class);
@@ -592,54 +597,59 @@ public class DeviceService {
         if (!deviceHandlerDir.exists()) {
             deviceHandlerDir.mkdir();
         }
-        if (deviceHandlerDir.exists() && deviceHandlerDir.isDirectory()) {
-            File[] deviceHandlerFiles = deviceHandlerDir.listFiles(new FileFilter() {
-                @Override
-                public boolean accept(File pathname) {
-                    return pathname.isFile() && pathname.getName().endsWith(".groovy");
-                }
-            });
-
-            if (deviceHandlerFiles != null && deviceHandlerFiles.length > 0) {
-                for (File f : deviceHandlerFiles) {
-                    try {
-                        String deviceHandlerId = UUID.randomUUID().toString();
-
-                        String scriptCode = IOUtils.toString(new FileInputStream(f), StandardCharsets.UTF_8);
-                        Map dhi = extractDeviceHandlerDefinition(scriptCode);
-                        dhi.put("type", DeviceHandler.Type.USER);
-                        deviceHandlerInfo.put(deviceHandlerId, new DeviceHandler(deviceHandlerId, "deviceHandlers/" + f.getName(), dhi));
-                    } catch (Exception e) {
-                        logger.warn(String.format("Caught exception while processing %s", f.getName()), e);
-                    }
-                }
-            }
-        }
+        deviceHandlerInfo.putAll(loadDeviceHandlerSourcesFromDirectory(deviceHandlerDir, DeviceHandler.Type.USER).stream()
+                .collect(Collectors.toMap(DeviceHandler::getId, dh -> dh)));
 
         // scan through extension directory for device handler files
-        File extensionDirectory = new File("./extensions");
-        if (!extensionDirectory.exists()) {
-            extensionDirectory.mkdir();
-        }
-        File extDirs[] = extensionDirectory.listFiles(new FileFilter() {
-            @Override
-            public boolean accept(File file) {
-                return file.isDirectory();
-            }
-        });
-
-        Map<String, Map<String, Object>> integrations = new HashMap<>();
-        for (File extDir : extDirs) {
-            List<URL> urls = FileSystemUtils.listJarsForDirectory(extDir, true);
-            ClassLoader myClassLoader = new URLClassLoader(urls.toArray(new URL[0]));
-            deviceHandlerInfo.putAll(getDeviceHandlersFromClassloader(myClassLoader, extensionDirectory.getAbsolutePath()));
+        Set<Path> extDirs = ExtensionService.getExtensionDirectories();
+        for (Path extDir : extDirs) {
+            // get source code extensions
+            File extDeviceHandlerDir = new File(extDir.toString() + "/deviceHandlers");
+            deviceHandlerInfo.putAll(loadDeviceHandlerSourcesFromDirectory(extDeviceHandlerDir, DeviceHandler.Type.EXTENSION_SOURCE).stream()
+                    .collect(Collectors.toMap(DeviceHandler::getId, dh -> dh)));
+            // get compiled extensions
+            ClassLoader myClassLoader = FileSystemUtils.getClassloaderForJarFiles(extDir, true);
+            deviceHandlerInfo.putAll(getDeviceHandlersFromClassloader(myClassLoader, extDir.toString()));
         }
 
         return deviceHandlerInfo;
     }
 
+    private Set<DeviceHandler> loadDeviceHandlerSourcesFromDirectory(File deviceHandlerDir, DeviceHandler.Type deviceHandlerType) {
+        Set<DeviceHandler> deviceHandlers = new HashSet<>();
+        if (deviceHandlerDir.exists() && deviceHandlerDir.isDirectory()) {
+
+            try (Stream<Path> pathStream = Files.find(deviceHandlerDir.toPath(),
+                    Integer.MAX_VALUE,
+                    (p, basicFileAttributes) ->
+                            p.getFileName().toString().endsWith(".groovy"))
+            ) {
+                deviceHandlers = pathStream.map(path -> {
+                    File f = path.toFile();
+                    try {
+                        String deviceHandlerId = UUID.randomUUID().toString();
+
+                        String scriptCode = IOUtils.toString(new FileInputStream(f), StandardCharsets.UTF_8);
+                        Map dhi = extractDeviceHandlerDefinition(scriptCode);
+                        dhi.put("type", deviceHandlerType);
+                        return new DeviceHandler(deviceHandlerId, deviceHandlerDir.getPath() + "/" + f.getName(), dhi);
+                    } catch (Exception e) {
+                        logger.warn(String.format("Caught exception while processing %s", f.getName()), e);
+                    }
+                    return null;
+                }).collect(Collectors.toSet());
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        return deviceHandlers;
+    }
+
     private Map<String, DeviceHandler> getDeviceHandlersFromClassloader(ClassLoader classLoader, String baseDirectory) {
         Map<String, DeviceHandler> deviceHandlerInfo = new HashMap<>();
+        if (classLoader == null || baseDirectory == null) {
+            return deviceHandlerInfo;
+        }
         try {
             Enumeration<URL> resources = classLoader.getResources("deviceHandlerClasses.yaml");
             while (resources.hasMoreElements()) {

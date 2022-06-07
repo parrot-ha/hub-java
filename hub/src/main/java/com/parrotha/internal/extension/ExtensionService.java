@@ -20,6 +20,8 @@ package com.parrotha.internal.extension;
 
 import com.parrotha.internal.ServiceFactory;
 import com.parrotha.internal.common.FileSystemUtils;
+import com.parrotha.internal.entity.EntityService;
+import groovy.json.JsonBuilder;
 import groovy.json.JsonSlurper;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
@@ -33,25 +35,43 @@ import java.io.FileFilter;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
-import java.io.FilenameFilter;
 import java.io.IOException;
 import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class ExtensionService {
+    private static final String EXTENSION_PATH = "extensions/";
     private static final Logger logger = LoggerFactory.getLogger(ExtensionService.class);
     private ExtensionDataStore extensionDataStore;
+    private EntityService entityService;
 
     public ExtensionService() {
         this.extensionDataStore = new ExtensionYamlDataStore();
     }
 
     public ExtensionService(ExtensionDataStore extensionDataStore) {
+        this.extensionDataStore = extensionDataStore;
+    }
+
+    public ExtensionService(EntityService entityService) {
+        this.entityService = entityService;
+        this.extensionDataStore = new ExtensionYamlDataStore();
+    }
+
+    public ExtensionService(EntityService entityService, ExtensionDataStore extensionDataStore) {
+        this.entityService = entityService;
         this.extensionDataStore = extensionDataStore;
     }
 
@@ -62,8 +82,10 @@ public class ExtensionService {
     }
 
     public void clearExtensions() {
-        this.extensions.clear();
-        this.extensions = null;
+        if (this.extensions != null) {
+            this.extensions.clear();
+            this.extensions = null;
+        }
     }
 
     private Map<String, String> extensionStatus;
@@ -121,21 +143,29 @@ public class ExtensionService {
         updateExtensionStatus(id, "INSTALLING");
         boolean success = true;
         Map extension = getExtension(id);
-        List<String> files = null;
-        try {
-            files = downloadExtension(extension, "./extensions/staging/" + id);
-            if (files.size() == 0) {
-                success = false;
+        if ("source".equals(extension.get("type"))) {
+            success = downloadAndInstallSourceExtension(extension);
+            if (success) {
+                entityService.reprocessAutomationApps();
+                entityService.reprocessDeviceHandlers();
             }
-            installExtension(extension, files);
-        } catch (IOException e) {
-            success = false;
-            logger.warn("Exception when downloading and installing extension: " + id, e);
-        }
+        } else {
+            List<String> files;
+            try {
+                files = downloadBinaryExtension(extension, EXTENSION_PATH + "staging/" + id);
+                if (files.size() == 0) {
+                    success = false;
+                }
+                installBinaryExtension(extension, files);
+            } catch (IOException e) {
+                success = false;
+                logger.warn("Exception when downloading and installing extension: " + id, e);
+            }
 
-        if (!success) {
-            //TODO: wipe out downloads
+            if (!success) {
+                //TODO: wipe out downloads
 
+            }
         }
         updateExtensionStatus(id, "IDLE");
         refreshExtensionList();
@@ -143,8 +173,76 @@ public class ExtensionService {
         return success;
     }
 
-    private List<String> downloadExtension(Map extension, String downloadDirectory) throws IOException {
+    private boolean downloadAndInstallSourceExtension(Map extension) {
         String id = (String) extension.get("id");
+        String destinationDirectory = EXTENSION_PATH + id;
+        FileSystemUtils.cleanDirectory(destinationDirectory, true);
+
+        Object filesObj = extension.get("files");
+        if (filesObj != null && filesObj instanceof List) {
+            String locationURL = (String) extension.get("locationURL");
+            if (locationURL != null) {
+                if (locationURL.endsWith("parrotExtension.yaml")) {
+                    locationURL = locationURL.substring(0, locationURL.length() - "parrotExtension.yaml".length());
+                }
+                if (!locationURL.endsWith("/")) {
+                    locationURL = locationURL + "/";
+                }
+
+                // download parrotExtension.yaml
+                try {
+                    FileUtils.copyURLToFile(new URL(locationURL + "parrotExtension.yaml"), new File(destinationDirectory + "/parrotExtension.yaml"));
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    return false;
+                }
+            } else {
+                return false;
+            }
+            List files = (List) filesObj;
+            for (Object fileObj : files) {
+                if (fileObj instanceof Map) {
+                    Map file = (Map) fileObj;
+                    String remoteFileName = (String) file.get("file");
+                    String type = null;
+                    if (((Map) fileObj).containsKey("type")) {
+                        type = (String) ((Map) fileObj).get("type");
+                    }
+                    if (type != null) {
+                        String downloadURL = remoteFileName;
+                        if (!remoteFileName.startsWith("http")) {
+                            downloadURL = locationURL + remoteFileName;
+                        }
+
+                        String fileName = downloadURL.substring(downloadURL.lastIndexOf('/'));
+
+                        // download file
+                        String localFileName;
+                        if ("AUTOMATION_APP".equals(type)) {
+                            localFileName = destinationDirectory + "/automationApps/" + fileName;
+                        } else if ("DEVICE_HANDLER".equals(type)) {
+                            localFileName = destinationDirectory + "/deviceHandlers/" + fileName;
+                        } else {
+                            // we don't support other file types, move on.
+                            continue;
+                        }
+
+                        try {
+                            FileUtils.copyURLToFile(new URL(downloadURL), new File(localFileName));
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                            return false;
+                        }
+                    }
+                }
+            }
+            return true;
+        }
+        return false;
+    }
+
+    private List<String> downloadBinaryExtension(Map extension, String downloadDirectory) throws IOException {
+        //String id = (String) extension.get("id");
         String locationType = (String) extension.get("locationType");
         String locationURL = (String) extension.get("locationURL");
         List<String> downloadedFiles = new ArrayList<>();
@@ -174,39 +272,19 @@ public class ExtensionService {
                 }
             }
         } else if ("URL".equals(locationType)) {
-            // extension should include a list of files.
+            // TODO: download URL extensions
+            logger.debug("extension info " + new JsonBuilder(extension));
+
         }
         return downloadedFiles;
     }
 
-    private void installExtension(Map extensionInfo, List<String> files) throws IOException {
+    private void installBinaryExtension(Map extensionInfo, List<String> files) throws IOException {
 
         String type = (String) extensionInfo.get("type");
         String id = (String) extensionInfo.get("id");
-        String destinationDirectory = "./extensions/" + id;
-        if ("source".equalsIgnoreCase(type)) {
-            List<Map> sourceFiles = (List<Map>) extensionInfo.get("sourcefiles");
-            for (Map sourceFileInfo : sourceFiles) {
-
-                String sourceFileName = (String) sourceFileInfo.get("file");
-                String sourceFileType = (String) sourceFileInfo.get("type");
-                String destFileName = sourceFileName;
-                // if source file has a full url or directory structure to it, strip that off.
-                if (destFileName.contains("/")) {
-                    destFileName = destFileName.substring(destFileName.lastIndexOf("/"));
-                }
-                // copy source files to appropriate directories
-                if ("AUTOMATION_APP".equals(sourceFileType)) {
-                    FileSystemUtils.createDirectory(destinationDirectory + "/automationApps");
-                    FileUtils.copyFile(new File(sourceFileName), new File(destinationDirectory + "/automationApps/" + destFileName));
-                } else if ("DEVICE_HANDLER".equals(sourceFileType)) {
-                    FileSystemUtils.createDirectory(destinationDirectory + "/deviceHandlers");
-                    FileUtils.copyFile(new File(sourceFileName), new File(destinationDirectory + "/deviceHandlers/" + destFileName));
-                } else {
-                    logger.warn("Unknown file type " + sourceFileType);
-                }
-            }
-        } else {
+        String destinationDirectory = EXTENSION_PATH + id;
+        if (!"source".equalsIgnoreCase(type)) {
             File destDirFile = new File(destinationDirectory);
             // clean out destination
             FileSystemUtils.cleanDirectory(destinationDirectory);
@@ -228,28 +306,32 @@ public class ExtensionService {
             String type = (String) extension.get("type");
             synchronized (this) {
                 if ((boolean) extension.get("updateAvailable") && extension.containsKey("updateInfo")) {
-                    Map updateInfo = (Map) extension.get("updateInfo");
+                    if ("source".equalsIgnoreCase(type)) {
+                        boolean success = downloadAndInstallSourceExtension(extension);
+                        if (success) {
+                            entityService.reprocessAutomationApps();
+                            entityService.reprocessDeviceHandlers();
+                        }
+                        return success;
+                    } else {
+                        Map updateInfo = (Map) extension.get("updateInfo");
 
-                    List<String> files = downloadExtension(updateInfo, "./extensions/staging/" + id);
+                        List<String> files = downloadBinaryExtension(updateInfo, EXTENSION_PATH + "staging/" + id);
 
-                    if (!"source".equalsIgnoreCase(type)) {
                         // stop services after download is complete
                         stopServices();
-                    }
 
-                    // copy updated extensions
-                    installExtension(updateInfo, files);
+                        // copy updated extensions
+                        installBinaryExtension(updateInfo, files);
 
-                    // clean up staging directory
-                    FileSystemUtils.cleanDirectory("./extensions/staging/" + id);
+                        // clean up staging directory
+                        FileSystemUtils.cleanDirectory(EXTENSION_PATH + "staging/" + id);
 
-                    if (!"source".equalsIgnoreCase(type)) {
                         startServices();
+                        return true;
                     }
                 }
             }
-
-            return true;
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -268,7 +350,7 @@ public class ExtensionService {
 
             // delete extension
             try {
-                FileUtils.deleteDirectory(new File("./extensions/" + id));
+                FileUtils.deleteDirectory(new File(EXTENSION_PATH + id));
             } catch (IOException e) {
                 e.printStackTrace();
                 return false;
@@ -293,8 +375,8 @@ public class ExtensionService {
     }
 
     public void refreshExtensionList() {
-        FileSystemUtils.createDirectory("./extensions");
-        FileSystemUtils.createDirectory("./extensions/.extensions");
+        FileSystemUtils.createDirectory(EXTENSION_PATH);
+        FileSystemUtils.createDirectory(EXTENSION_PATH + ".extensions/");
 
         List<Map> extLocs = getExtensionSettings();
 
@@ -361,9 +443,9 @@ public class ExtensionService {
         extensionInformation.put("locationType", locationType);
         String extensionId = (String) extensionInformation.get("id");
 
-        FileSystemUtils.createDirectory("./extensions/.extensions/" + extensionId);
+        FileSystemUtils.createDirectory(EXTENSION_PATH + ".extensions/" + extensionId);
 
-        File file = new File("./extensions/.extensions/" + extensionId + "/parrotExtension.yaml");
+        File file = new File(EXTENSION_PATH + ".extensions/" + extensionId + "/parrotExtension.yaml");
         FileWriter fileWriter = new FileWriter(file);
         yaml.dump(extensionInformation, fileWriter);
     }
@@ -384,24 +466,27 @@ public class ExtensionService {
 
     private Map<String, Map> loadExtensions() {
         // load extensions from file system
-        File extensionDirectory = new File("./extensions");
-        if (!extensionDirectory.exists()) {
-            extensionDirectory.mkdir();
-        }
-        File extDirs[] = extensionDirectory.listFiles(new FileFilter() {
-            @Override
-            public boolean accept(File file) {
-                return file.isDirectory();
-            }
-        });
+        Set<Path> extDirs = getExtensionDirectories();
 
         Map<String, Map> tmpExtensions = new HashMap<>();
-        for (File extDir : extDirs) {
-            tmpExtensions.putAll(loadJarFiles(extDir));
+        for (Path extDir : extDirs) {
+            File parrotExtensionFile = new File(extDir + "/parrotExtension.yaml");
+            if (parrotExtensionFile.exists()) {
+                Yaml yaml = new Yaml();
+                try {
+                    Map extInf = yaml.load(new FileInputStream(parrotExtensionFile));
+                    extInf.put("installed", true);
+                    tmpExtensions.put((String) extInf.get("id"), extInf);
+                } catch (FileNotFoundException e) {
+                    e.printStackTrace();
+                }
+            } else {
+                tmpExtensions.putAll(loadJarFiles(extDir));
+            }
         }
 
         // load extensions from configuration directory
-        File availableExtensionDirectory = new File("./extensions/.extensions");
+        File availableExtensionDirectory = new File(EXTENSION_PATH + ".extensions");
         if (availableExtensionDirectory.isDirectory()) {
             File avExtDirs[] = availableExtensionDirectory.listFiles(new FileFilter() {
                 @Override
@@ -411,34 +496,24 @@ public class ExtensionService {
             });
 
             for (File extDir : avExtDirs) {
-                File[] extInfFiles = extDir.listFiles(new FilenameFilter() {
-                    @Override
-                    public boolean accept(File file, String s) {
-                        return "parrotExtension.yaml".equals(s);
-                    }
-                });
-
-                if (extInfFiles.length > 0) {
-                    File extInfFile = extInfFiles[0];
+                try {
                     Yaml yaml = new Yaml();
-                    try {
-                        Map extInf = yaml.load(new FileInputStream(extInfFile));
-                        String extInfId = (String) extInf.get("id");
-                        if (tmpExtensions.containsKey(extInfId)) {
-                            Map extension = tmpExtensions.get(extInfId);
-                            if (!StringUtils.equals((String) extension.get("version"), (String) extInf.get("version"))) {
-                                extension.put("updateAvailable", true);
-                                extension.put("updateInfo", extInf);
-                            } else {
-                                extension.put("updateAvailable", false);
-                            }
+                    Map extInf = yaml.load(new FileInputStream(new File(extDir.getPath() + "/parrotExtension.yaml")));
+                    String extInfId = (String) extInf.get("id");
+                    if (tmpExtensions.containsKey(extInfId)) {
+                        Map extension = tmpExtensions.get(extInfId);
+                        if (!StringUtils.equals((String) extension.get("version"), (String) extInf.get("version"))) {
+                            extension.put("updateAvailable", true);
+                            extension.put("updateInfo", extInf);
                         } else {
-                            extInf.put("installed", false);
-                            tmpExtensions.put((String) extInf.get("id"), extInf);
+                            extension.put("updateAvailable", false);
                         }
-                    } catch (FileNotFoundException e) {
-                        e.printStackTrace();
+                    } else {
+                        extInf.put("installed", false);
+                        tmpExtensions.put((String) extInf.get("id"), extInf);
                     }
+                } catch (FileNotFoundException e) {
+                    e.printStackTrace();
                 }
             }
         }
@@ -446,23 +521,12 @@ public class ExtensionService {
         return tmpExtensions;
     }
 
-    private Map<String, Map> loadJarFiles(File extDir) {
+    private Map<String, Map> loadJarFiles(Path extDir) {
         Map<String, Map> extensions = new HashMap<>();
 
-        File additionalDirectories[] = extDir.listFiles(new FileFilter() {
-            @Override
-            public boolean accept(File file) {
-                return file.isDirectory();
-            }
-        });
-        // recurse through directories
-        for (File addDir : additionalDirectories) {
-            extensions.putAll(loadJarFiles(addDir));
-        }
-
-        ClassLoader myClassLoader = FileSystemUtils.getClassloaderForJarFiles(extDir);
+        ClassLoader myClassLoader = FileSystemUtils.getClassloaderForJarFiles(extDir, true);
         if (myClassLoader != null) {
-            extensions.putAll(getExtensionFromClassloader(myClassLoader, extDir.getPath()));
+            extensions.putAll(getExtensionFromClassloader(myClassLoader, extDir.toString()));
         }
 
         return extensions;
@@ -490,5 +554,24 @@ public class ExtensionService {
         }
 
         return extensions;
+    }
+
+    public static Set<Path> getExtensionDirectories() {
+        File extensionDirectory = new File(EXTENSION_PATH);
+        if (!extensionDirectory.exists()) {
+            extensionDirectory.mkdir();
+        }
+
+        Set<Path> extDirs = new HashSet<>();
+        try (Stream<Path> stream = Files.list(Paths.get(extensionDirectory.getPath()))) {
+            extDirs = stream
+                    .filter(Files::isDirectory)
+                    .filter(file -> !file.endsWith(".extensions") && !file.endsWith("staging"))
+                    .collect(Collectors.toSet());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return extDirs;
     }
 }

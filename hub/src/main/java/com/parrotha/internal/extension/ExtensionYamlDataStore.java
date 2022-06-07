@@ -59,6 +59,10 @@ public class ExtensionYamlDataStore implements ExtensionDataStore {
                 "name", "Zwave-JS",
                 "type", "GithubRelease",
                 "location", "parrot-ha/zwavejs-integration"));
+        extensionLocations.put("34b4a309-9bda-4bf1-a439-b43abcdde972", Map.of("id", "34b4a309-9bda-4bf1-a439-b43abcdde972",
+                "name", "Test Source Ext",
+                "type", "URL",
+                "location", "https://raw.githubusercontent.com/parrot-ha/testSourceExt/main/parrotExtension.yaml"));
 
         return extensionLocations;
     }

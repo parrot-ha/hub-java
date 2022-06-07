@@ -21,15 +21,16 @@ package com.parrotha.internal.common;
 import org.apache.commons.io.FileUtils;
 
 import java.io.File;
-import java.io.FileFilter;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.util.ArrayList;
-import java.util.List;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -42,15 +43,23 @@ public class FileSystemUtils {
         }
     }
 
-    public static void cleanDirectory(String directory) {
+    public static void cleanDirectory(String directory, boolean createDirectory) {
         File directoryFile = new File(directory);
-        if (directoryFile.exists() && directoryFile.isDirectory()) {
-            try {
-                FileUtils.cleanDirectory(directoryFile);
-            } catch (IOException e) {
-                e.printStackTrace();
+        if (directoryFile.exists()) {
+            if (directoryFile.isDirectory()) {
+                try {
+                    FileUtils.cleanDirectory(directoryFile);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
+        } else if (createDirectory) {
+            createDirectory(directory);
         }
+    }
+
+    public static void cleanDirectory(String directory) {
+        cleanDirectory(directory, false);
     }
 
     public static void unzipFile(String fileZip, String destDir) throws IOException {
@@ -109,48 +118,33 @@ public class FileSystemUtils {
         return destFile;
     }
 
-    public static ClassLoader getClassloaderForJarFiles(File directory) {
-        List<URL> urls = listJarsForDirectory(directory, false);
+    public static ClassLoader getClassloaderForJarFiles(Path directory, boolean recurse) {
+        URL[] urls = listJarsForDirectory(directory, recurse);
 
-        if (urls.isEmpty()) {
+        if (urls.length == 0) {
             return null;
         }
-
-        ClassLoader myClassLoader = new URLClassLoader(urls.toArray(new URL[0]));
-        return myClassLoader;
+        return new URLClassLoader(urls);
     }
 
-    public static List<URL> listJarsForDirectory(File directory, boolean recurse) {
-        List<URL> urls = new ArrayList<>();
+    public static URL[] listJarsForDirectory(Path directory, boolean recurse) {
+        URL[] urls = {};
 
-        if (recurse) {
-            File additionalDirectories[] = directory.listFiles(new FileFilter() {
-                @Override
-                public boolean accept(File file) {
-                    return file.isDirectory();
+        try (Stream<Path> pathStream = Files.find(directory,
+                recurse ? Integer.MAX_VALUE : 0,
+                (p, basicFileAttributes) ->
+                        p.getFileName().toString().endsWith(".jar"))
+        ) {
+            urls = pathStream.map(path -> {
+                try {
+                    return path.toUri().toURL();
+                } catch (MalformedURLException e) {
                 }
-            });
-            // recurse through directories
-            for (File addDir : additionalDirectories) {
-                urls.addAll(listJarsForDirectory(addDir, recurse));
-            }
+                return null;
+            }).collect(Collectors.toList()).toArray(URL[]::new);
+        } catch (IOException e) {
+            e.printStackTrace();
         }
-
-        File jarFiles[] = directory.listFiles(new FileFilter() {
-            @Override
-            public boolean accept(File file) {
-                return file.getName().endsWith(".jar");
-            }
-        });
-
-        for (File jarFile : jarFiles) {
-            try {
-                urls.add(jarFile.toURI().toURL());
-            } catch (MalformedURLException e) {
-                e.printStackTrace();
-            }
-        }
-
         return urls;
     }
 }

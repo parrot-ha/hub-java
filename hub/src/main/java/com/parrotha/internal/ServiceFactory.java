@@ -103,7 +103,7 @@ public class ServiceFactory {
 
     public static ExtensionService getExtensionService() {
         if (extensionService == null) {
-            extensionService = new ExtensionService();
+            extensionService = new ExtensionService(getEntityService());
         }
         return extensionService;
     }

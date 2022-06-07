@@ -101,17 +101,17 @@ public class DeviceTilesDelegate {
     }
 
     void attributeState(Map options, String name) {
-
     }
 
     public void main(String mainTileName) {
     }
 
-    void details(List list) {
+    public void main(List mainTileList) {
+    }
 
+    void details(List list) {
     }
 
     void state(Map options, String name) {
-
     }
 }

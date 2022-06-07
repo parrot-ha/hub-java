@@ -347,6 +347,7 @@ public class IntegrationService {
                         .asSubclass(AbstractIntegration.class);
                 abstractIntegration = integrationClass.getDeclaredConstructor().newInstance();
             } catch (Exception e) {
+                logger.warn("Exception occurred while loading integration id {}", integrationTypeId);
                 e.printStackTrace();
             }
         }
