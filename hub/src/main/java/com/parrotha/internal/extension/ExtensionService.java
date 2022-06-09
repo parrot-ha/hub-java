@@ -109,7 +109,7 @@ public class ExtensionService {
         if (extensions == null) {
             synchronized (this) {
                 // check for null again so only the first thread to get here loads the extensions.
-                if(extensions == null) {
+                if (extensions == null) {
                     extensions = loadExtensions();
                 }
             }
@@ -361,11 +361,11 @@ public class ExtensionService {
     public Map<String, ClassLoader> getExtensionClassloaders() {
         Map<String, ClassLoader> extensionClassLoaders = new HashMap<>();
 
-        for(Map extensionInfo : getExtensions().values()) {
+        for (Map extensionInfo : getExtensions().values()) {
             String location = (String) extensionInfo.get("location");
-            if(location != null) {
+            if (location != null) {
                 ClassLoader myClassLoader = FileSystemUtils.getClassloaderForJarFiles(Paths.get(location), true);
-                if(myClassLoader != null) {
+                if (myClassLoader != null) {
                     extensionClassLoaders.put((String) extensionInfo.get("id"), myClassLoader);
                 }
             }
@@ -385,7 +385,7 @@ public class ExtensionService {
         Map<String, Map<String, InputStream>> sourceList = new HashMap<>();
 
         // scan through extension directory for files
-        Map<String, Path> extDirs = getExtensionsAndDirectories();
+        Map<String, Path> extDirs = getInstalledExtensionsAndDirectories();
         for (String extId : extDirs.keySet()) {
             // get source code extensions
             File extSourceDir = new File(extDirs.get(extId) + sourceSubDir);
@@ -703,10 +703,10 @@ public class ExtensionService {
         return extDirs;
     }
 
-    private Map<String, Path> getExtensionsAndDirectories() {
+    private Map<String, Path> getInstalledExtensionsAndDirectories() {
         Map<String, Path> extDirs = new HashMap<>();
         if (getExtensions().size() > 0) {
-            extDirs = getExtensions().values().stream()
+            extDirs = getExtensions().values().stream().filter(ext -> ext.get("installed") != null && (boolean) ext.get("installed"))
                     .collect(Collectors.toMap(ext -> (String) ext.get("id"), ext -> Paths.get((String) ext.get("location"))));
         }
         return extDirs;
