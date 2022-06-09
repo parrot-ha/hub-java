@@ -18,9 +18,9 @@
  */
 package com.parrotha.internal.app;
 
+import com.parrotha.internal.system.OAuthToken;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
-import com.parrotha.internal.system.OAuthToken;
 
 import java.beans.Transient;
 import java.util.ArrayList;
@@ -50,15 +50,25 @@ public class AutomationApp {
 
     private List<OAuthToken> oAuthTokens;
 
+    private Type type;
+
+    public enum Type {
+        USER,
+        SYSTEM,
+        EXTENSION,
+        EXTENSION_SOURCE;
+    }
+
     /**
      * Check if the 2 AutomationApps are equal but ignore the id field
      */
     public boolean equalsIgnoreId(AutomationApp aa) {
         return equalsIgnoreId(aa, false);
     }
-        /**
-         * Check if the 2 AutomationApps are equal but ignore the id field
-         */
+
+    /**
+     * Check if the 2 AutomationApps are equal but ignore the id field
+     */
     public boolean equalsIgnoreId(AutomationApp aa, boolean includeOAuthClientIdSecret) {
         if (aa == this) {
             return true;
@@ -106,7 +116,15 @@ public class AutomationApp {
         if (!StringUtils.equals(oAuthDisplayLink, aa.getoAuthDisplayLink())) {
             return false;
         }
-        if(includeOAuthClientIdSecret) {
+        if (type != null) {
+            if (!type.equals(aa.getType())) {
+                return false;
+            }
+        } else if (aa.getType() != null) {
+            // aa.type is not null but type is null, they are not equal
+            return false;
+        }
+        if (includeOAuthClientIdSecret) {
             if (!StringUtils.equals(oAuthClientId, aa.getoAuthClientId())) {
                 return false;
             }
@@ -134,13 +152,22 @@ public class AutomationApp {
         this.iconX2Url = getStringValue(definition, "iconX2Url");
         this.iconX3Url = getStringValue(definition, "iconX3Url");
         this.parent = getStringValue(definition, "parent");
-        if(definition.get("oauth") instanceof Map) {
+        if (definition.get("oauth") instanceof Map) {
             Map oAuthMap = (Map) definition.get("oauth");
             this.oAuthDisplayName = getStringValue(oAuthMap, "displayName");
             this.oAuthDisplayLink = getStringValue(oAuthMap, "displayLink");
             this.oAuthRedirectURI = getStringValue(oAuthMap, "redirectURI");
             this.oAuthClientId = getStringValue(oAuthMap, "clientId");
             this.oAuthClientSecret = getStringValue(oAuthMap, "clientSecret");
+        }
+
+        Object typeObj = definition.get("type");
+        if (typeObj != null) {
+            if (typeObj instanceof String) {
+                this.type = Type.valueOf((String) typeObj);
+            } else if (typeObj instanceof Type) {
+                this.type = (Type) typeObj;
+            }
         }
     }
 
@@ -310,6 +337,14 @@ public class AutomationApp {
         return oAuthTokens.add(oAuthToken);
     }
 
+    public Type getType() {
+        return type;
+    }
+
+    public void setType(Type type) {
+        this.type = type;
+    }
+
     @Transient
     public boolean isOAuthEnabled() {
         return StringUtils.isNotBlank(oAuthClientId) && StringUtils.isNotBlank(oAuthClientSecret);
@@ -330,6 +365,7 @@ public class AutomationApp {
                 ", iconUrl='" + iconUrl + '\'' +
                 ", iconX2Url='" + iconX2Url + '\'' +
                 ", iconX3Url='" + iconX3Url + '\'' +
+                ", type='" + type + '\'' +
                 ", oAuthClientId='" + oAuthClientId + '\'' +
                 ", oAuthClientSecret='" + oAuthClientSecret + '\'' +
                 ", oAuthRedirectURI='" + oAuthRedirectURI + '\'' +

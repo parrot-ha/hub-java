@@ -74,7 +74,7 @@ public class ServiceFactory {
 
     public static AutomationAppService getAutomationAppService() {
         if (automationAppService == null) {
-            automationAppService = new AutomationAppService();
+            automationAppService = new AutomationAppService(getExtensionService());
         }
         return automationAppService;
     }
@@ -103,7 +103,7 @@ public class ServiceFactory {
 
     public static ExtensionService getExtensionService() {
         if (extensionService == null) {
-            extensionService = new ExtensionService(getEntityService());
+            extensionService = new ExtensionService();
         }
         return extensionService;
     }

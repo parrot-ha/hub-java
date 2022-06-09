@@ -20,7 +20,6 @@ package com.parrotha.internal.extension;
 
 import com.parrotha.internal.ServiceFactory;
 import com.parrotha.internal.common.FileSystemUtils;
-import com.parrotha.internal.entity.EntityService;
 import groovy.json.JsonBuilder;
 import groovy.json.JsonSlurper;
 import org.apache.commons.io.FileUtils;
@@ -36,6 +35,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -54,24 +54,15 @@ import java.util.stream.Stream;
 public class ExtensionService {
     private static final String EXTENSION_PATH = "extensions/";
     private static final Logger logger = LoggerFactory.getLogger(ExtensionService.class);
+
+    private Set<ExtensionStateListener> stateListeners = new HashSet<>();
     private ExtensionDataStore extensionDataStore;
-    private EntityService entityService;
 
     public ExtensionService() {
         this.extensionDataStore = new ExtensionYamlDataStore();
     }
 
     public ExtensionService(ExtensionDataStore extensionDataStore) {
-        this.extensionDataStore = extensionDataStore;
-    }
-
-    public ExtensionService(EntityService entityService) {
-        this.entityService = entityService;
-        this.extensionDataStore = new ExtensionYamlDataStore();
-    }
-
-    public ExtensionService(EntityService entityService, ExtensionDataStore extensionDataStore) {
-        this.entityService = entityService;
         this.extensionDataStore = extensionDataStore;
     }
 
@@ -139,6 +130,28 @@ public class ExtensionService {
         return returnValue;
     }
 
+    public void registerStateListener(ExtensionStateListener stateListener) {
+        synchronized (stateListeners) {
+            stateListeners.add(stateListener);
+        }
+    }
+
+    public void unregisterStateListener(ExtensionStateListener stateListener) {
+        synchronized (stateListener) {
+            stateListeners.remove(stateListener);
+        }
+    }
+
+    private void notifyStateListeners(ExtensionState state) {
+        if (stateListeners.size() > 0) {
+            new Thread(() -> {
+                for (ExtensionStateListener stateListener : stateListeners) {
+                    stateListener.stateUpdated(state);
+                }
+            }).start();
+        }
+    }
+
     public boolean downloadAndInstallExtension(String id) {
         updateExtensionStatus(id, "INSTALLING");
         boolean success = true;
@@ -146,8 +159,8 @@ public class ExtensionService {
         if ("source".equals(extension.get("type"))) {
             success = downloadAndInstallSourceExtension(extension);
             if (success) {
-                entityService.reprocessAutomationApps();
-                entityService.reprocessDeviceHandlers();
+                // notify listeners
+                notifyStateListeners(new ExtensionState(id, ExtensionState.StateType.INSTALLED));
             }
         } else {
             List<String> files;
@@ -157,6 +170,7 @@ public class ExtensionService {
                     success = false;
                 }
                 installBinaryExtension(extension, files);
+                notifyStateListeners(new ExtensionState(id, ExtensionState.StateType.INSTALLED));
             } catch (IOException e) {
                 success = false;
                 logger.warn("Exception when downloading and installing extension: " + id, e);
@@ -309,8 +323,8 @@ public class ExtensionService {
                     if ("source".equalsIgnoreCase(type)) {
                         boolean success = downloadAndInstallSourceExtension(extension);
                         if (success) {
-                            entityService.reprocessAutomationApps();
-                            entityService.reprocessDeviceHandlers();
+                            // notify listeners
+                            notifyStateListeners(new ExtensionState(id, ExtensionState.StateType.UPDATED));
                         }
                         return success;
                     } else {
@@ -323,6 +337,8 @@ public class ExtensionService {
 
                         // copy updated extensions
                         installBinaryExtension(updateInfo, files);
+                        // notify listeners
+                        notifyStateListeners(new ExtensionState(id, ExtensionState.StateType.UPDATED));
 
                         // clean up staging directory
                         FileSystemUtils.cleanDirectory(EXTENSION_PATH + "staging/" + id);
@@ -339,6 +355,89 @@ public class ExtensionService {
         return false;
     }
 
+    public Map<String, InputStream> getAutomationAppSources() {
+        Map<String, InputStream> sourceList = new HashMap<>();
+
+        // scan through extension directory for automation app files
+        Set<Path> extDirs = ExtensionService.getExtensionDirectories();
+        for (Path extDir : extDirs) {
+            // get source code extensions
+            File extAutomationAppDir = new File(extDir.toString() + "/automationApps");
+            sourceList.putAll(loadSourcesFromDirectory(extAutomationAppDir));
+        }
+        return sourceList;
+    }
+
+    public Map<String, InputStream> getAutomationAppSources(String extensionId) {
+        Map<String, InputStream> sourceList = new HashMap<>();
+
+        // scan through extension directory for device handler files
+        Set<Path> extDirs = ExtensionService.getExtensionDirectories();
+        for (Path extDir : extDirs) {
+            // get source code extensions
+            File extAutomationAppDir = getExtensionDirectory(extensionId).resolve("automationApps").toFile();
+            sourceList.putAll(loadSourcesFromDirectory(extAutomationAppDir));
+        }
+        return sourceList;
+    }
+
+    private Map<String, InputStream> loadSourcesFromDirectory(File sourceDir) {
+        Map<String, InputStream> sourceList = new HashMap<>();
+        if (!sourceDir.exists() || !sourceDir.isDirectory()) {
+            return sourceList;
+        }
+
+        // load automation apps from text files on local file system
+        try (Stream<Path> pathStream = Files.find(sourceDir.toPath(),
+                0,
+                (p, basicFileAttributes) ->
+                        p.getFileName().toString().endsWith(".groovy"))
+        ) {
+            sourceList = pathStream.collect(Collectors.toMap(Path::toString, path -> {
+                try {
+                    return Files.newInputStream(path);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                return null;
+            }));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return sourceList;
+    }
+
+//    public Map<String, InputStream> getAutomationAppSources() {
+//        Map<String, InputStream> automationAppSourceList = new HashMap<>();
+//
+//        // load automation apps from text files on local file system
+//        try {
+//            final String aaFilePath = "automationApps/";
+//            File automationAppDir = new File(aaFilePath);
+//            if (!automationAppDir.exists()) {
+//                automationAppDir.mkdir();
+//            }
+//            if (automationAppDir.exists() && automationAppDir.isDirectory()) {
+//                File[] automationAppFiles = automationAppDir.listFiles(new FileFilter() {
+//                    @Override
+//                    public boolean accept(File pathname) {
+//                        return pathname.isFile() && pathname.getName().endsWith(".groovy");
+//                    }
+//                });
+//
+//                if (automationAppFiles != null && automationAppFiles.length > 0) {
+//                    for (File f : automationAppFiles) {
+//                        automationAppSourceList.put(aaFilePath + f.getName(), new FileInputStream(f));
+//                    }
+//                }
+//            }
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
+//        return automationAppSourceList;
+//    }
+
     public boolean deleteExtension(String id) {
         Map extension = getExtension(id);
         synchronized (this) {
@@ -351,6 +450,8 @@ public class ExtensionService {
             // delete extension
             try {
                 FileUtils.deleteDirectory(new File(EXTENSION_PATH + id));
+                // notify listeners
+                notifyStateListeners(new ExtensionState(id, ExtensionState.StateType.DELETED));
             } catch (IOException e) {
                 e.printStackTrace();
                 return false;
@@ -573,5 +674,9 @@ public class ExtensionService {
         }
 
         return extDirs;
+    }
+
+    public static Path getExtensionDirectory(String extensionId) {
+        return new File(EXTENSION_PATH + extensionId).toPath();
     }
 }

@@ -42,7 +42,6 @@ import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.introspector.BeanAccess;
 
 import java.io.File;
-import java.io.FileFilter;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
@@ -533,6 +532,7 @@ public class DeviceService {
             try {
                 String scriptCode = IOUtils.toString(new FileInputStream(f), StandardCharsets.UTF_8);
                 Map definition = extractDeviceHandlerDefinition(scriptCode);
+                definition.put("type", DeviceHandler.Type.USER);
                 DeviceHandler newDeviceHandler = new DeviceHandler(id, fileName, definition);
                 if (!newDeviceHandler.equalsIgnoreId(existingDeviceHandler)) {
                     deviceDataStore.updateDeviceHandler(newDeviceHandler);

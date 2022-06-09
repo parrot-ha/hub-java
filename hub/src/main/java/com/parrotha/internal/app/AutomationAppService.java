@@ -18,15 +18,18 @@
  */
 package com.parrotha.internal.app;
 
+import com.parrotha.exception.NotFoundException;
+import com.parrotha.internal.ChangeTrackingMap;
+import com.parrotha.internal.Main;
+import com.parrotha.internal.extension.ExtensionService;
+import com.parrotha.internal.extension.ExtensionState;
+import com.parrotha.internal.extension.ExtensionStateListener;
+import com.parrotha.internal.script.ParrotHubDelegatingScript;
+import com.parrotha.internal.system.OAuthToken;
 import groovy.lang.GroovyShell;
 import groovy.util.DelegatingScript;
 import org.apache.commons.io.IOUtils;
 import org.codehaus.groovy.control.CompilerConfiguration;
-import com.parrotha.exception.NotFoundException;
-import com.parrotha.internal.ChangeTrackingMap;
-import com.parrotha.internal.Main;
-import com.parrotha.internal.script.ParrotHubDelegatingScript;
-import com.parrotha.internal.system.OAuthToken;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.yaml.snakeyaml.Yaml;
@@ -49,16 +52,22 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-public class AutomationAppService {
+public class AutomationAppService implements ExtensionStateListener {
     private static final Logger logger = LoggerFactory.getLogger(AutomationAppService.class);
 
     AutomationAppDataStore automationAppDataStore;
+    ExtensionService extensionService;
 
     public AutomationAppService(AutomationAppDataStore automationAppDataStore) {
         this.automationAppDataStore = automationAppDataStore;
     }
 
     public AutomationAppService() {
+        this.automationAppDataStore = new AutomationAppYamlDataStore();
+    }
+
+    public AutomationAppService(ExtensionService extensionService) {
+        this.extensionService = extensionService;
         this.automationAppDataStore = new AutomationAppYamlDataStore();
     }
 
@@ -89,11 +98,12 @@ public class AutomationAppService {
     public String addChildInstalledAutomationApp(String parentAppId, String appName, String namespace) throws NotFoundException {
         AutomationApp childAutomationApp = getAutomationAppByNameAndNamespace(appName, namespace);
         InstalledAutomationApp parentInstalledAutomationApp = getInstalledAutomationApp(parentAppId);
-        if(parentInstalledAutomationApp == null) {
+        if (parentInstalledAutomationApp == null) {
             throw new NotFoundException("Parent App Id not found: " + parentAppId);
         }
         AutomationApp parentAutomationApp = getAutomationAppById(parentInstalledAutomationApp.getAutomationAppId());
-        if(childAutomationApp.getParent() != null && childAutomationApp.getParent().equals(parentAutomationApp.getNamespace() + ":" + parentAutomationApp.getName())) {
+        if (childAutomationApp.getParent() != null &&
+                childAutomationApp.getParent().equals(parentAutomationApp.getNamespace() + ":" + parentAutomationApp.getName())) {
             InstalledAutomationApp iaa = new InstalledAutomationApp(null, childAutomationApp.getName());
             iaa.setAutomationAppId(childAutomationApp.getId());
             iaa.setParentInstalledAutomationAppId(parentAppId);
@@ -115,10 +125,10 @@ public class AutomationAppService {
 
     public List<InstalledAutomationApp> getChildInstalledAutomationApps(String parentId, String name, String namespace) {
         List<InstalledAutomationApp> childApps = automationAppDataStore.getChildInstalledAutomationApps(parentId);
-        if(name != null && namespace != null && childApps.size() > 0) {
+        if (name != null && namespace != null && childApps.size() > 0) {
             // filter out child apps
             AutomationApp automationApp = getAutomationAppByNameAndNamespace(name, namespace);
-            if(automationApp != null) {
+            if (automationApp != null) {
                 return childApps.stream().filter(ca -> ca.getAutomationAppId().equals(automationApp.getId())).collect(Collectors.toList());
             }
         }
@@ -356,6 +366,7 @@ public class AutomationAppService {
             try {
                 String scriptCode = IOUtils.toString(new FileInputStream(f), StandardCharsets.UTF_8);
                 Map definition = extractAutomationAppDefinition(scriptCode);
+                definition.put("type", AutomationApp.Type.USER);
                 AutomationApp newAutomationApp = new AutomationApp(id, fileName, definition);
                 updateAutomationAppIfChanged(existingAutomationApp, newAutomationApp);
             } catch (IOException e) {
@@ -386,6 +397,7 @@ public class AutomationAppService {
                     ParrotHubDelegatingScript automationAppScript = automationAppScriptClass.getDeclaredConstructor()
                             .newInstance();
                     Map definition = extractAutomationAppDefinition(automationAppScript);
+                    definition.put("type", AutomationApp.Type.SYSTEM);
                     AutomationApp automationApp = new AutomationApp(UUID.randomUUID().toString(), "class:" + className,
                             definition);
                     automationAppInfo.put(automationApp.getId(), automationApp);
@@ -405,11 +417,22 @@ public class AutomationAppService {
 
         // load automation apps from data store
         Map<String, InputStream> aaSources = automationAppDataStore.getAutomationAppSources();
+        automationAppInfo.putAll(createAutomationAppsFromSource(aaSources, AutomationApp.Type.USER));
+
+        // load automation apps from extensions
+        automationAppInfo.putAll(createAutomationAppsFromSource(extensionService.getAutomationAppSources(), AutomationApp.Type.EXTENSION_SOURCE));
+
+        return automationAppInfo;
+    }
+
+    private Map<String, AutomationApp> createAutomationAppsFromSource(Map<String, InputStream> aaSources, AutomationApp.Type type) {
+        Map<String, AutomationApp> automationAppInfo = new HashMap<>();
         if (aaSources != null && aaSources.size() > 0) {
             for (String aaSourceKey : aaSources.keySet()) {
                 try {
                     String scriptCode = IOUtils.toString(aaSources.get(aaSourceKey), StandardCharsets.UTF_8);
                     Map definition = extractAutomationAppDefinition(scriptCode);
+                    definition.put("type", type);
                     AutomationApp automationApp = new AutomationApp(UUID.randomUUID().toString(), aaSourceKey,
                             definition);
                     automationAppInfo.put(automationApp.getId(), automationApp);
@@ -420,7 +443,6 @@ public class AutomationAppService {
                 }
             }
         }
-
         return automationAppInfo;
     }
 
@@ -468,9 +490,10 @@ public class AutomationAppService {
 
     public String addAutomationAppSourceCode(String sourceCode) {
         Map definition = extractAutomationAppDefinition(sourceCode);
-        if(definition == null) {
+        if (definition == null) {
             throw new IllegalArgumentException("No definition found.");
         }
+        definition.put("type", AutomationApp.Type.USER);
         String aaId = automationAppDataStore
                 .addAutomationAppSourceCode(sourceCode, new AutomationApp(null, null, definition));
         return aaId;
@@ -485,4 +508,14 @@ public class AutomationAppService {
                 .filter(aa -> !aa.getFile().startsWith("class")).collect(Collectors.toList());
     }
 
+    @Override
+    public void stateUpdated(ExtensionState state) {
+        if (ExtensionState.StateType.INSTALLED.equals(state.getState())) {
+            //TODO: parse new automation apps
+        } else if (ExtensionState.StateType.UPDATED.equals(state.getState())) {
+            //TODO: parse updated automation apps
+        } else if (ExtensionState.StateType.DELETED.equals(state.getState())) {
+            //TODO: remove old automation apps
+        }
+    }
 }
