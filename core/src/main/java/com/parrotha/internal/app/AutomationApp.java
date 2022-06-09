@@ -50,8 +50,8 @@ public class AutomationApp {
 
     private List<OAuthToken> oAuthTokens;
 
+    private String extensionId;
     private Type type;
-
     public enum Type {
         USER,
         SYSTEM,
@@ -161,6 +161,7 @@ public class AutomationApp {
             this.oAuthClientSecret = getStringValue(oAuthMap, "clientSecret");
         }
 
+        this.extensionId = getStringValue(definition, "extensionId");
         Object typeObj = definition.get("type");
         if (typeObj != null) {
             if (typeObj instanceof String) {
@@ -335,6 +336,14 @@ public class AutomationApp {
             oAuthTokens = new ArrayList<>();
         }
         return oAuthTokens.add(oAuthToken);
+    }
+
+    public String getExtensionId() {
+        return extensionId;
+    }
+
+    public void setExtensionId(String extensionId) {
+        this.extensionId = extensionId;
     }
 
     public Type getType() {

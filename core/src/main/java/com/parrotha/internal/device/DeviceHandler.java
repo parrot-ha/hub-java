@@ -36,6 +36,7 @@ public class DeviceHandler {
     private List<Command> commandList;
     private List<Attribute> attributeList;
     private List<Fingerprint> fingerprints;
+    private String extensionId;
     private Type type;
 
     public enum Type {
@@ -54,9 +55,9 @@ public class DeviceHandler {
 
         //Map dhi = extractDeviceHandlerInformation(scriptCode);
         Map<String, Object> definition = (Map<String, Object>) metadata.get("definition");
-        this.name = (String) definition.get("name");
-        this.namespace = (String) definition.get("namespace");
-        this.author = (String) definition.get("author");
+        this.name = getStringValue(definition, "name");
+        this.namespace = getStringValue(definition, "namespace");
+        this.author = getStringValue(definition, "author");
         if (definition.get("tags") != null) {
             if (definition.get("tags") instanceof String || definition.get("tags") instanceof GString) {
                 tags = new ArrayList<>();
@@ -81,6 +82,8 @@ public class DeviceHandler {
             }
         }
 
+        this.extensionId = getStringValue(definition, "extensionId");
+
         Object typeObj = metadata.get("type");
         if (typeObj != null) {
             if (typeObj instanceof String) {
@@ -89,6 +92,13 @@ public class DeviceHandler {
                 this.type = (Type) typeObj;
             }
         }
+    }
+
+    private String getStringValue(Map definition, String value) {
+        if (definition.get(value) != null) {
+            return definition.get(value).toString();
+        }
+        return null;
     }
 
     /**
@@ -266,6 +276,14 @@ public class DeviceHandler {
         this.fingerprints = fingerprints;
     }
 
+    public String getExtensionId() {
+        return extensionId;
+    }
+
+    public void setExtensionId(String extensionId) {
+        this.extensionId = extensionId;
+    }
+
     public Type getType() {
         return type;
     }
@@ -277,6 +295,7 @@ public class DeviceHandler {
     public boolean isUserType() {
         return Type.USER.equals(this.type);
     }
+
 
     //- metadata:
     //    definition:

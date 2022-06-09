@@ -56,7 +56,7 @@ public class ServiceFactory {
 
     public static DeviceService getDeviceService() {
         if (deviceService == null) {
-            deviceService = new DeviceService(getIntegrationRegistry());
+            deviceService = new DeviceService(getIntegrationRegistry(), getExtensionService());
         }
         return deviceService;
     }

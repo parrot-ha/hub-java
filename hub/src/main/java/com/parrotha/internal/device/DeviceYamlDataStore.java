@@ -30,11 +30,13 @@ import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.introspector.BeanAccess;
 
 import java.io.File;
+import java.io.FileFilter;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
@@ -520,6 +522,37 @@ public class DeviceYamlDataStore implements DeviceDataStore {
         }
 
         return null;
+    }
+
+    @Override
+    public Map<String, InputStream> getDeviceHandlerSources() {
+        Map<String, InputStream> deviceHandlerSourceList = new HashMap<>();
+
+        // load device handlers from text files on local file system
+        try {
+            final String dhFilePath = "deviceHandlers/";
+            File devicehandlerDir = new File(dhFilePath);
+            if (!devicehandlerDir.exists()) {
+                devicehandlerDir.mkdir();
+            }
+            if (devicehandlerDir.exists() && devicehandlerDir.isDirectory()) {
+                File[] deviceHandlerFiles = devicehandlerDir.listFiles(new FileFilter() {
+                    @Override
+                    public boolean accept(File pathname) {
+                        return pathname.isFile() && pathname.getName().endsWith(".groovy");
+                    }
+                });
+
+                if (deviceHandlerFiles != null && deviceHandlerFiles.length > 0) {
+                    for (File f : deviceHandlerFiles) {
+                        deviceHandlerSourceList.put(dhFilePath + f.getName(), new FileInputStream(f));
+                    }
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return deviceHandlerSourceList;
     }
 
     @Override

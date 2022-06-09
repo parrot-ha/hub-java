@@ -106,9 +106,12 @@ public class ExtensionService {
     }
 
     public Map<String, Map> getExtensions() {
-        synchronized (this) {
-            if (extensions == null) {
-                extensions = loadExtensions();
+        if (extensions == null) {
+            synchronized (this) {
+                // check for null again so only the first thread to get here loads the extensions.
+                if(extensions == null) {
+                    extensions = loadExtensions();
+                }
             }
         }
         return extensions;
@@ -355,15 +358,38 @@ public class ExtensionService {
         return false;
     }
 
-    public Map<String, InputStream> getAutomationAppSources() {
-        Map<String, InputStream> sourceList = new HashMap<>();
+    public Map<String, ClassLoader> getExtensionClassloaders() {
+        Map<String, ClassLoader> extensionClassLoaders = new HashMap<>();
 
-        // scan through extension directory for automation app files
-        Set<Path> extDirs = ExtensionService.getExtensionDirectories();
-        for (Path extDir : extDirs) {
+        for(Map extensionInfo : getExtensions().values()) {
+            String location = (String) extensionInfo.get("location");
+            if(location != null) {
+                ClassLoader myClassLoader = FileSystemUtils.getClassloaderForJarFiles(Paths.get(location), true);
+                if(myClassLoader != null) {
+                    extensionClassLoaders.put((String) extensionInfo.get("id"), myClassLoader);
+                }
+            }
+        }
+        return extensionClassLoaders;
+    }
+
+    public Map<String, Map<String, InputStream>> getDeviceHandlerSources() {
+        return getSources("/deviceHandlers");
+    }
+
+    public Map<String, Map<String, InputStream>> getAutomationAppSources() {
+        return getSources("/automationApps");
+    }
+
+    private Map<String, Map<String, InputStream>> getSources(String sourceSubDir) {
+        Map<String, Map<String, InputStream>> sourceList = new HashMap<>();
+
+        // scan through extension directory for files
+        Map<String, Path> extDirs = getExtensionsAndDirectories();
+        for (String extId : extDirs.keySet()) {
             // get source code extensions
-            File extAutomationAppDir = new File(extDir.toString() + "/automationApps");
-            sourceList.putAll(loadSourcesFromDirectory(extAutomationAppDir));
+            File extSourceDir = new File(extDirs.get(extId) + sourceSubDir);
+            sourceList.put(extId, loadSourcesFromDirectory(extSourceDir));
         }
         return sourceList;
     }
@@ -371,13 +397,13 @@ public class ExtensionService {
     public Map<String, InputStream> getAutomationAppSources(String extensionId) {
         Map<String, InputStream> sourceList = new HashMap<>();
 
-        // scan through extension directory for device handler files
-        Set<Path> extDirs = ExtensionService.getExtensionDirectories();
-        for (Path extDir : extDirs) {
-            // get source code extensions
-            File extAutomationAppDir = getExtensionDirectory(extensionId).resolve("automationApps").toFile();
+        // get source code extensions
+        Path extensionDirectory = getExtensionDirectory(extensionId);
+        if (extensionDirectory != null) {
+            File extAutomationAppDir = extensionDirectory.resolve("automationApps").toFile();
             sourceList.putAll(loadSourcesFromDirectory(extAutomationAppDir));
         }
+
         return sourceList;
     }
 
@@ -577,6 +603,7 @@ public class ExtensionService {
                 try {
                     Map extInf = yaml.load(new FileInputStream(parrotExtensionFile));
                     extInf.put("installed", true);
+                    extInf.put("location", extDir.toString());
                     tmpExtensions.put((String) extInf.get("id"), extInf);
                 } catch (FileNotFoundException e) {
                     e.printStackTrace();
@@ -657,7 +684,7 @@ public class ExtensionService {
         return extensions;
     }
 
-    public static Set<Path> getExtensionDirectories() {
+    private static Set<Path> getExtensionDirectories() {
         File extensionDirectory = new File(EXTENSION_PATH);
         if (!extensionDirectory.exists()) {
             extensionDirectory.mkdir();
@@ -676,7 +703,20 @@ public class ExtensionService {
         return extDirs;
     }
 
-    public static Path getExtensionDirectory(String extensionId) {
-        return new File(EXTENSION_PATH + extensionId).toPath();
+    private Map<String, Path> getExtensionsAndDirectories() {
+        Map<String, Path> extDirs = new HashMap<>();
+        if (getExtensions().size() > 0) {
+            extDirs = getExtensions().values().stream()
+                    .collect(Collectors.toMap(ext -> (String) ext.get("id"), ext -> Paths.get((String) ext.get("location"))));
+        }
+        return extDirs;
+    }
+
+    private Path getExtensionDirectory(String extensionId) {
+        Map extensionInfo = getExtensions().get(extensionId);
+        if (extensionInfo != null && extensionInfo.get("location") != null) {
+            return new File(EXTENSION_PATH + extensionInfo.get("location")).toPath();
+        }
+        return null;
     }
 }

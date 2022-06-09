@@ -344,12 +344,15 @@ public class EntityServiceImpl implements EntityService {
         deviceService.reprocessDeviceHandler(id);
     }
 
-
     public void initialize() {
         deviceService.initialize();
         automationAppService.initialize();
     }
 
+    public void shutdown() {
+        automationAppService.shutdown();
+        deviceService.shutdown();
+    }
 
     private Map<Fingerprint, String> fingerprints;
 

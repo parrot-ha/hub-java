@@ -18,6 +18,7 @@
  */
 package com.parrotha.internal.device;
 
+import java.io.InputStream;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -61,6 +62,8 @@ public interface DeviceDataStore {
     void addDeviceHandler(DeviceHandler deviceHandler);
 
     String getDeviceHandlerSourceCode(String id);
+
+    Map<String, InputStream> getDeviceHandlerSources();
 
     boolean updateDeviceHandlerSourceCode(String id, String sourceCode);
 
