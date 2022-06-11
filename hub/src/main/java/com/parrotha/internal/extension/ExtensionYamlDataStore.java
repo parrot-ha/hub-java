@@ -18,51 +18,107 @@
  */
 package com.parrotha.internal.extension;
 
+import org.yaml.snakeyaml.Yaml;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 public class ExtensionYamlDataStore implements ExtensionDataStore {
-    private Map<String, Map> extensionSettings;
+    private Map<String, Map> extensionLocations;
 
     @Override
-    public List getExtensionSettings() {
-        synchronized (this) {
-            if (extensionSettings == null) {
-                extensionSettings = loadExtensionSettings();
+    public Map<String, Map> getExtensionLocations() {
+        if (extensionLocations == null) {
+            synchronized (this) {
+                // check again once we are inside the synchronized block in case another thread has initialized the extension locations.
+                if (extensionLocations == null) {
+                    extensionLocations = loadExtensionLocations();
+                }
             }
         }
 
-        return new ArrayList<>(extensionSettings.values());
+        return extensionLocations;
     }
 
     @Override
-    public String addSetting(String name, String type, String location) {
-        return null;
+    public String addLocation(String name, String type, String location) {
+        String id = UUID.randomUUID().toString();
+        getExtensionLocations().put(id, Map.of("id", id,
+                "name", name,
+                "type", type,
+                "location", location));
+        return saveExtensionLocations() ? id : null;
     }
 
     @Override
-    public boolean updateSetting(String id, String name, String type, String location) {
+    public boolean updateLocation(String id, String name, String type, String location) {
+        Map extensionLocation = getExtensionLocations().get(id);
+        if (extensionLocation != null) {
+            extensionLocation.put("name", name);
+            extensionLocation.put("type", type);
+            extensionLocation.put("location", location);
+        }
+        return saveExtensionLocations();
+    }
+
+    @Override
+    public boolean deleteLocation(String id) {
+        this.extensionLocations.remove(id);
+        return saveExtensionLocations();
+    }
+
+    @Override
+    public Map getLocationById(String id) {
+        return getExtensionLocations().get(id);
+    }
+
+    private boolean saveExtensionLocations() {
+        if (extensionLocations != null) {
+            synchronized (this.extensionLocations) {
+                try {
+                    Yaml yaml = new Yaml();
+                    File extensionLocationsFile = new File("config/extensionLocations.yaml");
+                    FileWriter fileWriter = new FileWriter(extensionLocationsFile);
+                    yaml.dump(new ArrayList<>(extensionLocations.values()), fileWriter);
+                    fileWriter.close();
+                    return true;
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
         return false;
     }
 
-    @Override
-    public Map getSettingById(String id) {
-        return null;
-    }
-
-    private Map<String, Map> loadExtensionSettings() {
-        //TODO: make this configurable from UI
+    private Map<String, Map> loadExtensionLocations() {
         Map<String, Map> extensionLocations = new HashMap<>();
-        extensionLocations.put("ada38365-1d40-44a0-8208-8395b6ecca53", Map.of("id", "ada38365-1d40-44a0-8208-8395b6ecca53",
-                "name", "Zwave-JS",
-                "type", "GithubRelease",
-                "location", "parrot-ha/zwavejs-integration"));
-        extensionLocations.put("34b4a309-9bda-4bf1-a439-b43abcdde972", Map.of("id", "34b4a309-9bda-4bf1-a439-b43abcdde972",
-                "name", "Test Source Ext",
-                "type", "URL",
-                "location", "https://raw.githubusercontent.com/parrot-ha/testSourceExt/main/parrotExtension.yaml"));
+        File extensionLocationsFile = new File("/config/extensionLocations.yaml");
+        if (extensionLocationsFile.exists()) {
+            try {
+                Yaml yaml = new Yaml();
+                List<Map> listObj = yaml.load(new FileInputStream(extensionLocationsFile));
+                if (listObj != null) {
+                    for (Map extensionLocation : listObj) {
+                        extensionLocations.put((String) extensionLocation.get("id"), extensionLocation);
+                    }
+                }
+            } catch (FileNotFoundException fnfe) {
+                fnfe.printStackTrace();
+            }
+        } else {
+            extensionLocations.put("ada38365-1d40-44a0-8208-8395b6ecca53", new HashMap(Map.of("id", "ada38365-1d40-44a0-8208-8395b6ecca53",
+                    "name", "Zwave-JS",
+                    "type", "GithubRelease",
+                    "location", "parrot-ha/zwavejs-integration")));
+        }
 
         return extensionLocations;
     }

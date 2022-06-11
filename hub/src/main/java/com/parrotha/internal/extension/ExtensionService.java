@@ -117,18 +117,24 @@ public class ExtensionService {
         return extensions;
     }
 
-    public List getExtensionSettings() {
-        return extensionDataStore.getExtensionSettings();
+    public List getExtensionLocationsList() {
+        return new ArrayList(extensionDataStore.getExtensionLocations().values());
     }
 
-    public String addSetting(String name, String type, String location) {
-        String returnValue = extensionDataStore.addSetting(name, type, location);
+    public String addLocation(String name, String type, String location) {
+        String returnValue = extensionDataStore.addLocation(name, type, location);
         refreshExtensionList();
         return returnValue;
     }
 
-    public boolean updateSetting(String id, String name, String type, String location) {
-        boolean returnValue = extensionDataStore.updateSetting(id, name, type, location);
+    public boolean updateLocation(String id, String name, String type, String location) {
+        boolean returnValue = extensionDataStore.updateLocation(id, name, type, location);
+        refreshExtensionList();
+        return returnValue;
+    }
+
+    public boolean deleteLocation(String id) {
+        boolean returnValue = extensionDataStore.deleteLocation(id);
         refreshExtensionList();
         return returnValue;
     }
@@ -272,7 +278,7 @@ public class ExtensionService {
                 Map githubInfo = (Map) githubInfoObject;
                 List<Map> assetList = (List<Map>) githubInfo.get("assets");
 
-                FileSystemUtils.createDirectory(downloadDirectory);
+                FileSystemUtils.createDirectory(downloadDirectory, true);
 
                 for (Map asset : assetList) {
                     String assetName = (String) asset.get("name");
@@ -502,10 +508,9 @@ public class ExtensionService {
     }
 
     public void refreshExtensionList() {
-        FileSystemUtils.createDirectory(EXTENSION_PATH);
-        FileSystemUtils.createDirectory(EXTENSION_PATH + ".extensions/");
+        FileSystemUtils.cleanDirectory(EXTENSION_PATH + ".extensions/", true);
 
-        List<Map> extLocs = getExtensionSettings();
+        List<Map> extLocs = getExtensionLocationsList();
 
         for (Map extLoc : extLocs) {
             try {
@@ -570,7 +575,7 @@ public class ExtensionService {
         extensionInformation.put("locationType", locationType);
         String extensionId = (String) extensionInformation.get("id");
 
-        FileSystemUtils.createDirectory(EXTENSION_PATH + ".extensions/" + extensionId);
+        FileSystemUtils.createDirectory(EXTENSION_PATH + ".extensions/" + extensionId, true);
 
         File file = new File(EXTENSION_PATH + ".extensions/" + extensionId + "/parrotExtension.yaml");
         FileWriter fileWriter = new FileWriter(file);

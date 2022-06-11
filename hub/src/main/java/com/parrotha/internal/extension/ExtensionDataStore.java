@@ -18,15 +18,16 @@
  */
 package com.parrotha.internal.extension;
 
-import java.util.List;
 import java.util.Map;
 
 public interface ExtensionDataStore {
-    List getExtensionSettings();
+    Map getExtensionLocations();
 
-    String addSetting(String name, String type, String location);
+    String addLocation(String name, String type, String location);
 
-    boolean updateSetting(String id, String name, String type, String location);
+    boolean updateLocation(String id, String name, String type, String location);
 
-    Map getSettingById(String id);
+    boolean deleteLocation(String id);
+
+    Map getLocationById(String id);
 }

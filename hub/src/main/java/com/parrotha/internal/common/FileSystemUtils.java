@@ -36,10 +36,14 @@ import java.util.zip.ZipInputStream;
 
 public class FileSystemUtils {
 
-    public static void createDirectory(String directory) {
+    public static void createDirectory(String directory, boolean createParent) {
         File directoryFile = new File(directory);
         if (!directoryFile.exists()) {
-            directoryFile.mkdir();
+            if (createParent) {
+                directoryFile.mkdirs();
+            } else {
+                directoryFile.mkdir();
+            }
         }
     }
 
@@ -54,7 +58,7 @@ public class FileSystemUtils {
                 }
             }
         } else if (createDirectory) {
-            createDirectory(directory);
+            createDirectory(directory, true);
         }
     }
 
