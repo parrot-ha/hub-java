@@ -36,6 +36,8 @@ import groovy.lang.GroovyShell;
 import groovy.util.DelegatingScript;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.codehaus.groovy.control.CompilerConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -553,44 +555,51 @@ public class DeviceService implements ExtensionStateListener {
 
 
     public void reprocessDeviceHandlers() {
-        Collection<DeviceHandler> deviceHandlers = deviceDataStore.getAllDeviceHandlers();
-
         // run this process in the background, allows quicker start up of system at the
         // expense of system starting up with possibly old device handler definition, however
         // this should be quickly rectified once system is fully running
         new Thread(() -> {
+            Collection<DeviceHandler> deviceHandlers = deviceDataStore.getAllDeviceHandlers();
             Map<String, DeviceHandler> newDeviceHandlerInfoMap = processDeviceHandlerInfo();
 
-            // check each device handler info against what is in the config file.
-            Iterator<DeviceHandler> newDHInfoIter = newDeviceHandlerInfoMap.values().iterator();
-            while (newDHInfoIter.hasNext()) {
-                DeviceHandler newDHInfo = newDHInfoIter.next();
-                String fileName = newDHInfo.getFile();
-                Iterator<DeviceHandler> oldDHInfoIter = deviceHandlers.iterator();
-
-                boolean foundExistingDH = false;
-                while (oldDHInfoIter.hasNext()) {
-                    DeviceHandler oldDHInfo = oldDHInfoIter.next();
-                    if (fileName.equals(oldDHInfo.getFile())) {
-                        foundExistingDH = true;
-                        // the file name matches, let see if any of the values have changed.
-                        //TODO: this check is only if the file name stays the same, add another check in case all the contents stay the same, but the file name changed.
-                        if (newDHInfo.equalsIgnoreId(oldDHInfo)) {
-                            // only difference is the id,, so no changes
-                            logger.debug("No changes for file " + fileName);
-                        } else {
-                            logger.debug("Changes for file " + fileName);
-                            newDHInfo.setId(oldDHInfo.getId());
-                            deviceDataStore.updateDeviceHandler(newDHInfo);
-                        }
-                    }
-                }
-                if (!foundExistingDH) {
-                    // we have a new device handler.
-                    deviceDataStore.addDeviceHandler(newDHInfo);
-                }
+            if (deviceHandlers != null && newDeviceHandlerInfoMap != null) {
+                // check each device handler info against what is in the config file.
+                compareNewAndExistingDeviceHandlers(deviceHandlers, newDeviceHandlerInfoMap.values());
             }
         }).start();
+    }
+
+    private void compareNewAndExistingDeviceHandlers(Collection<DeviceHandler> existingDeviceHandlers, Collection<DeviceHandler> newDeviceHandlers) {
+        // check each device handler info against what is in the config file.
+        Iterator<DeviceHandler> newDHInfoIter = newDeviceHandlers.iterator();
+
+        while (newDHInfoIter.hasNext()) {
+            DeviceHandler newDHInfo = newDHInfoIter.next();
+            String fileName = newDHInfo.getFile();
+            Iterator<DeviceHandler> oldDHInfoIter = existingDeviceHandlers.iterator();
+
+            boolean foundExistingDH = false;
+            while (oldDHInfoIter.hasNext()) {
+                DeviceHandler oldDHInfo = oldDHInfoIter.next();
+                if (fileName.equals(oldDHInfo.getFile())) {
+                    foundExistingDH = true;
+                    // the file name matches, let see if any of the values have changed.
+                    //TODO: this check is only if the file name stays the same, add another check in case all the contents stay the same, but the file name changed.
+                    if (newDHInfo.equalsIgnoreId(oldDHInfo)) {
+                        // only difference is the id,, so no changes
+                        logger.debug("No changes for file " + fileName);
+                    } else {
+                        logger.debug("Changes for file " + fileName);
+                        newDHInfo.setId(oldDHInfo.getId());
+                        deviceDataStore.updateDeviceHandler(newDHInfo);
+                    }
+                }
+            }
+            if (!foundExistingDH) {
+                // we have a new device handler.
+                deviceDataStore.addDeviceHandler(newDHInfo);
+            }
+        }
     }
 
     private Map<String, DeviceHandler> processDeviceHandlerInfo() {
@@ -717,12 +726,39 @@ public class DeviceService implements ExtensionStateListener {
 
     @Override
     public void stateUpdated(ExtensionState state) {
-        if (ExtensionState.StateType.INSTALLED.equals(state.getState())) {
-            //TODO: parse new device handlers
-        } else if (ExtensionState.StateType.UPDATED.equals(state.getState())) {
-            //TODO: parse updated device handlers
+        String extensionId = state.getId();
+        if (ExtensionState.StateType.INSTALLED.equals(state.getState()) || ExtensionState.StateType.UPDATED.equals(state.getState())) {
+            // we need to process device handlers
+            Map<String, DeviceHandler> newDeviceHandlerInfo = new HashMap<>();
+
+            // load device handler sources from extensions
+            Map<String, InputStream> extDHSources = extensionService.getDeviceHandlerSources(extensionId);
+            newDeviceHandlerInfo.putAll(createDeviceHandlersFromSource(extDHSources, DeviceHandler.Type.EXTENSION_SOURCE, extensionId));
+
+            // load device handlers from extension classpaths (pre-compiled)
+            ClassLoader extensionClassloader = extensionService.getExtensionClassloader(extensionId);
+            newDeviceHandlerInfo.putAll(getDeviceHandlersFromClassloader(extensionClassloader, DeviceHandler.Type.EXTENSION));
+
+            Collection<DeviceHandler> deviceHandlers = deviceDataStore.getAllDeviceHandlers();
+
+            // check each device handler info against what is in the config file.
+            compareNewAndExistingDeviceHandlers(deviceHandlers, newDeviceHandlerInfo.values());
         } else if (ExtensionState.StateType.DELETED.equals(state.getState())) {
             //TODO: remove old device handlers
+        }
+    }
+
+    @Override
+    public Pair<Boolean, String> isExtensionInUse(String extensionId) {
+        Collection<Device> devices = deviceDataStore.getDevicesByExtension(extensionId);
+        if (devices.size() == 0) {
+            return new ImmutablePair<>(false, "");
+        } else {
+            StringBuilder sb = new StringBuilder();
+            for (Device device : devices) {
+                sb.append("Device ").append(device.getDisplayName()).append("\n");
+            }
+            return new ImmutablePair<>(true, sb.toString());
         }
     }
 }

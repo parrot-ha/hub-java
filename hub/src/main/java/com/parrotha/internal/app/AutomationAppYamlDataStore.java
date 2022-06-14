@@ -39,6 +39,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -52,6 +53,19 @@ public class AutomationAppYamlDataStore implements AutomationAppDataStore {
 
     public Collection<InstalledAutomationApp> getAllInstalledAutomationApps() {
         return getInstalledAutomationAppMap().values();
+    }
+
+    @Override
+    public Collection<InstalledAutomationApp> getInstalledAutomationAppsByExtension(String extensionId) {
+        Collection<InstalledAutomationApp> installedAutomationApps = new HashSet<>();
+        for (AutomationApp automationApp : getAllAutomationApps(true)) {
+            for (InstalledAutomationApp installedAutomationApp : getAllInstalledAutomationApps()) {
+                if (automationApp.getId() != null && automationApp.getId().equals(installedAutomationApp.getAutomationAppId())) {
+                    installedAutomationApps.add(installedAutomationApp);
+                }
+            }
+        }
+        return installedAutomationApps;
     }
 
     public InstalledAutomationApp getInstalledAutomationAppById(String id) {

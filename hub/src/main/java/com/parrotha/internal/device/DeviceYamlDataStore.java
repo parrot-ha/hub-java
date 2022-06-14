@@ -73,6 +73,19 @@ public class DeviceYamlDataStore implements DeviceDataStore {
     }
 
     @Override
+    public Collection<Device> getDevicesByExtension(String extensionId) {
+        Collection<Device> devices = new HashSet<>();
+        for (DeviceHandler deviceHandler : getAllDeviceHandlers()) {
+            for (Device device : getAllDevices()) {
+                if (deviceHandler.getId() != null && deviceHandler.getId().equals(device.getDeviceHandlerId())) {
+                    devices.add(device);
+                }
+            }
+        }
+        return devices;
+    }
+
+    @Override
     public Device getDeviceById(String id) {
         Device device = getDevices().get(id);
         if (device != null) {

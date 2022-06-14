@@ -21,6 +21,7 @@ package com.parrotha.internal;
 import com.parrotha.internal.app.AutomationAppService;
 import com.parrotha.internal.device.DeviceIntegrationServiceImpl;
 import com.parrotha.internal.device.DeviceService;
+import com.parrotha.internal.entity.EntityService;
 import com.parrotha.internal.entity.EntityServiceImpl;
 import com.parrotha.internal.extension.ExtensionService;
 import com.parrotha.internal.hub.EventService;
@@ -31,7 +32,6 @@ import com.parrotha.internal.integration.ConfigurationService;
 import com.parrotha.internal.integration.ConfigurationServiceImpl;
 import com.parrotha.internal.integration.IntegrationRegistry;
 import com.parrotha.internal.integration.IntegrationService;
-import com.parrotha.internal.entity.EntityService;
 
 public class ServiceFactory {
     private static ConfigurationService configurationService;
@@ -93,7 +93,7 @@ public class ServiceFactory {
 
     public static IntegrationService getIntegrationService() {
         if (integrationService == null) {
-            integrationService = new IntegrationService(getIntegrationRegistry(), getConfigurationService(), getDeviceService(), getEntityService(),
+            integrationService = new IntegrationService(getIntegrationRegistry(), getConfigurationService(), getExtensionService(),
                     getDeviceIntegrationService(), getEntityService(), getLocationService());
         }
         return integrationService;

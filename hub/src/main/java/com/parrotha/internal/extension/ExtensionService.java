@@ -25,6 +25,8 @@ import groovy.json.JsonSlurper;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.yaml.snakeyaml.Yaml;
@@ -56,6 +58,7 @@ public class ExtensionService {
     private static final Logger logger = LoggerFactory.getLogger(ExtensionService.class);
 
     private Set<ExtensionStateListener> stateListeners = new HashSet<>();
+
     private ExtensionDataStore extensionDataStore;
 
     public ExtensionService() {
@@ -159,6 +162,20 @@ public class ExtensionService {
                 }
             }).start();
         }
+    }
+
+    private Pair<Boolean, String> isExtensionInUse(String extensionId) {
+        boolean inUse = false;
+        StringBuilder message = new StringBuilder();
+        if (stateListeners.size() > 0) {
+            for (ExtensionStateListener stateListener : stateListeners) {
+                Pair<Boolean, String> listenerResponse = stateListener.isExtensionInUse(extensionId);
+                if (listenerResponse.getLeft()) {
+                    message.append(listenerResponse.getRight());
+                }
+            }
+        }
+        return new ImmutablePair<>(inUse, message.toString());
     }
 
     public boolean downloadAndInstallExtension(String id) {
@@ -367,16 +384,24 @@ public class ExtensionService {
     public Map<String, ClassLoader> getExtensionClassloaders() {
         Map<String, ClassLoader> extensionClassLoaders = new HashMap<>();
 
-        for (Map extensionInfo : getExtensions().values()) {
-            String location = (String) extensionInfo.get("location");
-            if (location != null) {
-                ClassLoader myClassLoader = FileSystemUtils.getClassloaderForJarFiles(Paths.get(location), true);
-                if (myClassLoader != null) {
-                    extensionClassLoaders.put((String) extensionInfo.get("id"), myClassLoader);
-                }
+        for (String extensionId : getExtensions().keySet()) {
+            ClassLoader myClassLoader = getExtensionClassloader(extensionId);
+            if (myClassLoader != null) {
+                extensionClassLoaders.put(extensionId, myClassLoader);
             }
         }
         return extensionClassLoaders;
+    }
+
+    public ClassLoader getExtensionClassloader(String extensionId) {
+        Path extensionDirectory = getExtensionDirectory(extensionId);
+        if (extensionDirectory != null) {
+            ClassLoader myClassLoader = FileSystemUtils.getClassloaderForJarFiles(extensionDirectory, true);
+            if (myClassLoader != null) {
+                return myClassLoader;
+            }
+        }
+        return null;
     }
 
     public Map<String, Map<String, InputStream>> getDeviceHandlerSources() {
@@ -401,13 +426,21 @@ public class ExtensionService {
     }
 
     public Map<String, InputStream> getAutomationAppSources(String extensionId) {
+        return getSources(extensionId, "/automationApps");
+    }
+
+    public Map<String, InputStream> getDeviceHandlerSources(String extensionId) {
+        return getSources(extensionId, "/deviceHandlers");
+    }
+
+    public Map<String, InputStream> getSources(String extensionId, String sourceSubDir) {
         Map<String, InputStream> sourceList = new HashMap<>();
 
         // get source code extensions
         Path extensionDirectory = getExtensionDirectory(extensionId);
         if (extensionDirectory != null) {
-            File extAutomationAppDir = extensionDirectory.resolve("automationApps").toFile();
-            sourceList.putAll(loadSourcesFromDirectory(extAutomationAppDir));
+            File extDeviceHandlerDir = extensionDirectory.resolve(sourceSubDir).toFile();
+            sourceList.putAll(loadSourcesFromDirectory(extDeviceHandlerDir));
         }
 
         return sourceList;
@@ -440,56 +473,30 @@ public class ExtensionService {
         return sourceList;
     }
 
-//    public Map<String, InputStream> getAutomationAppSources() {
-//        Map<String, InputStream> automationAppSourceList = new HashMap<>();
-//
-//        // load automation apps from text files on local file system
-//        try {
-//            final String aaFilePath = "automationApps/";
-//            File automationAppDir = new File(aaFilePath);
-//            if (!automationAppDir.exists()) {
-//                automationAppDir.mkdir();
-//            }
-//            if (automationAppDir.exists() && automationAppDir.isDirectory()) {
-//                File[] automationAppFiles = automationAppDir.listFiles(new FileFilter() {
-//                    @Override
-//                    public boolean accept(File pathname) {
-//                        return pathname.isFile() && pathname.getName().endsWith(".groovy");
-//                    }
-//                });
-//
-//                if (automationAppFiles != null && automationAppFiles.length > 0) {
-//                    for (File f : automationAppFiles) {
-//                        automationAppSourceList.put(aaFilePath + f.getName(), new FileInputStream(f));
-//                    }
-//                }
-//            }
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
-//        return automationAppSourceList;
-//    }
-
     public boolean deleteExtension(String id) {
         Map extension = getExtension(id);
-        synchronized (this) {
-            String type = (String) extension.get("type");
+        Pair<Boolean, String> extensionInUse = isExtensionInUse(id);
 
-            if (!"source".equalsIgnoreCase(type)) {
-                stopServices();
-            }
+        if (!extensionInUse.getLeft()) {
+            synchronized (this) {
+                String type = (String) extension.get("type");
 
-            // delete extension
-            try {
-                FileUtils.deleteDirectory(new File(EXTENSION_PATH + id));
-                // notify listeners
-                notifyStateListeners(new ExtensionState(id, ExtensionState.StateType.DELETED));
-            } catch (IOException e) {
-                e.printStackTrace();
-                return false;
-            } finally {
                 if (!"source".equalsIgnoreCase(type)) {
-                    startServices();
+                    stopServices();
+                }
+
+                // delete extension
+                try {
+                    FileUtils.deleteDirectory(new File(EXTENSION_PATH + id));
+                    // notify listeners
+                    notifyStateListeners(new ExtensionState(id, ExtensionState.StateType.DELETED));
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    return false;
+                } finally {
+                    if (!"source".equalsIgnoreCase(type)) {
+                        startServices();
+                    }
                 }
             }
         }

@@ -28,6 +28,8 @@ public interface DeviceDataStore {
 
     Collection<Device> getDevicesByCapability(String capability);
 
+    Collection<Device> getDevicesByExtension(String extensionId);
+
     Device getDeviceById(String id);
 
     Device getDeviceByIntegrationAndDNI(String integrationId, String deviceNetworkId);

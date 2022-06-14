@@ -29,6 +29,8 @@ import com.parrotha.internal.system.OAuthToken;
 import groovy.lang.GroovyShell;
 import groovy.util.DelegatingScript;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.codehaus.groovy.control.CompilerConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -311,42 +313,44 @@ public class AutomationAppService implements ExtensionStateListener {
 
 
     public void reprocessAutomationApps() {
-        Collection<AutomationApp> automationApps = automationAppDataStore.getAllAutomationApps(true);
-
         // run this process in the background, allows quicker start up of system at the
         // expense of system starting up with possibly old automation app definition, however
         // this should be quickly rectified once system is fully running
         new Thread(() -> {
-
+            Collection<AutomationApp> automationApps = automationAppDataStore.getAllAutomationApps(true);
             Map<String, AutomationApp> newAutomationAppInfoMap = processAutomationApps();
 
             // check each automation app info against what is in the config file.
             if (newAutomationAppInfoMap != null) {
-
-                Iterator<AutomationApp> newAAInfoIter = newAutomationAppInfoMap.values().iterator();
-                while (newAAInfoIter.hasNext()) {
-                    AutomationApp newAAInfo = newAAInfoIter.next();
-                    String fileName = newAAInfo.getFile();
-                    Iterator<AutomationApp> oldAAInfoIter = automationApps.iterator();
-                    boolean foundExistingAA = false;
-                    while (oldAAInfoIter.hasNext()) {
-                        AutomationApp oldAAInfo = oldAAInfoIter.next();
-                        if (fileName.equals(oldAAInfo.getFile())) {
-                            foundExistingAA = true;
-                            // the file name matches, let see if any of the values have changed.
-                            //TODO: this check is only if the file name stays the same, add another check in case all the contents stay the same, but the file name changed.
-
-                            updateAutomationAppIfChanged(oldAAInfo, newAAInfo);
-                        }
-                    }
-                    if (!foundExistingAA) {
-                        // we have a new automation app, load it.
-                        // we have a new device handler.
-                        automationAppDataStore.addAutomationApp(newAAInfo);
-                    }
-                }
+                compareNewAndExistingAutomationApps(automationApps, newAutomationAppInfoMap.values());
             }
         }).start();
+    }
+
+    private void compareNewAndExistingAutomationApps(Collection<AutomationApp> existingAutomationApps, Collection<AutomationApp> newAutomationApps) {
+        // check each device handler info against what is in the config file.
+        Iterator<AutomationApp> newAAInfoIter = newAutomationApps.iterator();
+
+        while (newAAInfoIter.hasNext()) {
+            AutomationApp newAAInfo = newAAInfoIter.next();
+            String fileName = newAAInfo.getFile();
+            Iterator<AutomationApp> oldAAInfoIter = existingAutomationApps.iterator();
+            boolean foundExistingAA = false;
+            while (oldAAInfoIter.hasNext()) {
+                AutomationApp oldAAInfo = oldAAInfoIter.next();
+                if (fileName.equals(oldAAInfo.getFile())) {
+                    foundExistingAA = true;
+                    // the file name matches, let see if any of the values have changed.
+                    //TODO: this check is only if the file name stays the same, add another check in case all the contents stay the same, but the file name changed.
+
+                    updateAutomationAppIfChanged(oldAAInfo, newAAInfo);
+                }
+            }
+            if (!foundExistingAA) {
+                // we have a new automation app, load it.
+                automationAppDataStore.addAutomationApp(newAAInfo);
+            }
+        }
     }
 
     private void updateAutomationAppIfChanged(AutomationApp oldAutomationApp, AutomationApp newAutomationApp) {
@@ -530,12 +534,39 @@ public class AutomationAppService implements ExtensionStateListener {
 
     @Override
     public void stateUpdated(ExtensionState state) {
-        if (ExtensionState.StateType.INSTALLED.equals(state.getState())) {
-            //TODO: parse new automation apps
-        } else if (ExtensionState.StateType.UPDATED.equals(state.getState())) {
-            //TODO: parse updated automation apps
+        String extensionId = state.getId();
+        if (ExtensionState.StateType.INSTALLED.equals(state.getState()) || ExtensionState.StateType.UPDATED.equals(state.getState())) {
+            // we need to process device handlers
+            Map<String, AutomationApp> newAutomationAppInfoMap = new HashMap<>();
+
+            // load automation app sources from extensions
+            Map<String, InputStream> extAASources = extensionService.getAutomationAppSources(extensionId);
+            newAutomationAppInfoMap.putAll(createAutomationAppsFromSource(extAASources, AutomationApp.Type.EXTENSION_SOURCE, extensionId));
+
+            // load automation app from extension classpaths (pre-compiled)
+            ClassLoader extensionClassloader = extensionService.getExtensionClassloader(extensionId);
+            newAutomationAppInfoMap.putAll(getAutomationAppsFromClassloader(extensionClassloader, AutomationApp.Type.EXTENSION));
+
+            Collection<AutomationApp> automationApps = automationAppDataStore.getAllAutomationApps(true);
+
+            // check each device handler info against what is in the config file.
+            compareNewAndExistingAutomationApps(automationApps, newAutomationAppInfoMap.values());
         } else if (ExtensionState.StateType.DELETED.equals(state.getState())) {
             //TODO: remove old automation apps
+        }
+    }
+
+    @Override
+    public Pair<Boolean, String> isExtensionInUse(String extensionId) {
+        Collection<InstalledAutomationApp> installedAutomationApps = automationAppDataStore.getInstalledAutomationAppsByExtension(extensionId);
+        if (installedAutomationApps.size() == 0) {
+            return new ImmutablePair<>(false, "");
+        } else {
+            StringBuilder sb = new StringBuilder();
+            for (InstalledAutomationApp installedAutomationApp : installedAutomationApps) {
+                sb.append("Automation App ").append(installedAutomationApp.getDisplayName()).append("\n");
+            }
+            return new ImmutablePair<>(true, sb.toString());
         }
     }
 }

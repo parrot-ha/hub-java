@@ -82,7 +82,7 @@ public class ExtensionYamlDataStore implements ExtensionDataStore {
 
     private boolean saveExtensionLocations() {
         if (extensionLocations != null) {
-            synchronized (this.extensionLocations) {
+            synchronized (this) {
                 try {
                     Yaml yaml = new Yaml();
                     File extensionLocationsFile = new File("config/extensionLocations.yaml");
@@ -114,7 +114,7 @@ public class ExtensionYamlDataStore implements ExtensionDataStore {
                 fnfe.printStackTrace();
             }
         } else {
-            extensionLocations.put("ada38365-1d40-44a0-8208-8395b6ecca53", new HashMap(Map.of("id", "ada38365-1d40-44a0-8208-8395b6ecca53",
+            extensionLocations.put("ada38365-1d40-44a0-8208-8395b6ecca53", new HashMap<>(Map.of("id", "ada38365-1d40-44a0-8208-8395b6ecca53",
                     "name", "Zwave-JS",
                     "type", "GithubRelease",
                     "location", "parrot-ha/zwavejs-integration")));

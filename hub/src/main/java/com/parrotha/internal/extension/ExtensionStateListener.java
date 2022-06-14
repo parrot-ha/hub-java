@@ -18,6 +18,17 @@
  */
 package com.parrotha.internal.extension;
 
+import org.apache.commons.lang3.tuple.Pair;
+
 public interface ExtensionStateListener {
     void stateUpdated(ExtensionState state);
+
+    /**
+     * Implementing class should return true if the extension is in use, in addition a message can be returned explaining the usage.
+     *
+     * @param extensionId The extension id to check for usage
+     * @return
+     */
+    Pair<Boolean, String> isExtensionInUse(String extensionId);
+
 }
