@@ -63,6 +63,8 @@ public interface DeviceDataStore {
 
     void addDeviceHandler(DeviceHandler deviceHandler);
 
+    boolean deleteDeviceHandler(String id);
+
     String getDeviceHandlerSourceCode(String id);
 
     Map<String, InputStream> getDeviceHandlerSources();

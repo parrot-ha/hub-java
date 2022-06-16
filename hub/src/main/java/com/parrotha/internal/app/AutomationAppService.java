@@ -552,7 +552,12 @@ public class AutomationAppService implements ExtensionStateListener {
             // check each device handler info against what is in the config file.
             compareNewAndExistingAutomationApps(automationApps, newAutomationAppInfoMap.values());
         } else if (ExtensionState.StateType.DELETED.equals(state.getState())) {
-            //TODO: remove old automation apps
+            if (isExtensionInUse(state.getId()).getLeft()) {
+                throw new RuntimeException("Automation Apps still in use");
+            }
+            // delete all automation apps that are a part of this extension
+            getAllAutomationApps(true).stream().filter(aa -> extensionId.equals(aa.getExtensionId()))
+                    .forEach(aa -> automationAppDataStore.deleteAutomationApp(aa.getId()));
         }
     }
 

@@ -744,7 +744,12 @@ public class DeviceService implements ExtensionStateListener {
             // check each device handler info against what is in the config file.
             compareNewAndExistingDeviceHandlers(deviceHandlers, newDeviceHandlerInfo.values());
         } else if (ExtensionState.StateType.DELETED.equals(state.getState())) {
-            //TODO: remove old device handlers
+            if (isExtensionInUse(state.getId()).getLeft()) {
+                throw new RuntimeException("Devices still in use");
+            }
+            // delete all device handlers that are a part of this extension
+            getAllDeviceHandlers().stream().filter(dh -> extensionId.equals(dh.getExtensionId()))
+                    .forEach(dh -> deviceDataStore.deleteDeviceHandler(dh.getId()));
         }
     }
 

@@ -48,6 +48,8 @@ public interface AutomationAppDataStore {
 
     void addAutomationApp(AutomationApp automationApp);
 
+    boolean deleteAutomationApp(String id);
+
     boolean updateInstalledAutomationAppState(String installedAutomationAppId, Map state);
 
     String getAutomationAppSourceCode(String id);

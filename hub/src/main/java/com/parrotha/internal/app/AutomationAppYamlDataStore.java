@@ -318,6 +318,23 @@ public class AutomationAppYamlDataStore implements AutomationAppDataStore {
         saveAutomationApps();
     }
 
+    @Override
+    public boolean deleteAutomationApp(String id) {
+        AutomationApp aa = getAutomationAppById(id);
+        if (AutomationApp.Type.USER.equals(aa.getType())) {
+            //delete source file
+            boolean fileDeleted = new File(aa.getFile()).delete();
+            if (!fileDeleted) {
+                logger.warn("Unable to remove automation app file for " + id);
+                return false;
+            }
+        }
+
+        getAutomationAppMap().remove(id);
+        saveAutomationApps();
+        return true;
+    }
+
     private void saveAutomationApps() {
         if (automationAppInfo != null && automationAppInfo.size() > 0) {
             try {

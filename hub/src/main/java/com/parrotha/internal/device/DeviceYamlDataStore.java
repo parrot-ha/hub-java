@@ -486,6 +486,23 @@ public class DeviceYamlDataStore implements DeviceDataStore {
         saveDeviceHandlers();
     }
 
+    @Override
+    public boolean deleteDeviceHandler(String id) {
+        DeviceHandler dh = getDeviceHandler(id);
+        if (DeviceHandler.Type.USER.equals(dh.getType())) {
+            //delete file in device handlers
+            boolean fileDeleted = new File(dh.getFile()).delete();
+            if (!fileDeleted) {
+                logger.warn("Unable to remove device handler file for " + id);
+                return false;
+            }
+        }
+
+        getDeviceHandlerInfo().remove(id);
+        saveDeviceHandlers();
+        return true;
+    }
+
     public void saveDeviceHandlers() {
         if (deviceHandlerInfo != null && deviceHandlerInfo.size() > 0) {
             try {
