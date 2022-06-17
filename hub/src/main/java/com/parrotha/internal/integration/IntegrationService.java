@@ -78,14 +78,21 @@ public class IntegrationService implements ExtensionStateListener {
         Map<String, Map<String, Object>> integrations = new HashMap<>();
 
         // load integrations built in
-        for (Map<String, Object> sysIntegration : getIntegrationsFromClassloader(Main.class.getClassLoader(), "SYSTEM")) {
-            integrations.put((String) sysIntegration.get("id"), sysIntegration);
+        try {
+            Enumeration<URL> resources = Main.class.getClassLoader().getResources("parrotIntegration.yaml");
+            List<Map<String, Object>> systemIntegrations = getIntegrationsFromResources(resources, "SYSTEM", Main.class.getClassLoader());
+            for (Map<String, Object> sysIntegration : systemIntegrations) {
+                integrations.put((String) sysIntegration.get("id"), sysIntegration);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
         }
 
         // load integrations from extensions
-        Map<String, ClassLoader> extensionClassloaders = extensionService.getExtensionClassloaders();
-        for (String extensionId : extensionClassloaders.keySet()) {
-            List<Map<String, Object>> extIntegrations = getIntegrationsFromClassloader(extensionClassloaders.get(extensionId), "EXTENSION");
+        Map<String, Pair<Enumeration<URL>, ClassLoader>> extensionResources = extensionService.getResourcesFromExtensions("parrotIntegration.yaml");
+        for (String extensionId : extensionResources.keySet()) {
+            Pair<Enumeration<URL>, ClassLoader> resource = extensionResources.get(extensionId);
+            List<Map<String, Object>> extIntegrations = getIntegrationsFromResources(resource.getLeft(), "EXTENSION", resource.getRight());
             for (Map<String, Object> extIntegration : extIntegrations) {
                 extIntegration.put("extensionId", extensionId);
                 integrations.put((String) extIntegration.get("id"), extIntegration);
@@ -95,11 +102,10 @@ public class IntegrationService implements ExtensionStateListener {
         integrationTypeMap = integrations;
     }
 
-    private List<Map<String, Object>> getIntegrationsFromClassloader(ClassLoader classLoader, String type) {
+    private List<Map<String, Object>> getIntegrationsFromResources(Enumeration<URL> resources, String type, ClassLoader classLoader) {
         List<Map<String, Object>> availableIntegrations = new ArrayList<>();
 
         try {
-            Enumeration<URL> resources = classLoader.getResources("parrotIntegration.yaml");
             while (resources.hasMoreElements()) {
                 URL url = resources.nextElement();
                 Yaml yaml = new Yaml();
@@ -227,6 +233,10 @@ public class IntegrationService implements ExtensionStateListener {
                 }
             }
         }
+
+        if (extensionService != null) {
+            extensionService.registerStateListener(this);
+        }
     }
 
     private void initializeIntegration(AbstractIntegration abstractIntegration) {
@@ -245,6 +255,10 @@ public class IntegrationService implements ExtensionStateListener {
             for (AbstractIntegration abstractIntegration : integrationMap.values()) {
                 abstractIntegration.stop();
             }
+        }
+
+        if (extensionService != null) {
+            extensionService.unregisterStateListener(this);
         }
     }
 
@@ -422,7 +436,7 @@ public class IntegrationService implements ExtensionStateListener {
         boolean inUse = false;
         for (IntegrationConfiguration integrationConfiguration : getIntegrations()) {
             Map<String, Object> integrationType = integrationTypeMap.get(integrationConfiguration.getIntegrationTypeId());
-            if (extensionId.equals(integrationType.get("id"))) {
+            if (integrationType != null && extensionId.equals(integrationType.get("id"))) {
                 inUse = true;
                 sb.append("Integration ").append(integrationConfiguration.getDisplayName()).append("\n");
             }

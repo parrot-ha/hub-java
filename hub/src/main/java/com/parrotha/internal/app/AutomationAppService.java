@@ -395,7 +395,12 @@ public class AutomationAppService implements ExtensionStateListener {
         Map<String, AutomationApp> automationAppInfo = new HashMap<>();
 
         // load automation apps from jar files (pre-compiled)
-        automationAppInfo.putAll(getAutomationAppsFromClassloader(Main.class.getClassLoader(), AutomationApp.Type.SYSTEM));
+        try {
+            Enumeration<URL> resources = Main.class.getClassLoader().getResources("automationAppClasses.yaml");
+            automationAppInfo.putAll(getAutomationAppsFromResources(resources, AutomationApp.Type.SYSTEM, Main.class.getClassLoader()));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
         // load automation apps from data store
         Map<String, InputStream> aaSources = automationAppDataStore.getAutomationAppSources();
@@ -408,22 +413,25 @@ public class AutomationAppService implements ExtensionStateListener {
                     createAutomationAppsFromSource(extAASources.get(extensionId), AutomationApp.Type.EXTENSION_SOURCE, extensionId));
         }
 
-        // load automation apps from extension classpath (pre-compiled)
-        Map<String, ClassLoader> extensionClassloaders = extensionService.getExtensionClassloaders();
-        for (String extensionId : extensionClassloaders.keySet()) {
-            automationAppInfo.putAll(getAutomationAppsFromClassloader(extensionClassloaders.get(extensionId), AutomationApp.Type.EXTENSION));
+        // load automation apps from extension resources (pre-compiled)
+        Map<String, Pair<Enumeration<URL>, ClassLoader>> extensionResources = extensionService.getResourcesFromExtensions(
+                "automationAppClasses.yaml");
+        for (String extensionId : extensionResources.keySet()) {
+            Pair<Enumeration<URL>, ClassLoader> resource = extensionResources.get(extensionId);
+            automationAppInfo.putAll(getAutomationAppsFromResources(resource.getLeft(), AutomationApp.Type.EXTENSION, resource.getRight()));
         }
 
         return automationAppInfo;
     }
 
-    private Map<String, AutomationApp> getAutomationAppsFromClassloader(ClassLoader classLoader, AutomationApp.Type automationAppType) {
+    private Map<String, AutomationApp> getAutomationAppsFromResources(Enumeration<URL> resources, AutomationApp.Type automationAppType,
+                                                                      ClassLoader classLoader) {
         Map<String, AutomationApp> automationAppInfo = new HashMap<>();
-        if (classLoader == null) {
+        if (resources == null || classLoader == null) {
             return automationAppInfo;
         }
+
         try {
-            Enumeration<URL> resources = classLoader.getResources("automationAppClasses.yaml");
             while (resources.hasMoreElements()) {
                 URL url = resources.nextElement();
                 Yaml yaml = new Yaml();
@@ -432,8 +440,8 @@ public class AutomationAppService implements ExtensionStateListener {
                 for (Map m : list) {
                     String automationAppId = (String) m.get("id");
                     String className = (String) m.get("className");
-
-                    Class<ParrotHubDelegatingScript> automationAppScriptClass = (Class<ParrotHubDelegatingScript>) Class.forName(className);
+                    Class<ParrotHubDelegatingScript> automationAppScriptClass = (Class<ParrotHubDelegatingScript>) Class.forName(className, false,
+                            classLoader);
                     ParrotHubDelegatingScript automationAppScript = automationAppScriptClass.getDeclaredConstructor().newInstance();
                     Map definition = extractAutomationAppDefinition(automationAppScript);
                     definition.put("type", automationAppType);
@@ -446,7 +454,6 @@ public class AutomationAppService implements ExtensionStateListener {
         }
 
         return automationAppInfo;
-
     }
 
     private Map<String, AutomationApp> createAutomationAppsFromSource(Map<String, InputStream> aaSources, AutomationApp.Type type,
@@ -536,16 +543,20 @@ public class AutomationAppService implements ExtensionStateListener {
     public void stateUpdated(ExtensionState state) {
         String extensionId = state.getId();
         if (ExtensionState.StateType.INSTALLED.equals(state.getState()) || ExtensionState.StateType.UPDATED.equals(state.getState())) {
-            // we need to process device handlers
+            // we need to process automation apps
             Map<String, AutomationApp> newAutomationAppInfoMap = new HashMap<>();
 
             // load automation app sources from extensions
             Map<String, InputStream> extAASources = extensionService.getAutomationAppSources(extensionId);
             newAutomationAppInfoMap.putAll(createAutomationAppsFromSource(extAASources, AutomationApp.Type.EXTENSION_SOURCE, extensionId));
 
-            // load automation app from extension classpaths (pre-compiled)
-            ClassLoader extensionClassloader = extensionService.getExtensionClassloader(extensionId);
-            newAutomationAppInfoMap.putAll(getAutomationAppsFromClassloader(extensionClassloader, AutomationApp.Type.EXTENSION));
+            // load automation app from extension resources (pre-compiled)
+            Pair<Enumeration<URL>, ClassLoader> extensionResources = extensionService.getResourcesFromExtension(extensionId,
+                    "automationAppClasses.yaml");
+            if (extensionResources != null) {
+                newAutomationAppInfoMap.putAll(getAutomationAppsFromResources(extensionResources.getLeft(), AutomationApp.Type.EXTENSION,
+                        extensionResources.getRight()));
+            }
 
             Collection<AutomationApp> automationApps = automationAppDataStore.getAllAutomationApps(true);
 
@@ -556,8 +567,11 @@ public class AutomationAppService implements ExtensionStateListener {
                 throw new RuntimeException("Automation Apps still in use");
             }
             // delete all automation apps that are a part of this extension
-            getAllAutomationApps(true).stream().filter(aa -> extensionId.equals(aa.getExtensionId()))
-                    .forEach(aa -> automationAppDataStore.deleteAutomationApp(aa.getId()));
+            List<String> aaIds = getAllAutomationApps(true).stream().filter(aa -> extensionId.equals(aa.getExtensionId())).map(aa -> aa.getId())
+                    .collect(Collectors.toList());
+            for (String aaId : aaIds) {
+                automationAppDataStore.deleteAutomationApp(aaId);
+            }
         }
     }
 
@@ -567,11 +581,16 @@ public class AutomationAppService implements ExtensionStateListener {
         if (installedAutomationApps.size() == 0) {
             return new ImmutablePair<>(false, "");
         } else {
+            boolean inUse = false;
             StringBuilder sb = new StringBuilder();
             for (InstalledAutomationApp installedAutomationApp : installedAutomationApps) {
-                sb.append("Automation App ").append(installedAutomationApp.getDisplayName()).append("\n");
+                AutomationApp aa = getAutomationAppById(installedAutomationApp.getAutomationAppId());
+                if (aa != null && extensionId.equals(aa.getExtensionId())) {
+                    inUse = true;
+                    sb.append("Automation App ").append(installedAutomationApp.getDisplayName()).append("\n");
+                }
             }
-            return new ImmutablePair<>(true, sb.toString());
+            return new ImmutablePair<>(inUse, sb.toString());
         }
     }
 }

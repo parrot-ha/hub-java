@@ -100,7 +100,7 @@
                                       <v-btn
                                         color="primary"
                                         text
-                                        @click="deleteDialog = false"
+                                        @click="deleteExtension(extension.id)"
                                       >
                                         Delete
                                       </v-btn>
@@ -427,6 +427,7 @@ export default {
       })
         .then(handleErrors)
         .then(response => {
+          this.deleteDialog = false;
           this.loadExtensions(true);
         });
     },
@@ -455,6 +456,7 @@ export default {
         .then(handleErrors)
         .then(response => {
           this.loadExtensionLocations();
+          this.loadExtensions(false);
         });
       this.locationsCloseDelete();
     },
@@ -499,6 +501,7 @@ export default {
         .then(handleErrors)
         .then(response => {
           this.loadExtensionLocations();
+          this.loadExtensions(false);
         });
 
       this.locationsClose();

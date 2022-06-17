@@ -34,6 +34,8 @@ import java.util.UUID;
 public class ExtensionYamlDataStore implements ExtensionDataStore {
     private Map<String, Map> extensionLocations;
 
+    private final static String EXTENSION_CONFIG_FILE = "config/extensionLocations.yaml";
+
     @Override
     public Map<String, Map> getExtensionLocations() {
         if (extensionLocations == null) {
@@ -51,10 +53,10 @@ public class ExtensionYamlDataStore implements ExtensionDataStore {
     @Override
     public String addLocation(String name, String type, String location) {
         String id = UUID.randomUUID().toString();
-        getExtensionLocations().put(id, Map.of("id", id,
+        getExtensionLocations().put(id, new HashMap<>(Map.of("id", id,
                 "name", name,
                 "type", type,
-                "location", location));
+                "location", location)));
         return saveExtensionLocations() ? id : null;
     }
 
@@ -85,7 +87,7 @@ public class ExtensionYamlDataStore implements ExtensionDataStore {
             synchronized (this) {
                 try {
                     Yaml yaml = new Yaml();
-                    File extensionLocationsFile = new File("config/extensionLocations.yaml");
+                    File extensionLocationsFile = new File(EXTENSION_CONFIG_FILE);
                     FileWriter fileWriter = new FileWriter(extensionLocationsFile);
                     yaml.dump(new ArrayList<>(extensionLocations.values()), fileWriter);
                     fileWriter.close();
@@ -100,7 +102,7 @@ public class ExtensionYamlDataStore implements ExtensionDataStore {
 
     private Map<String, Map> loadExtensionLocations() {
         Map<String, Map> extensionLocations = new HashMap<>();
-        File extensionLocationsFile = new File("/config/extensionLocations.yaml");
+        File extensionLocationsFile = new File(EXTENSION_CONFIG_FILE);
         if (extensionLocationsFile.exists()) {
             try {
                 Yaml yaml = new Yaml();

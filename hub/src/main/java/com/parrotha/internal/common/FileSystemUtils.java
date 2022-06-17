@@ -26,7 +26,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.net.URLClassLoader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.stream.Collectors;
@@ -122,20 +121,11 @@ public class FileSystemUtils {
         return destFile;
     }
 
-    public static ClassLoader getClassloaderForJarFiles(Path directory, boolean recurse) {
-        URL[] urls = listJarsForDirectory(directory, recurse);
-
-        if (urls.length == 0) {
-            return null;
-        }
-        return new URLClassLoader(urls);
-    }
-
     public static URL[] listJarsForDirectory(Path directory, boolean recurse) {
         URL[] urls = {};
 
         try (Stream<Path> pathStream = Files.find(directory,
-                recurse ? Integer.MAX_VALUE : 0,
+                recurse ? Integer.MAX_VALUE : 1,
                 (p, basicFileAttributes) ->
                         p.getFileName().toString().endsWith(".jar"))
         ) {

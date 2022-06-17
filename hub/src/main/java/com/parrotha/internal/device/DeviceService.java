@@ -607,7 +607,13 @@ public class DeviceService implements ExtensionStateListener {
         Map<String, DeviceHandler> deviceHandlerInfo = new HashMap<>();
 
         // load built in device handlers (pre-compiled)
-        deviceHandlerInfo.putAll(getDeviceHandlersFromClassloader(Main.class.getClassLoader(), DeviceHandler.Type.SYSTEM));
+        try {
+            ClassLoader classLoader = Main.class.getClassLoader();
+            Enumeration<URL> resources = classLoader.getResources("deviceHandlerClasses.yaml");
+            deviceHandlerInfo.putAll(getDeviceHandlersFromResources(resources, DeviceHandler.Type.SYSTEM, classLoader));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
         // load device handlers from data store
         Map<String, InputStream> dhSources = deviceDataStore.getDeviceHandlerSources();
@@ -621,9 +627,11 @@ public class DeviceService implements ExtensionStateListener {
         }
 
         // load device handlers from extension classpaths (pre-compiled)
-        Map<String, ClassLoader> extensionClassloaders = extensionService.getExtensionClassloaders();
-        for (String extensionId : extensionClassloaders.keySet()) {
-            deviceHandlerInfo.putAll(getDeviceHandlersFromClassloader(extensionClassloaders.get(extensionId), DeviceHandler.Type.EXTENSION));
+        Map<String, Pair<Enumeration<URL>, ClassLoader>> extensionResources = extensionService.getResourcesFromExtensions(
+                "deviceHandlerClasses.yaml");
+        for (String extensionId : extensionResources.keySet()) {
+            Pair<Enumeration<URL>, ClassLoader> resource = extensionResources.get(extensionId);
+            deviceHandlerInfo.putAll(getDeviceHandlersFromResources(resource.getLeft(), DeviceHandler.Type.EXTENSION, resource.getRight()));
         }
 
         return deviceHandlerInfo;
@@ -650,13 +658,43 @@ public class DeviceService implements ExtensionStateListener {
         return deviceHandlers;
     }
 
-    private Map<String, DeviceHandler> getDeviceHandlersFromClassloader(ClassLoader classLoader, DeviceHandler.Type deviceHandlerType) {
+//    private Map<String, DeviceHandler> getDeviceHandlersFromClassloader(ClassLoader classLoader, DeviceHandler.Type deviceHandlerType) {
+//        Map<String, DeviceHandler> deviceHandlerInfo = new HashMap<>();
+//        if (classLoader == null) {
+//            return deviceHandlerInfo;
+//        }
+//        try {
+//            Enumeration<URL> resources = classLoader.getResources("deviceHandlerClasses.yaml");
+//            while (resources.hasMoreElements()) {
+//                URL url = resources.nextElement();
+//                Yaml yaml = new Yaml();
+//                yaml.setBeanAccess(BeanAccess.FIELD);
+//                List<Map> list = yaml.load(url.openStream());
+//                for (Map m : list) {
+//                    String deviceHandlerId = (String) m.get("id");
+//                    String className = (String) m.get("className");
+//                    Class<ParrotHubDelegatingScript> deviceHandlerScriptClass = (Class<ParrotHubDelegatingScript>) Class.forName(className, false,
+//                            classLoader);
+//                    ParrotHubDelegatingScript deviceHandlerScript = deviceHandlerScriptClass.getDeclaredConstructor().newInstance();
+//                    Map dhi = extractDeviceHandlerDefinition(deviceHandlerScript);
+//                    dhi.put("type", deviceHandlerType);
+//                    deviceHandlerInfo.put(deviceHandlerId, new DeviceHandler(deviceHandlerId, "class:" + className, dhi));
+//                }
+//            }
+//        } catch (IOException | ClassNotFoundException | IllegalAccessException | InstantiationException | NoSuchMethodException | InvocationTargetException e) {
+//            e.printStackTrace();
+//        }
+//
+//        return deviceHandlerInfo;
+//    }
+
+    private Map<String, DeviceHandler> getDeviceHandlersFromResources(Enumeration<URL> resources, DeviceHandler.Type deviceHandlerType,
+                                                                      ClassLoader classLoader) {
         Map<String, DeviceHandler> deviceHandlerInfo = new HashMap<>();
-        if (classLoader == null) {
+        if (resources == null || classLoader == null) {
             return deviceHandlerInfo;
         }
         try {
-            Enumeration<URL> resources = classLoader.getResources("deviceHandlerClasses.yaml");
             while (resources.hasMoreElements()) {
                 URL url = resources.nextElement();
                 Yaml yaml = new Yaml();
@@ -678,7 +716,6 @@ public class DeviceService implements ExtensionStateListener {
         }
 
         return deviceHandlerInfo;
-
     }
 
     private Map extractDeviceHandlerDefinition(String deviceHandlerScript) {
@@ -736,8 +773,12 @@ public class DeviceService implements ExtensionStateListener {
             newDeviceHandlerInfo.putAll(createDeviceHandlersFromSource(extDHSources, DeviceHandler.Type.EXTENSION_SOURCE, extensionId));
 
             // load device handlers from extension classpaths (pre-compiled)
-            ClassLoader extensionClassloader = extensionService.getExtensionClassloader(extensionId);
-            newDeviceHandlerInfo.putAll(getDeviceHandlersFromClassloader(extensionClassloader, DeviceHandler.Type.EXTENSION));
+            Pair<Enumeration<URL>, ClassLoader> extensionResources = extensionService.getResourcesFromExtension(extensionId,
+                    "deviceHandlerClasses.yaml");
+            if (extensionResources != null) {
+                newDeviceHandlerInfo.putAll(getDeviceHandlersFromResources(extensionResources.getLeft(), DeviceHandler.Type.EXTENSION,
+                        extensionResources.getRight()));
+            }
 
             Collection<DeviceHandler> deviceHandlers = deviceDataStore.getAllDeviceHandlers();
 
@@ -748,8 +789,11 @@ public class DeviceService implements ExtensionStateListener {
                 throw new RuntimeException("Devices still in use");
             }
             // delete all device handlers that are a part of this extension
-            getAllDeviceHandlers().stream().filter(dh -> extensionId.equals(dh.getExtensionId()))
-                    .forEach(dh -> deviceDataStore.deleteDeviceHandler(dh.getId()));
+            List<String> dhIds = getAllDeviceHandlers().stream().filter(dh -> extensionId.equals(dh.getExtensionId())).map(DeviceHandler::getId)
+                    .collect(Collectors.toList());
+            for (String dhId : dhIds) {
+                deviceDataStore.deleteDeviceHandler(dhId);
+            }
         }
     }
 
@@ -759,11 +803,16 @@ public class DeviceService implements ExtensionStateListener {
         if (devices.size() == 0) {
             return new ImmutablePair<>(false, "");
         } else {
+            boolean inUse = false;
             StringBuilder sb = new StringBuilder();
             for (Device device : devices) {
-                sb.append("Device ").append(device.getDisplayName()).append("\n");
+                DeviceHandler dh = getDeviceHandler(device.getDeviceHandlerId());
+                if (dh != null && extensionId.equals(dh.getExtensionId())) {
+                    inUse = true;
+                    sb.append("Device ").append(device.getDisplayName()).append("\n");
+                }
             }
-            return new ImmutablePair<>(true, sb.toString());
+            return new ImmutablePair<>(inUse, sb.toString());
         }
     }
 }
