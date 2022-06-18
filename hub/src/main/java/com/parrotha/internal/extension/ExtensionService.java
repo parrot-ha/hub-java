@@ -32,8 +32,6 @@ import org.yaml.snakeyaml.Yaml;
 
 import java.io.File;
 import java.io.FileFilter;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
@@ -357,40 +355,38 @@ public class ExtensionService {
     }
 
     public boolean updateExtension(String id) {
-        try {
-            Map extension = getExtension(id);
-            String type = (String) extension.get("type");
-            synchronized (this) {
-                if ((boolean) extension.get("updateAvailable") && extension.containsKey("updateInfo")) {
-                    if ("source".equalsIgnoreCase(type)) {
-                        boolean success = downloadAndInstallSourceExtension(extension);
-                        if (success) {
-                            // notify listeners
-                            notifyStateListeners(new ExtensionState(id, ExtensionState.StateType.UPDATED));
-                        }
-                        return success;
-                    } else {
-                        Map updateInfo = (Map) extension.get("updateInfo");
+        boolean success = false;
 
+        Map extension = getExtension(id);
+        String type = (String) extension.get("type");
+        synchronized (this) {
+            if ((boolean) extension.get("updateAvailable") && extension.containsKey("updateInfo")) {
+                Map updateInfo = (Map) extension.get("updateInfo");
+                if ("source".equalsIgnoreCase(type)) {
+                    success = downloadAndInstallSourceExtension(extension);
+                } else {
+                    try {
                         List<String> files = downloadBinaryExtension(updateInfo, EXTENSION_PATH + "staging/" + id);
-
                         // copy updated extensions
-                        installBinaryExtension(updateInfo, files);
-                        // notify listeners
-                        notifyStateListeners(new ExtensionState(id, ExtensionState.StateType.UPDATED));
-
-                        // clean up staging directory
-                        FileSystemUtils.cleanDirectory(EXTENSION_PATH + "staging/" + id);
-
-                        return true;
+                        if (files != null || files.size() > 0) {
+                            success = installBinaryExtension(updateInfo, files);
+                        }
+                    } catch (IOException ioe) {
+                        logger.warn("Exception updating extension {}", id, ioe);
                     }
+
+                    // clean up staging directory
+                    FileSystemUtils.cleanDirectory(EXTENSION_PATH + "staging/" + id);
+                }
+                if (success) {
+                    reprocessExtensionInfo(id);
+                    // notify listeners
+                    notifyStateListeners(new ExtensionState(id, ExtensionState.StateType.UPDATED));
                 }
             }
-        } catch (IOException e) {
-            e.printStackTrace();
         }
 
-        return false;
+        return success;
     }
 
     public Map<String, Pair<Enumeration<URL>, ClassLoader>> getResourcesFromExtensions(String name) {
@@ -551,6 +547,29 @@ public class ExtensionService {
         processExtensionConfigurationDirectory();
     }
 
+    private void reprocessExtensionInfo(String extensionId) {
+        Path extDir = getExtensionDirectory(extensionId);
+
+        Map installedExtension = FileSystemUtils.loadYamlFile(extDir + "/parrotExtension.yaml");
+        if (installedExtension != null) {
+            installedExtension.put("installed", true);
+            installedExtension.put("location", extDir.toString());
+        } else {
+            Map<String, Map> tmpExtensions = loadJarFiles(extDir);
+            if (tmpExtensions != null) {
+                installedExtension = tmpExtensions.get(extensionId);
+            }
+        }
+
+        Map availableExtensionInfo = FileSystemUtils.loadYamlFile(EXTENSION_PATH + ".extensions/" + extensionId + "/parrotExtension.yaml");
+        if (availableExtensionInfo != null) {
+            Map updatedExtensionInfo = compareAndUpdateExtensionInfo(installedExtension, availableExtensionInfo);
+            getExtensions().put(extensionId, updatedExtensionInfo);
+        } else if (installedExtension != null) {
+            getExtensions().put(extensionId, installedExtension);
+        }
+    }
+
     private void loadExtensionLocation(Map extLoc, int level) throws IOException {
         // this will stop us from entering an infinite loop should 2 repository files point to each other.
         if (level++ > 10) {
@@ -629,56 +648,45 @@ public class ExtensionService {
 
         Map<String, Map> tmpExtensions = new HashMap<>();
         for (Path extDir : extDirs) {
-            File parrotExtensionFile = new File(extDir + "/parrotExtension.yaml");
-            if (parrotExtensionFile.exists()) {
-                Yaml yaml = new Yaml();
-                try {
-                    Map extInf = yaml.load(new FileInputStream(parrotExtensionFile));
-                    extInf.put("installed", true);
-                    extInf.put("location", extDir.toString());
-                    tmpExtensions.put((String) extInf.get("id"), extInf);
-                } catch (FileNotFoundException e) {
-                    e.printStackTrace();
-                }
+            Map extInf = FileSystemUtils.loadYamlFile(extDir + "/parrotExtension.yaml");
+            if (extInf != null) {
+                extInf.put("installed", true);
+                extInf.put("location", extDir.toString());
+                tmpExtensions.put((String) extInf.get("id"), extInf);
             } else {
                 tmpExtensions.putAll(loadJarFiles(extDir));
             }
         }
-//
-//        // load extensions from configuration directory
-//        File availableExtensionDirectory = new File(EXTENSION_PATH + ".extensions");
-//        if (availableExtensionDirectory.isDirectory()) {
-//            File avExtDirs[] = availableExtensionDirectory.listFiles(new FileFilter() {
-//                @Override
-//                public boolean accept(File file) {
-//                    return file.isDirectory();
-//                }
-//            });
-//
-//            for (File extDir : avExtDirs) {
-//                try {
-//                    Yaml yaml = new Yaml();
-//                    Map extInf = yaml.load(new FileInputStream(new File(extDir.getPath() + "/parrotExtension.yaml")));
-//                    String extInfId = (String) extInf.get("id");
-//                    if (tmpExtensions.containsKey(extInfId)) {
-//                        Map extension = tmpExtensions.get(extInfId);
-//                        if (!StringUtils.equals((String) extension.get("version"), (String) extInf.get("version"))) {
-//                            extension.put("updateAvailable", true);
-//                            extension.put("updateInfo", extInf);
-//                        } else {
-//                            extension.put("updateAvailable", false);
-//                        }
-//                    } else {
-//                        extInf.put("installed", false);
-//                        tmpExtensions.put((String) extInf.get("id"), extInf);
-//                    }
-//                } catch (FileNotFoundException e) {
-//                    e.printStackTrace();
-//                }
-//            }
-//        }
 
         return tmpExtensions;
+    }
+
+    private Map compareAndUpdateExtensionInfo(Map installedExtension, Map updatedExtensionInfo) {
+        if (installedExtension != null) {
+            if ((boolean) installedExtension.get("installed")) {
+                if (!StringUtils.equals((String) installedExtension.get("version"), (String) updatedExtensionInfo.get("version"))) {
+                    installedExtension.put("updateAvailable", true);
+                    installedExtension.put("updateInfo", updatedExtensionInfo);
+                } else {
+                    installedExtension.put("updateAvailable", false);
+                    installedExtension.remove("updateInfo");
+                }
+                if (!installedExtension.containsKey("locationURL")) {
+                    installedExtension.put("locationURL", updatedExtensionInfo.get("locationURL"));
+                }
+                if (!installedExtension.containsKey("locationType")) {
+                    installedExtension.put("locationType", updatedExtensionInfo.get("locationType"));
+                }
+                return installedExtension;
+            } else {
+                // update existing information
+                updatedExtensionInfo.put("installed", false);
+                return updatedExtensionInfo;
+            }
+        } else {
+            updatedExtensionInfo.put("installed", false);
+            return updatedExtensionInfo;
+        }
     }
 
     private void processExtensionConfigurationDirectory() {
@@ -693,31 +701,12 @@ public class ExtensionService {
             });
 
             for (File extDir : avExtDirs) {
-                try {
-                    Yaml yaml = new Yaml();
-                    Map extInf = yaml.load(new FileInputStream(new File(extDir.getPath() + "/parrotExtension.yaml")));
-                    String extInfId = (String) extInf.get("id");
-                    if (getExtensions().containsKey(extInfId)) {
-                        Map extension = getExtensions().get(extInfId);
-                        if ((boolean) extension.get("installed")) {
-                            if (!StringUtils.equals((String) extension.get("version"), (String) extInf.get("version"))) {
-                                extension.put("updateAvailable", true);
-                                extension.put("updateInfo", extInf);
-                            } else {
-                                extension.put("updateAvailable", false);
-                                extension.remove("updateInfo");
-                            }
-                        } else {
-                            // update existing information
-                            extInf.put("installed", false);
-                            getExtensions().put((String) extInf.get("id"), extInf);
-                        }
-                    } else {
-                        extInf.put("installed", false);
-                        getExtensions().put((String) extInf.get("id"), extInf);
-                    }
-                } catch (FileNotFoundException e) {
-                    e.printStackTrace();
+                Map extInf = FileSystemUtils.loadYamlFile(extDir.getPath() + "/parrotExtension.yaml");
+                if (extInf != null) {
+                    String extensionId = (String) extInf.get("id");
+                    Map installedExtension = getExtensions().get(extensionId);
+                    Map updatedExtensionInfo = compareAndUpdateExtensionInfo(installedExtension, extInf);
+                    getExtensions().put(extensionId, updatedExtensionInfo);
                 }
             }
         }

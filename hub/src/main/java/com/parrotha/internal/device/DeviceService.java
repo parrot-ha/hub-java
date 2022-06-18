@@ -540,10 +540,10 @@ public class DeviceService implements ExtensionStateListener {
             File f = new File(fileName);
             try {
                 String scriptCode = IOUtils.toString(new FileInputStream(f), StandardCharsets.UTF_8);
-                Map definition = extractDeviceHandlerDefinition(scriptCode);
-                definition.put("type", existingDeviceHandler.getType());
-                definition.put("extensionId", existingDeviceHandler.getExtensionId());
-                DeviceHandler newDeviceHandler = new DeviceHandler(id, fileName, definition);
+                Map metadata = extractDeviceHandlerMetadata(scriptCode);
+                metadata.put("type", existingDeviceHandler.getType());
+                metadata.put("extensionId", existingDeviceHandler.getExtensionId());
+                DeviceHandler newDeviceHandler = new DeviceHandler(id, fileName, metadata);
                 if (!newDeviceHandler.equalsIgnoreId(existingDeviceHandler)) {
                     deviceDataStore.updateDeviceHandler(newDeviceHandler);
                 }
@@ -644,11 +644,11 @@ public class DeviceService implements ExtensionStateListener {
             for (String dhSourceKey : dhSources.keySet()) {
                 try {
                     String scriptCode = IOUtils.toString(dhSources.get(dhSourceKey), StandardCharsets.UTF_8);
-                    Map definition = extractDeviceHandlerDefinition(scriptCode);
-                    definition.put("type", type);
-                    definition.put("extensionId", extensionId);
+                    Map metadata = extractDeviceHandlerMetadata(scriptCode);
+                    metadata.put("type", type);
+                    metadata.put("extensionId", extensionId);
 
-                    DeviceHandler deviceHandler = new DeviceHandler(UUID.randomUUID().toString(), dhSourceKey, definition);
+                    DeviceHandler deviceHandler = new DeviceHandler(UUID.randomUUID().toString(), dhSourceKey, metadata);
                     deviceHandlers.put(deviceHandler.getId(), deviceHandler);
                 } catch (Exception exception) {
                     logger.warn(String.format("Caught exception while processing %s", dhSourceKey), exception);
@@ -657,36 +657,6 @@ public class DeviceService implements ExtensionStateListener {
         }
         return deviceHandlers;
     }
-
-//    private Map<String, DeviceHandler> getDeviceHandlersFromClassloader(ClassLoader classLoader, DeviceHandler.Type deviceHandlerType) {
-//        Map<String, DeviceHandler> deviceHandlerInfo = new HashMap<>();
-//        if (classLoader == null) {
-//            return deviceHandlerInfo;
-//        }
-//        try {
-//            Enumeration<URL> resources = classLoader.getResources("deviceHandlerClasses.yaml");
-//            while (resources.hasMoreElements()) {
-//                URL url = resources.nextElement();
-//                Yaml yaml = new Yaml();
-//                yaml.setBeanAccess(BeanAccess.FIELD);
-//                List<Map> list = yaml.load(url.openStream());
-//                for (Map m : list) {
-//                    String deviceHandlerId = (String) m.get("id");
-//                    String className = (String) m.get("className");
-//                    Class<ParrotHubDelegatingScript> deviceHandlerScriptClass = (Class<ParrotHubDelegatingScript>) Class.forName(className, false,
-//                            classLoader);
-//                    ParrotHubDelegatingScript deviceHandlerScript = deviceHandlerScriptClass.getDeclaredConstructor().newInstance();
-//                    Map dhi = extractDeviceHandlerDefinition(deviceHandlerScript);
-//                    dhi.put("type", deviceHandlerType);
-//                    deviceHandlerInfo.put(deviceHandlerId, new DeviceHandler(deviceHandlerId, "class:" + className, dhi));
-//                }
-//            }
-//        } catch (IOException | ClassNotFoundException | IllegalAccessException | InstantiationException | NoSuchMethodException | InvocationTargetException e) {
-//            e.printStackTrace();
-//        }
-//
-//        return deviceHandlerInfo;
-//    }
 
     private Map<String, DeviceHandler> getDeviceHandlersFromResources(Enumeration<URL> resources, DeviceHandler.Type deviceHandlerType,
                                                                       ClassLoader classLoader) {
@@ -706,7 +676,7 @@ public class DeviceService implements ExtensionStateListener {
                     Class<ParrotHubDelegatingScript> deviceHandlerScriptClass = (Class<ParrotHubDelegatingScript>) Class.forName(className, false,
                             classLoader);
                     ParrotHubDelegatingScript deviceHandlerScript = deviceHandlerScriptClass.getDeclaredConstructor().newInstance();
-                    Map dhi = extractDeviceHandlerDefinition(deviceHandlerScript);
+                    Map dhi = extractDeviceHandlerMetadata(deviceHandlerScript);
                     dhi.put("type", deviceHandlerType);
                     deviceHandlerInfo.put(deviceHandlerId, new DeviceHandler(deviceHandlerId, "class:" + className, dhi));
                 }
@@ -718,16 +688,16 @@ public class DeviceService implements ExtensionStateListener {
         return deviceHandlerInfo;
     }
 
-    private Map extractDeviceHandlerDefinition(String deviceHandlerScript) {
+    private Map extractDeviceHandlerMetadata(String deviceHandlerScript) {
         CompilerConfiguration compilerConfiguration = new CompilerConfiguration();
         compilerConfiguration.setScriptBaseClass("com.parrotha.internal.script.ParrotHubDelegatingScript");
         GroovyShell shell = new GroovyShell(compilerConfiguration);
 
         ParrotHubDelegatingScript parrotHubDelegatingScript = (ParrotHubDelegatingScript) shell.parse(deviceHandlerScript);
-        return extractDeviceHandlerDefinition(parrotHubDelegatingScript);
+        return extractDeviceHandlerMetadata(parrotHubDelegatingScript);
     }
 
-    private Map extractDeviceHandlerDefinition(DelegatingScript deviceHandlerScript) {
+    private Map extractDeviceHandlerMetadata(DelegatingScript deviceHandlerScript) {
         deviceHandlerScript.setDelegate(new DeviceDefinitionDelegate());
 
         deviceHandlerScript.invokeMethod("run", null);
@@ -746,18 +716,18 @@ public class DeviceService implements ExtensionStateListener {
     }
 
     public boolean updateDeviceHandlerSourceCode(String id, String sourceCode) {
-        extractDeviceHandlerDefinition(sourceCode);
+        extractDeviceHandlerMetadata(sourceCode);
         return deviceDataStore.updateDeviceHandlerSourceCode(id, sourceCode);
     }
 
     public String addDeviceHandlerSourceCode(String sourceCode) {
-        Map definition = extractDeviceHandlerDefinition(sourceCode);
-        if (definition == null) {
-            throw new IllegalArgumentException("No definition found.");
+        Map metadata = extractDeviceHandlerMetadata(sourceCode);
+        if (metadata == null) {
+            throw new IllegalArgumentException("No metadata found.");
         }
-        definition.put("type", DeviceHandler.Type.USER);
+        metadata.put("type", DeviceHandler.Type.USER);
         String dhId = deviceDataStore
-                .addDeviceHandlerSourceCode(sourceCode, new DeviceHandler(null, null, definition));
+                .addDeviceHandlerSourceCode(sourceCode, new DeviceHandler(null, null, metadata));
         return dhId;
     }
 

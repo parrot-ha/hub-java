@@ -19,9 +19,11 @@
 package com.parrotha.internal.common;
 
 import org.apache.commons.io.FileUtils;
+import org.yaml.snakeyaml.Yaml;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -140,5 +142,19 @@ public class FileSystemUtils {
             e.printStackTrace();
         }
         return urls;
+    }
+
+    public static <T> T loadYamlFile(String fileName) {
+        T fileInformation = null;
+        File yamlFile = new File(fileName);
+        if (yamlFile.exists()) {
+            Yaml yaml = new Yaml();
+            try {
+                fileInformation = yaml.load(new FileInputStream(fileName));
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            }
+        }
+        return fileInformation;
     }
 }

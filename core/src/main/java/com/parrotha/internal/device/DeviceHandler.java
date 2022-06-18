@@ -82,7 +82,7 @@ public class DeviceHandler {
             }
         }
 
-        this.extensionId = getStringValue(definition, "extensionId");
+        this.extensionId = getStringValue(metadata, "extensionId");
 
         Object typeObj = metadata.get("type");
         if (typeObj != null) {
