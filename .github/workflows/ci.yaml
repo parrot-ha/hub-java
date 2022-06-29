@@ -1,6 +1,9 @@
 name: Java/Gradle CI
 
-on: [push]
+on:
+  push:
+    tags-ignore:
+      - 'v*' # ignore release tags
 
 jobs:
   build:
