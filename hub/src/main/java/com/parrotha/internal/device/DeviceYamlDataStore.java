@@ -30,11 +30,13 @@ import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.introspector.BeanAccess;
 
 import java.io.File;
+import java.io.FileFilter;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
@@ -64,6 +66,19 @@ public class DeviceYamlDataStore implements DeviceDataStore {
                     if (capability.equalsIgnoreCase(StringUtils.deleteWhitespace(deviceCapability))) {
                         devices.add(device);
                     }
+                }
+            }
+        }
+        return devices;
+    }
+
+    @Override
+    public Collection<Device> getDevicesByExtension(String extensionId) {
+        Collection<Device> devices = new HashSet<>();
+        for (DeviceHandler deviceHandler : getAllDeviceHandlers()) {
+            for (Device device : getAllDevices()) {
+                if (deviceHandler.getId() != null && deviceHandler.getId().equals(device.getDeviceHandlerId())) {
+                    devices.add(device);
                 }
             }
         }
@@ -471,6 +486,23 @@ public class DeviceYamlDataStore implements DeviceDataStore {
         saveDeviceHandlers();
     }
 
+    @Override
+    public boolean deleteDeviceHandler(String id) {
+        DeviceHandler dh = getDeviceHandler(id);
+        if (DeviceHandler.Type.USER.equals(dh.getType())) {
+            //delete file in device handlers
+            boolean fileDeleted = new File(dh.getFile()).delete();
+            if (!fileDeleted) {
+                logger.warn("Unable to remove device handler file for " + id);
+                return false;
+            }
+        }
+
+        getDeviceHandlerInfo().remove(id);
+        saveDeviceHandlers();
+        return true;
+    }
+
     public void saveDeviceHandlers() {
         if (deviceHandlerInfo != null && deviceHandlerInfo.size() > 0) {
             try {
@@ -509,7 +541,7 @@ public class DeviceYamlDataStore implements DeviceDataStore {
     @Override
     public String getDeviceHandlerSourceCode(String id) {
         DeviceHandler deviceHandler = getDeviceHandlerInfo().get(id);
-        if (deviceHandler != null && !deviceHandler.getFile().startsWith("class:")) {
+        if (deviceHandler != null && deviceHandler.isUserType()) {
             File f = new File(deviceHandler.getFile());
             try {
                 String scriptCode = IOUtils.toString(new FileInputStream(f), StandardCharsets.UTF_8);
@@ -523,9 +555,40 @@ public class DeviceYamlDataStore implements DeviceDataStore {
     }
 
     @Override
+    public Map<String, InputStream> getDeviceHandlerSources() {
+        Map<String, InputStream> deviceHandlerSourceList = new HashMap<>();
+
+        // load device handlers from text files on local file system
+        try {
+            final String dhFilePath = "deviceHandlers/";
+            File devicehandlerDir = new File(dhFilePath);
+            if (!devicehandlerDir.exists()) {
+                devicehandlerDir.mkdir();
+            }
+            if (devicehandlerDir.exists() && devicehandlerDir.isDirectory()) {
+                File[] deviceHandlerFiles = devicehandlerDir.listFiles(new FileFilter() {
+                    @Override
+                    public boolean accept(File pathname) {
+                        return pathname.isFile() && pathname.getName().endsWith(".groovy");
+                    }
+                });
+
+                if (deviceHandlerFiles != null && deviceHandlerFiles.length > 0) {
+                    for (File f : deviceHandlerFiles) {
+                        deviceHandlerSourceList.put(dhFilePath + f.getName(), new FileInputStream(f));
+                    }
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return deviceHandlerSourceList;
+    }
+
+    @Override
     public boolean updateDeviceHandlerSourceCode(String id, String sourceCode) {
         DeviceHandler deviceHandler = getDeviceHandlerInfo().get(id);
-        if (deviceHandler != null && !deviceHandler.getFile().startsWith("class:")) {
+        if (deviceHandler != null && deviceHandler.isUserType()) {
             File f = new File(deviceHandler.getFile());
             try {
                 IOUtils.write(sourceCode, new FileOutputStream(f), StandardCharsets.UTF_8);

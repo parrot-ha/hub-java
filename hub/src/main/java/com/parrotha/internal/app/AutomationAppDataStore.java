@@ -26,6 +26,8 @@ import java.util.Map;
 public interface AutomationAppDataStore {
     Collection<InstalledAutomationApp> getAllInstalledAutomationApps();
 
+    Collection<InstalledAutomationApp> getInstalledAutomationAppsByExtension(String extensionId);
+
     InstalledAutomationApp getInstalledAutomationAppById(String id);
 
     boolean updateInstalledAutomationApp(InstalledAutomationApp installedAutomationApp);
@@ -45,6 +47,8 @@ public interface AutomationAppDataStore {
     boolean updateAutomationApp(AutomationApp automationApp);
 
     void addAutomationApp(AutomationApp automationApp);
+
+    boolean deleteAutomationApp(String id);
 
     boolean updateInstalledAutomationAppState(String installedAutomationAppId, Map state);
 

@@ -22,23 +22,23 @@ import com.parrotha.device.Protocol;
 import com.parrotha.integration.CloudIntegration;
 import com.parrotha.integration.DeviceIntegration;
 import com.parrotha.internal.Main;
-import com.parrotha.internal.device.DeviceIntegrationServiceImpl;
-import com.parrotha.internal.device.DeviceService;
 import com.parrotha.internal.entity.CloudIntegrationServiceImpl;
 import com.parrotha.internal.entity.EntityService;
+import com.parrotha.internal.extension.ExtensionService;
+import com.parrotha.internal.extension.ExtensionState;
+import com.parrotha.internal.extension.ExtensionStateListener;
 import com.parrotha.internal.hub.LocationService;
+import com.parrotha.service.DeviceIntegrationService;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.yaml.snakeyaml.Yaml;
 
-import java.io.File;
-import java.io.FileFilter;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
-import java.net.MalformedURLException;
 import java.net.URL;
-import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Enumeration;
@@ -48,13 +48,12 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
-public class IntegrationService {
+public class IntegrationService implements ExtensionStateListener {
     private static final Logger logger = LoggerFactory.getLogger(IntegrationService.class);
     IntegrationRegistry integrationRegistry;
-    DeviceService deviceService;
-    EntityService scriptService;
+    ExtensionService extensionService;
     ConfigurationService configurationService;
-    DeviceIntegrationServiceImpl deviceIntegrationService;
+    DeviceIntegrationService deviceIntegrationService;
     EntityService entityService;
     LocationService locationService;
     private Map<String, AbstractIntegration> integrationMap;
@@ -62,13 +61,12 @@ public class IntegrationService {
 
     private Map<String, Map<String, Object>> integrationTypeMap;
 
-    public IntegrationService(IntegrationRegistry integrationRegistry, ConfigurationService configurationService, DeviceService deviceService,
-                              EntityService scriptService, DeviceIntegrationServiceImpl deviceIntegrationService,
+    public IntegrationService(IntegrationRegistry integrationRegistry, ConfigurationService configurationService,
+                              ExtensionService extensionService, DeviceIntegrationService deviceIntegrationService,
                               EntityService entityService, LocationService locationService) {
         this.integrationRegistry = integrationRegistry;
         this.configurationService = configurationService;
-        this.deviceService = deviceService;
-        this.scriptService = scriptService;
+        this.extensionService = extensionService;
         this.deviceIntegrationService = deviceIntegrationService;
         this.entityService = entityService;
         this.locationService = locationService;
@@ -77,99 +75,64 @@ public class IntegrationService {
     }
 
     private void loadIntegrationTypes() {
-        File extensionDirectory = new File("./extensions");
-        if (!extensionDirectory.exists()) {
-            extensionDirectory.mkdir();
-        }
-        File extDirs[] = extensionDirectory.listFiles(new FileFilter() {
-            @Override
-            public boolean accept(File file) {
-                return file.isDirectory();
-            }
-        });
-
         Map<String, Map<String, Object>> integrations = new HashMap<>();
-        for (File extDir : extDirs) {
-            try {
-                File jarFiles[] = extDir.listFiles(new FileFilter() {
-                    @Override
-                    public boolean accept(File file) {
-                        return file.getName().endsWith(".jar");
-                    }
-                });
-                ArrayList<URL> urls = new ArrayList<>();
-                urls.add(extDir.toURI().toURL());
-                for (File jarFile : jarFiles) {
-                    urls.add(jarFile.toURI().toURL());
-                }
 
-                ClassLoader myClassLoader = new URLClassLoader(urls.toArray(new URL[0]));
-
-                List<Map<String, Object>> tmpIntegrations = getIntegrationsFromClassloader(myClassLoader, extensionDirectory.getAbsolutePath());
-
-                for (Map<String, Object> tmpIntegration : tmpIntegrations) {
-                    tmpIntegration.put("location", extDir.getAbsolutePath());
-                    integrations.put((String) tmpIntegration.get("id"), tmpIntegration);
-                }
-            } catch (MalformedURLException e) {
-                e.printStackTrace();
-            }
-        }
-
-        List<Map<String, Object>> tmpIntegrations = getIntegrationsFromClassloader(Main.class.getClassLoader(), null);
-        for (Map<String, Object> tmpIntegration : tmpIntegrations) {
-            integrations.put((String) tmpIntegration.get("id"), tmpIntegration);
-        }
-
-        integrationTypeMap = integrations;
-    }
-
-    private List<Map<String, Object>> getIntegrationsFromClassloader(ClassLoader classLoader, String baseDirectory) {
-        List<Map<String, String>> integrationClasses = new ArrayList<>();
+        // load integrations built in
         try {
-            Enumeration<URL> resources = classLoader.getResources("integrationInformation.yaml");
-            while (resources.hasMoreElements()) {
-                URL url = resources.nextElement();
-                Yaml yaml = new Yaml();
-                Map integrationInformation = yaml.load(url.openStream());
-                String className = (String) integrationInformation.get("className");
-                if (baseDirectory != null && url.toString().startsWith("jar:file:" + baseDirectory)) {
-                    integrationClasses.add(Map.of("className", className, "id", (String) integrationInformation.get("id")));
-                } else if (baseDirectory == null) {
-                    integrationClasses.add(Map.of("className", className, "id", (String) integrationInformation.get("id")));
-                }
+            Enumeration<URL> resources = Main.class.getClassLoader().getResources("parrotIntegration.yaml");
+            List<Map<String, Object>> systemIntegrations = getIntegrationsFromResources(resources, "SYSTEM", Main.class.getClassLoader());
+            for (Map<String, Object> sysIntegration : systemIntegrations) {
+                integrations.put((String) sysIntegration.get("id"), sysIntegration);
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
 
-        List<Map<String, Object>> availableIntegrations = new ArrayList<>();
-        for (Map<String, String> integrationClassMap : integrationClasses) {
-            Map<String, Object> integration = new HashMap<>();
-            try {
-                Class<? extends AbstractIntegration> integrationClass = Class.forName(integrationClassMap.get("className"), true, classLoader)
-                        .asSubclass(AbstractIntegration.class);
-                AbstractIntegration abstractIntegration = integrationClass.getDeclaredConstructor().newInstance();
-                integration.put("id", integrationClassMap.get("id"));
-                integration.put("name", abstractIntegration.getName());
-                integration.put("className", integrationClassMap.get("className"));
-                integration.put("description", abstractIntegration.getDescription());
-                integration.put("classLoader", classLoader);
-                availableIntegrations.add(integration);
-            } catch (ClassNotFoundException classNotFoundException) {
-                classNotFoundException.printStackTrace();
-            } catch (IllegalAccessException illegalAccessException) {
-                illegalAccessException.printStackTrace();
-            } catch (InstantiationException instantiationException) {
-                instantiationException.printStackTrace();
-            } catch (NoSuchMethodException e) {
-                e.printStackTrace();
-            } catch (InvocationTargetException e) {
-                e.printStackTrace();
+        // load integrations from extensions
+        Map<String, Pair<Enumeration<URL>, ClassLoader>> extensionResources = extensionService.getResourcesFromExtensions("parrotIntegration.yaml");
+        for (String extensionId : extensionResources.keySet()) {
+            Pair<Enumeration<URL>, ClassLoader> resource = extensionResources.get(extensionId);
+            List<Map<String, Object>> extIntegrations = getIntegrationsFromResources(resource.getLeft(), "EXTENSION", resource.getRight());
+            for (Map<String, Object> extIntegration : extIntegrations) {
+                extIntegration.put("extensionId", extensionId);
+                integrations.put((String) extIntegration.get("id"), extIntegration);
             }
         }
-        return availableIntegrations;
 
+        integrationTypeMap = integrations;
+    }
+
+    private List<Map<String, Object>> getIntegrationsFromResources(Enumeration<URL> resources, String type, ClassLoader classLoader) {
+        List<Map<String, Object>> availableIntegrations = new ArrayList<>();
+
+        try {
+            while (resources.hasMoreElements()) {
+                URL url = resources.nextElement();
+                Yaml yaml = new Yaml();
+                Map integrationInformation = yaml.load(url.openStream());
+                String className = (String) integrationInformation.get("className");
+                String id = (String) integrationInformation.get("id");
+
+                Map<String, Object> integration = new HashMap<>();
+                try {
+                    Class<? extends AbstractIntegration> integrationClass = Class.forName(className, true, classLoader)
+                            .asSubclass(AbstractIntegration.class);
+                    AbstractIntegration abstractIntegration = integrationClass.getDeclaredConstructor().newInstance();
+                    integration.put("id", id);
+                    integration.put("type", type);
+                    integration.put("name", abstractIntegration.getName());
+                    integration.put("className", className);
+                    integration.put("description", abstractIntegration.getDescription());
+                    integration.put("classLoader", classLoader);
+                    availableIntegrations.add(integration);
+                } catch (ClassNotFoundException | InvocationTargetException | NoSuchMethodException | InstantiationException | IllegalAccessException exception) {
+                    logger.warn("Exception occurred while processing integration {} with className {}", id, className, exception);
+                }
+            }
+        } catch (IOException e) {
+            logger.warn("Exception occurred while processing classLoader {} with type {}", classLoader.toString(), type, e);
+        }
+        return availableIntegrations;
     }
 
     public boolean removeIntegration(String id) {
@@ -270,6 +233,10 @@ public class IntegrationService {
                 }
             }
         }
+
+        if (extensionService != null) {
+            extensionService.registerStateListener(this);
+        }
     }
 
     private void initializeIntegration(AbstractIntegration abstractIntegration) {
@@ -288,6 +255,10 @@ public class IntegrationService {
             for (AbstractIntegration abstractIntegration : integrationMap.values()) {
                 abstractIntegration.stop();
             }
+        }
+
+        if (extensionService != null) {
+            extensionService.unregisterStateListener(this);
         }
     }
 
@@ -347,6 +318,7 @@ public class IntegrationService {
                         .asSubclass(AbstractIntegration.class);
                 abstractIntegration = integrationClass.getDeclaredConstructor().newInstance();
             } catch (Exception e) {
+                logger.warn("Exception occurred while loading integration id {}", integrationTypeId);
                 e.printStackTrace();
             }
         }
@@ -439,5 +411,37 @@ public class IntegrationService {
             availableIntegrations.add(integration);
         }
         return availableIntegrations;
+    }
+
+    @Override
+    public void stateUpdated(ExtensionState state) {
+        String extensionId = state.getId();
+        if (ExtensionState.StateType.INSTALLED.equals(state.getState()) || ExtensionState.StateType.UPDATED.equals(state.getState())) {
+            // TODO: should we be checking existing integrations and loading or unloading them as we go?
+            //  also should we check for an integration disappearing in a new version of the extension.
+            loadIntegrationTypes();
+        } else if (ExtensionState.StateType.DELETED.equals(state.getState())) {
+            if (isExtensionInUse(state.getId()).getLeft()) {
+                throw new RuntimeException("Integration still in use");
+            }
+            //remove old integration
+            integrationTypeMap.entrySet()
+                    .removeIf(entry -> "EXTENSION".equals(entry.getValue().get("type")) && extensionId.equals(entry.getValue().get("extensionId")));
+        }
+    }
+
+    @Override
+    public Pair<Boolean, String> isExtensionInUse(String extensionId) {
+        StringBuilder sb = new StringBuilder();
+        boolean inUse = false;
+        for (IntegrationConfiguration integrationConfiguration : getIntegrations()) {
+            Map<String, Object> integrationType = integrationTypeMap.get(integrationConfiguration.getIntegrationTypeId());
+            if (integrationType != null && extensionId.equals(integrationType.get("id"))) {
+                inUse = true;
+                sb.append("Integration ").append(integrationConfiguration.getDisplayName()).append("\n");
+            }
+        }
+
+        return new ImmutablePair<>(inUse, sb.toString());
     }
 }

@@ -21,13 +21,13 @@ package com.parrotha.internal;
 import com.parrotha.internal.app.AutomationAppApiHandler;
 import com.parrotha.internal.device.DeviceApiHandler;
 import com.parrotha.internal.device.DeviceService;
+import com.parrotha.internal.entity.EntityService;
 import com.parrotha.internal.extension.ExtensionApiHandler;
+import com.parrotha.internal.extension.ExtensionService;
 import com.parrotha.internal.hub.LocationApiHandler;
 import com.parrotha.internal.hub.ScheduleService;
 import com.parrotha.internal.hub.SettingsApiHandler;
 import com.parrotha.internal.integration.IntegrationApiHandler;
-import com.parrotha.internal.integration.IntegrationService;
-import com.parrotha.internal.entity.EntityService;
 import com.parrotha.internal.ui.UIFramework;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,12 +52,15 @@ public class Main {
 
         DeviceService deviceService = ServiceFactory.getDeviceService();
 
-        IntegrationService integrationService = ServiceFactory.getIntegrationService();
-        integrationService.start();
+        ServiceFactory.getIntegrationService().start();
 
         // start scheduler
         ScheduleService scheduleService = ServiceFactory.getScheduleService();
         scheduleService.start();
+
+        //initialize extension service
+        ExtensionService extensionService = ServiceFactory.getExtensionService();
+        extensionService.initialize();
 
         // configure api
         new DeviceApiHandler(deviceService, entityService).setupApi(uiFramework.getApp());
@@ -65,14 +68,14 @@ public class Main {
         new IntegrationApiHandler(ServiceFactory.getIntegrationService()).setupApi(uiFramework.getApp());
         new LocationApiHandler(ServiceFactory.getLocationService()).setupApi(uiFramework.getApp());
         new SettingsApiHandler(entityService).setupApi(uiFramework.getApp());
-        new ExtensionApiHandler(ServiceFactory.getExtensionService()).setupApi(uiFramework.getApp());
+        new ExtensionApiHandler(extensionService).setupApi(uiFramework.getApp());
 
         Thread myShutdownHook = new Thread(() -> {
             logger.info("In the middle of a shutdown");
 
-            scheduleService.shutdown();
+            ServiceFactory.getScheduleService().shutdown();
             uiFramework.stop();
-            integrationService.stop();
+            ServiceFactory.getIntegrationService().stop();
         }
         );
 

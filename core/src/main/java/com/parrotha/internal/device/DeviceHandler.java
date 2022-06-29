@@ -36,6 +36,15 @@ public class DeviceHandler {
     private List<Command> commandList;
     private List<Attribute> attributeList;
     private List<Fingerprint> fingerprints;
+    private String extensionId;
+    private Type type;
+
+    public enum Type {
+        USER,
+        SYSTEM,
+        EXTENSION,
+        EXTENSION_SOURCE;
+    }
 
     public DeviceHandler() {
     }
@@ -46,9 +55,9 @@ public class DeviceHandler {
 
         //Map dhi = extractDeviceHandlerInformation(scriptCode);
         Map<String, Object> definition = (Map<String, Object>) metadata.get("definition");
-        this.name = (String) definition.get("name");
-        this.namespace = (String) definition.get("namespace");
-        this.author = (String) definition.get("author");
+        this.name = getStringValue(definition, "name");
+        this.namespace = getStringValue(definition, "namespace");
+        this.author = getStringValue(definition, "author");
         if (definition.get("tags") != null) {
             if (definition.get("tags") instanceof String || definition.get("tags") instanceof GString) {
                 tags = new ArrayList<>();
@@ -72,6 +81,24 @@ public class DeviceHandler {
                 fingerprints.add(new Fingerprint(fingerprintMap));
             }
         }
+
+        this.extensionId = getStringValue(metadata, "extensionId");
+
+        Object typeObj = metadata.get("type");
+        if (typeObj != null) {
+            if (typeObj instanceof String) {
+                this.type = Type.valueOf((String) typeObj);
+            } else if (typeObj instanceof Type) {
+                this.type = (Type) typeObj;
+            }
+        }
+    }
+
+    private String getStringValue(Map definition, String value) {
+        if (definition.get(value) != null) {
+            return definition.get(value).toString();
+        }
+        return null;
     }
 
     /**
@@ -141,6 +168,16 @@ public class DeviceHandler {
             // dh.fingerprints is not null but fingerprints is null, they are not equal
             return false;
         }
+
+        if (type != null) {
+            if (!type.equals(dh.getType())) {
+                return false;
+            }
+        } else if (dh.getType() != null) {
+            // dh.type is not null but type is null, they are not equal
+            return false;
+        }
+
         return true;
     }
 
@@ -238,6 +275,27 @@ public class DeviceHandler {
     public void setFingerprints(List<Fingerprint> fingerprints) {
         this.fingerprints = fingerprints;
     }
+
+    public String getExtensionId() {
+        return extensionId;
+    }
+
+    public void setExtensionId(String extensionId) {
+        this.extensionId = extensionId;
+    }
+
+    public Type getType() {
+        return type;
+    }
+
+    public void setType(Type type) {
+        this.type = type;
+    }
+
+    public boolean isUserType() {
+        return Type.USER.equals(this.type);
+    }
+
 
     //- metadata:
     //    definition:

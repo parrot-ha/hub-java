@@ -39,6 +39,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -52,6 +53,19 @@ public class AutomationAppYamlDataStore implements AutomationAppDataStore {
 
     public Collection<InstalledAutomationApp> getAllInstalledAutomationApps() {
         return getInstalledAutomationAppMap().values();
+    }
+
+    @Override
+    public Collection<InstalledAutomationApp> getInstalledAutomationAppsByExtension(String extensionId) {
+        Collection<InstalledAutomationApp> installedAutomationApps = new HashSet<>();
+        for (AutomationApp automationApp : getAllAutomationApps(true)) {
+            for (InstalledAutomationApp installedAutomationApp : getAllInstalledAutomationApps()) {
+                if (automationApp.getId() != null && automationApp.getId().equals(installedAutomationApp.getAutomationAppId())) {
+                    installedAutomationApps.add(installedAutomationApp);
+                }
+            }
+        }
+        return installedAutomationApps;
     }
 
     public InstalledAutomationApp getInstalledAutomationAppById(String id) {
@@ -302,6 +316,23 @@ public class AutomationAppYamlDataStore implements AutomationAppDataStore {
     public void addAutomationApp(AutomationApp automationApp) {
         getAutomationAppMap().put(automationApp.getId(), automationApp);
         saveAutomationApps();
+    }
+
+    @Override
+    public boolean deleteAutomationApp(String id) {
+        AutomationApp aa = getAutomationAppById(id);
+        if (AutomationApp.Type.USER.equals(aa.getType())) {
+            //delete source file
+            boolean fileDeleted = new File(aa.getFile()).delete();
+            if (!fileDeleted) {
+                logger.warn("Unable to remove automation app file for " + id);
+                return false;
+            }
+        }
+
+        getAutomationAppMap().remove(id);
+        saveAutomationApps();
+        return true;
     }
 
     private void saveAutomationApps() {

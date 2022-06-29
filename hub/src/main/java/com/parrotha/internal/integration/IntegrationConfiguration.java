@@ -19,6 +19,7 @@
 package com.parrotha.internal.integration;
 
 import com.parrotha.device.Protocol;
+import org.apache.commons.lang3.StringUtils;
 
 import java.beans.Transient;
 import java.util.ArrayList;
@@ -80,6 +81,10 @@ public class IntegrationConfiguration {
 
     public String getLabel() {
         return label;
+    }
+
+    public String getDisplayName() {
+        return StringUtils.isNotBlank(label) ? label : name;
     }
 
     public void setLabel(String label) {
