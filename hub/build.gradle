@@ -45,7 +45,6 @@ dependencies {
     implementation project(':integration-common')
     implementation project(':zigbee-integration')
     implementation project(':lan-integration')
-    implementation project(':lutron-integration')
     implementation project(':device-handlers')
     implementation project(':zigbee-common')
     implementation project(':zwave-common')

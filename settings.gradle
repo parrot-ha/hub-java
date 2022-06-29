@@ -1,2 +1,2 @@
 rootProject.name = "parrot-hub"
-include ('hub', 'core', 'integration-common', 'zigbee-integration', 'lan-integration', 'lutron-integration', 'device-handlers', 'zigbee-common', 'zwave-common')
+include ('hub', 'core', 'integration-common', 'zigbee-integration', 'lan-integration', 'device-handlers', 'zigbee-common', 'zwave-common')
