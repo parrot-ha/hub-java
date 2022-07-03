@@ -402,7 +402,7 @@ public class ExtensionService {
     }
 
     public Pair<Enumeration<URL>, ClassLoader> getResourcesFromExtension(String extensionId, String name) {
-        ExtensionClassLoader myClassLoader = getCustomExtensionClassloader(extensionId);
+        ExtensionClassLoader myClassLoader = getExtensionClassloader(extensionId);
         if (myClassLoader != null) {
             try {
                 return new ImmutablePair<>(myClassLoader.getResources(name, false), myClassLoader);
@@ -414,7 +414,7 @@ public class ExtensionService {
         return null;
     }
 
-    private ExtensionClassLoader getCustomExtensionClassloader(String extensionId) {
+    public ExtensionClassLoader getExtensionClassloader(String extensionId) {
         Path extensionDirectory = getExtensionDirectory(extensionId);
         if (extensionDirectory != null) {
             return getClassloaderForJarFiles(extensionDirectory, true);

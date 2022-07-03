@@ -397,7 +397,7 @@ public class AutomationAppService implements ExtensionStateListener {
         // load automation apps from jar files (pre-compiled)
         try {
             Enumeration<URL> resources = Main.class.getClassLoader().getResources("automationAppClasses.yaml");
-            automationAppInfo.putAll(getAutomationAppsFromResources(resources, AutomationApp.Type.SYSTEM, Main.class.getClassLoader()));
+            automationAppInfo.putAll(getAutomationAppsFromResources(resources, AutomationApp.Type.SYSTEM, Main.class.getClassLoader(), null));
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -418,14 +418,15 @@ public class AutomationAppService implements ExtensionStateListener {
                 "automationAppClasses.yaml");
         for (String extensionId : extensionResources.keySet()) {
             Pair<Enumeration<URL>, ClassLoader> resource = extensionResources.get(extensionId);
-            automationAppInfo.putAll(getAutomationAppsFromResources(resource.getLeft(), AutomationApp.Type.EXTENSION, resource.getRight()));
+            automationAppInfo.putAll(
+                    getAutomationAppsFromResources(resource.getLeft(), AutomationApp.Type.EXTENSION, resource.getRight(), extensionId));
         }
 
         return automationAppInfo;
     }
 
     private Map<String, AutomationApp> getAutomationAppsFromResources(Enumeration<URL> resources, AutomationApp.Type automationAppType,
-                                                                      ClassLoader classLoader) {
+                                                                      ClassLoader classLoader, String extensionId) {
         Map<String, AutomationApp> automationAppInfo = new HashMap<>();
         if (resources == null || classLoader == null) {
             return automationAppInfo;
@@ -445,6 +446,7 @@ public class AutomationAppService implements ExtensionStateListener {
                     ParrotHubDelegatingScript automationAppScript = automationAppScriptClass.getDeclaredConstructor().newInstance();
                     Map definition = extractAutomationAppDefinition(automationAppScript);
                     definition.put("type", automationAppType);
+                    definition.put("extensionId", extensionId);
                     AutomationApp automationApp = new AutomationApp(automationAppId, "class:" + className, definition);
                     automationAppInfo.put(automationAppId, automationApp);
                 }
@@ -555,7 +557,7 @@ public class AutomationAppService implements ExtensionStateListener {
                     "automationAppClasses.yaml");
             if (extensionResources != null) {
                 newAutomationAppInfoMap.putAll(getAutomationAppsFromResources(extensionResources.getLeft(), AutomationApp.Type.EXTENSION,
-                        extensionResources.getRight()));
+                        extensionResources.getRight(), extensionId));
             }
 
             Collection<AutomationApp> automationApps = automationAppDataStore.getAllAutomationApps(true);
