@@ -387,10 +387,16 @@ public class IntegrationService implements ExtensionStateListener {
         abstractIntegration.setConfigurationService(new IntegrationConfigurationServiceImpl(configurationService));
 
         abstractIntegration.setId(integrationId);
-        abstractIntegration.start();
-
         initializeIntegration(abstractIntegration);
         integrationRegistry.registerIntegration(abstractIntegration);
+
+        new Thread(() -> {
+            try {
+                abstractIntegration.start();
+            } catch (Exception e) {
+                logger.warn("Exception occurred while staring integration.", e);
+            }
+        }).start();
 
         return integrationId;
     }
