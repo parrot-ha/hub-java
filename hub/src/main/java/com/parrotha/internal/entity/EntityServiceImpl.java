@@ -536,12 +536,10 @@ public class EntityServiceImpl implements EntityService {
             return null;
         }
         DeviceHandler deviceHandler = deviceService.getDeviceHandler(deviceHandlerId);
-        String deviceHandlerFileName = deviceService.getDeviceHandler(deviceHandlerId).getFile();
 
         Class<Script> s = deviceHandlerScripts.get(deviceHandlerId);
         if (s == null) {
             try {
-                //InputStream is = getClass().getClassLoader().getResourceAsStream(deviceHandlerFileName);
                 if (deviceHandler.getType() == DeviceHandler.Type.USER || deviceHandler.getType() == DeviceHandler.Type.EXTENSION_SOURCE) {
                     InputStream is = new FileInputStream(deviceHandler.getFile());
                     if (is != null) {

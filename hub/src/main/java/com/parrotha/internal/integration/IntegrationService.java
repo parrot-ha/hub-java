@@ -394,7 +394,7 @@ public class IntegrationService implements ExtensionStateListener {
             try {
                 abstractIntegration.start();
             } catch (Exception e) {
-                logger.warn("Exception occurred while staring integration.", e);
+                logger.warn("Exception occurred while starting integration.", e);
             }
         }).start();
 
