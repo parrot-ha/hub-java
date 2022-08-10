@@ -18,14 +18,6 @@
  */
 package com.parrotha.internal.entity;
 
-import groovy.json.JsonBuilder;
-import groovy.lang.GString;
-import groovy.lang.GroovyClassLoader;
-import groovy.lang.MissingMethodException;
-import groovy.lang.Script;
-import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.codehaus.groovy.control.CompilerConfiguration;
 import com.parrotha.api.Request;
 import com.parrotha.api.Response;
 import com.parrotha.app.DeviceWrapper;
@@ -51,6 +43,14 @@ import com.parrotha.internal.hub.ScheduleService;
 import com.parrotha.internal.integration.IntegrationRegistry;
 import com.parrotha.internal.script.ParrotHubDelegatingScript;
 import com.parrotha.internal.system.OAuthToken;
+import groovy.json.JsonBuilder;
+import groovy.lang.GString;
+import groovy.lang.GroovyClassLoader;
+import groovy.lang.MissingMethodException;
+import groovy.lang.Script;
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.codehaus.groovy.control.CompilerConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -535,15 +535,13 @@ public class EntityServiceImpl implements EntityService {
         if (deviceHandlerId == null) {
             return null;
         }
-        String deviceHandlerFileName = deviceService.getDeviceHandler(deviceHandlerId).getFile();
+        DeviceHandler deviceHandler = deviceService.getDeviceHandler(deviceHandlerId);
 
         Class<Script> s = deviceHandlerScripts.get(deviceHandlerId);
         if (s == null) {
             try {
-                //InputStream is = getClass().getClassLoader().getResourceAsStream(deviceHandlerFileName);
-                if (!deviceHandlerFileName.startsWith("class:")) {
-
-                    InputStream is = new FileInputStream(deviceHandlerFileName);
+                if (deviceHandler.getType() == DeviceHandler.Type.USER || deviceHandler.getType() == DeviceHandler.Type.EXTENSION_SOURCE) {
+                    InputStream is = new FileInputStream(deviceHandler.getFile());
                     if (is != null) {
                         String srcCode = IOUtils.toString(is, StandardCharsets.UTF_8);
 
@@ -553,15 +551,15 @@ public class EntityServiceImpl implements EntityService {
                         GroovyClassLoader gcl = new GroovyClassLoader(this.getClass().getClassLoader(), config);
                         Class<Script> scriptClass = (Class<Script>) gcl.parseClass(srcCode, "DH_" + deviceHandlerId);
 
-
                         deviceHandlerScripts.put(deviceHandlerId, scriptClass);
                         s = scriptClass;
                     }
                 } else {
                     //process class in classpath
                     try {
+                        ClassLoader myClassLoader = deviceService.getClassLoaderForDeviceHandler(deviceHandlerId);
                         Class<Script> scriptClass = (Class<Script>) Class
-                                .forName(deviceHandlerFileName.substring("class:".length()));
+                                .forName(deviceHandler.getFile().substring("class:".length()), false, myClassLoader);
                         deviceHandlerScripts.put(deviceHandlerId, scriptClass);
                         s = scriptClass;
                     } catch (ClassNotFoundException classNotFoundException) {

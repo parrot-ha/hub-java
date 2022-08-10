@@ -109,7 +109,7 @@ public class IntegrationApiHandler extends BaseApiHandler {
                 //TODO: allow other error codes.
                 ctx.status(500);
                 //TODO: return a descriptive message
-                integrationModel.put("message", "Error occurred");
+                integrationModel.put("message", "Error occurred: " + e.getMessage());
             }
             integrationModel.put("id", integrationId);
 
