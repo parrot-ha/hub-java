@@ -471,5 +471,55 @@ public class ZigBeeImpl implements ZigBee {
         return arrayList;
     }
 
+    public List<String> writeAttribute(Integer cluster, Integer attributeId, Integer dataType, Object value) {
+        return writeAttribute(cluster, attributeId, dataType, value, null);
+    }
+
+
+    public List<String> writeAttribute(Integer cluster, Integer attributeId, Integer dataType, Object value, Map additionalParams) {
+        return writeAttribute(cluster, attributeId, dataType, value, additionalParams, DEFAULT_DELAY);
+    }
+
+    //writeAttribute(0x05A3, 0x0015, 0x21, 0xffff, [mfgCode: '0x1234'])
+    //ST: [zcl mfg-code 0x1234, delay 200, zcl global write 0x05A3 0x0015 0x21 {FFFF}, delay 200, send 0xFC6E 0x01 0x01, delay 2000]
+    // the above message structure is defined in the document Application Framework Reference: For EmberZNet 4.7.2
+    //zcl mfg-code [mfgSpecificId:2]
+    //zcl global write [cluster:2] [attributeId:2] [type:4]
+    //send [id:2] [src-endpoint:1] [dst-endpoint:1]
+    //
+    //HE: [he wattr 0xFC6E 0x01 0x05A3 0x0015 0x21 {FFFF} {1234}, delay 2000]
+    // HE has decided to put all the commands into a single message, we should follow this same structure
+    //
+    public List<String> writeAttribute(Integer cluster, Integer attributeId, Integer dataType, Object value, Map additionalParams, int delay) {
+        ArrayList<String> arrayList = new ArrayList<>();
+
+        int destEndpoint = device.getEndpointId();
+        if (additionalParams != null && additionalParams.containsKey("destEndpoint")) {
+            destEndpoint = ObjectUtils.objectToInt(additionalParams.get("destEndpoint"));
+        }
+        int mfgCode = -1;
+        if (additionalParams != null && additionalParams.containsKey("mfgCode")) {
+            mfgCode = ObjectUtils.objectToInt(additionalParams.get("mfgCode"));
+        }
+
+        String stringValue;
+        if(value instanceof Number) {
+            stringValue = HexUtils.integerToHexString(((Number) value).intValue(),1);
+        } else {
+            stringValue = value.toString();
+        }
+
+        if (mfgCode > -1) {
+            arrayList.add(String.format("ph wattr 0x%s 0x%02X 0x%04X 0x%04X 0x%04X {%s} {%04X}", device.getDeviceNetworkId(), destEndpoint, cluster, attributeId, dataType, stringValue, mfgCode));
+        } else {
+            arrayList.add(String.format("ph wattr 0x%s 0x%02X 0x%04X 0x%04X 0x%04X {%s}", device.getDeviceNetworkId(), destEndpoint, cluster, attributeId, dataType, stringValue));
+        }
+
+        if (delay > 0)
+            arrayList.add("delay " + delay);
+
+        return arrayList;
+    }
+
     //TODO: implement additional methods listed here: https://docs.smartthings.com/en/latest/ref-docs/zigbee-ref.html
 }

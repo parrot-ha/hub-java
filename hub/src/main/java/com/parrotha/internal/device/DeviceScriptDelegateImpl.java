@@ -18,8 +18,6 @@
  */
 package com.parrotha.internal.device;
 
-import groovy.lang.Closure;
-import groovy.lang.MetaMethod;
 import com.parrotha.app.ChildDeviceWrapper;
 import com.parrotha.app.ChildDeviceWrapperImpl;
 import com.parrotha.app.DeviceWrapper;
@@ -33,18 +31,19 @@ import com.parrotha.internal.ChangeTrackingMap;
 import com.parrotha.internal.app.AutomationAppService;
 import com.parrotha.internal.app.InstalledAutomationApp;
 import com.parrotha.internal.entity.EntityScriptDelegateCommon;
+import com.parrotha.internal.entity.EntityService;
 import com.parrotha.internal.entity.LiveLogger;
 import com.parrotha.internal.hub.LocationService;
 import com.parrotha.internal.hub.ScheduleService;
-import com.parrotha.internal.entity.EntityService;
 import com.parrotha.internal.script.device.DeviceScriptDelegate;
 import com.parrotha.zigbee.ZigBee;
 import com.parrotha.zwave.Zwave;
+import groovy.lang.Closure;
+import groovy.lang.MetaMethod;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.InvocationTargetException;
-import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
@@ -475,7 +474,12 @@ public class DeviceScriptDelegateImpl extends EntityScriptDelegateCommon impleme
         return metadataValue;
     }
 
-    void attribute(String name, String value) {
+    void attribute(String attributeName, String attributeType) {
+        // do nothing, this is handled by DeviceDefinitionDelegate
+    }
+
+    void attribute(String attributeName, String attributeType, List possibleValues) {
+        // do nothing, this is handled by DeviceDefinitionDelegate
     }
 
     // [name:Cree Bulb Custom, namespace:smartthings, author:SmartThings, ocfDeviceType:oic.d.light, runLocally:true, executeCommandsLocally:true, minHubCoreVersion:000.022.0004]

@@ -18,6 +18,7 @@
  */
 package com.parrotha.integration.zigbee;
 
+import com.parrotha.internal.utils.HexUtils;
 import com.zsmartsystems.zigbee.IeeeAddress;
 import com.zsmartsystems.zigbee.ZigBeeCommand;
 import com.zsmartsystems.zigbee.ZigBeeEndpointAddress;
@@ -31,7 +32,6 @@ import com.zsmartsystems.zigbee.zcl.protocol.ZclCommandDirection;
 import com.zsmartsystems.zigbee.zcl.protocol.ZclDataType;
 import com.zsmartsystems.zigbee.zdo.command.BindRequest;
 import org.apache.commons.lang3.StringUtils;
-import com.parrotha.internal.utils.HexUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,23 +42,29 @@ public class ZigBeeMessageTransformer {
     private static final Logger logger = LoggerFactory.getLogger(ZigBeeHandler.class);
 
     private static int getIntegerValueForString(String valueStr) {
-        if (valueStr.startsWith("0x"))
+        if (valueStr.startsWith("0x")) {
             return HexUtils.hexStringToInt(valueStr);
-        else
+        } else {
             return Integer.parseInt(valueStr);
+        }
     }
 
     private static int getIntegerValueForString(String valueStr, int defaultValue) {
-        if(StringUtils.isEmpty(valueStr)) return defaultValue;
-        if (valueStr.startsWith("0x"))
+        if (StringUtils.isEmpty(valueStr)) {
+            return defaultValue;
+        }
+        if (valueStr.startsWith("0x")) {
             return HexUtils.hexStringToInt(valueStr);
-        else
+        } else {
             return Integer.parseInt(valueStr);
+        }
     }
 
     public static ZigBeeCommand createCommand(String msg, ZigBeeNetworkManager networkManager) {
         if (msg.startsWith("ph cmd") || msg.startsWith("st cmd") || msg.startsWith("he cmd")) {
-            if (logger.isDebugEnabled()) logger.debug("Sending cmd! " + msg);
+            if (logger.isDebugEnabled()) {
+                logger.debug("Sending cmd! " + msg);
+            }
             msg = msg.substring("ph cmd ".length());
             String[] msgParts = msg.split(" ");
             int networkAddress = getIntegerValueForString(msgParts[0].trim());
@@ -139,7 +145,7 @@ public class ZigBeeMessageTransformer {
             record.setMaximumReportingInterval(maxInterval);
 
             String reportableChangeString = StringUtils.deleteWhitespace(msg.substring(msg.indexOf("{") + 1, msg.indexOf("}")));
-            if(StringUtils.isNotEmpty(reportableChangeString)) {
+            if (StringUtils.isNotEmpty(reportableChangeString)) {
                 record.setReportableChange(getIntegerValueForString(reportableChangeString));
             }
 
@@ -164,7 +170,9 @@ public class ZigBeeMessageTransformer {
         } else if (msg.startsWith("send ") || msg.startsWith("raw ")) {
             logger.warn("Need to handle raw / send zigbee message: " + msg);
         } else if (msg.startsWith("ph raw ") || msg.startsWith("he raw ")) {
-            if (logger.isDebugEnabled()) logger.debug("Sending raw cmd! " + msg);
+            if (logger.isDebugEnabled()) {
+                logger.debug("Sending raw cmd! " + msg);
+            }
             msg = msg.substring("ph raw ".length());
             String[] msgParts = msg.split(" ");
             int networkAddress = getIntegerValueForString(msgParts[0].trim());
@@ -186,7 +194,7 @@ public class ZigBeeMessageTransformer {
                 final Integer manufacturer;
                 if ((frameControl & 0x04) == 0x04) {
                     // manufacturer specific
-                    manufacturer = rawCommandIntArray[rawCommandIndex + 2] << 2 + rawCommandIntArray[rawCommandIndex + 1];
+                    manufacturer = (rawCommandIntArray[rawCommandIndex + 2] << 8) + (rawCommandIntArray[rawCommandIndex + 1]);
                     rawCommandIndex += 3;
                 } else {
                     manufacturer = null;
@@ -199,7 +207,6 @@ public class ZigBeeMessageTransformer {
                 rawCommandIndex++;
                 int[] payload = Arrays.copyOfRange(rawCommandIntArray, rawCommandIndex, rawCommandIntArray.length);
 
-                //zigBeeService.getNode(networkAddress).getEndpoint(endpoint).getInputCluster(cluster).sendCommand()
                 ZclCommand zclCommand = new ZclCommand() {
                     {
                         clusterId = cluster;

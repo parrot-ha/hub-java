@@ -71,13 +71,15 @@ public class ZigBeeTest {
 
     @Test
     public void testGetEvent() {
-        Map event = ZigBeeImpl.getEvent("read attr - raw: 3F9A0A00060A00001001, dni: 3F9A, endpoint: 0A, cluster: 0006, size: 0A, attrId: 0000, encoding: 10, command: 01, value: 01");
+        Map event = ZigBeeImpl.getEvent(
+                "read attr - raw: 3F9A0A00060A00001001, dni: 3F9A, endpoint: 0A, cluster: 0006, size: 0A, attrId: 0000, encoding: 10, command: 01, value: 01");
         assertNotNull(event);
         assertEquals(2, event.size());
         assertEquals("switch", event.get("name"));
         assertEquals("on", event.get("value"));
 
-        event = ZigBeeImpl.getEvent("read attr - raw: 3F9A0A00080A000020FE, dni: 3F9A, endpoint: 0A, cluster: 0008, size: 0A, attrId: 0000, encoding: 20, command: 01, value: FE");
+        event = ZigBeeImpl.getEvent(
+                "read attr - raw: 3F9A0A00080A000020FE, dni: 3F9A, endpoint: 0A, cluster: 0008, size: 0A, attrId: 0000, encoding: 20, command: 01, value: FE");
         assertNotNull(event);
         assertEquals(2, event.size());
         assertEquals("level", event.get("name"));
@@ -89,7 +91,8 @@ public class ZigBeeTest {
         //read attr - raw: E6A20104020A0000299907, dni: E6A2, endpoint: 01, cluster: 0402, size: 0A, attrId: 0000, encoding: 29, command: 0A, value: 9907
         //read attr - raw: E6A20104050A0000215E14, dni: E6A2, endpoint: 01, cluster: 0405, size: 0A, attrId: 0000, encoding: 21, command: 0A, value: 5E14
         DeviceWrapper deviceWrapperMock = Mockito.mock(DeviceWrapper.class);
-        Map parsedDesc = new ZigBeeImpl(deviceWrapperMock).parseDescriptionAsMap("read attr - raw: E6A20104020A0000299907, dni: E6A2, endpoint: 01, cluster: 0402, size: 0A, attrId: 0000, encoding: 29, command: 0A, value: 9907");
+        Map parsedDesc = new ZigBeeImpl(deviceWrapperMock).parseDescriptionAsMap(
+                "read attr - raw: E6A20104020A0000299907, dni: E6A2, endpoint: 01, cluster: 0402, size: 0A, attrId: 0000, encoding: 29, command: 0A, value: 9907");
         //[raw:E6A20104020A0000299907, dni:E6A2, endpoint:01, cluster:0402, size:0A, attrId:0000, encoding:29, command:0A, value:0799, clusterInt:1026, attrInt:0]
         assertEquals("E6A20104020A0000299907", parsedDesc.get("raw"));
         assertEquals("E6A2", parsedDesc.get("dni"));
@@ -111,7 +114,8 @@ public class ZigBeeTest {
     public void testParseCatchallDescription() {
         //"catchall: 0104 0500 01 01 0040 00 ACFE 01 00 0000 00 01 010000000000"
         DeviceWrapper deviceWrapperMock = Mockito.mock(DeviceWrapper.class);
-        Map parsedDesc = new ZigBeeImpl(deviceWrapperMock).parseDescriptionAsMap("catchall: 0104 0500 01 01 0040 00 ACFE 01 00 0000 00 01 010000000000");
+        Map parsedDesc = new ZigBeeImpl(deviceWrapperMock).parseDescriptionAsMap(
+                "catchall: 0104 0500 01 01 0040 00 ACFE 01 00 0000 00 01 010000000000");
         //[raw:0104 0500 01 01 0040 00 ACFE 01 00 0000 00 01 010000000000, profileId:0104, clusterId:0500, sourceEndpoint:01, destinationEndpoint:01, options:0040, messageType:00, dni:ACFE, isClusterSpecific:true, isManufacturerSpecific:false, manufacturerId:0000, command:00, direction:01, data:[01, 00, 00, 00, 00, 00], clusterInt:1280, commandInt:0]
         assertEquals("0104 0500 01 01 0040 00 ACFE 01 00 0000 00 01 010000000000", parsedDesc.get("raw"));
         assertEquals("0104", parsedDesc.get("profileId"));
@@ -217,6 +221,12 @@ public class ZigBeeTest {
         assertNotNull(cmds);
         assertEquals(2, cmds.size());
         assertEquals("ph raw 0x1234 0x01 0x01 0x0006 { 05D204FF040102 }", cmds.get(0));
+
+        additionalParams.put("mfgCode", "0x1234");
+        cmds = zigbee.command(6, 4, "0102", additionalParams);
+        assertNotNull(cmds);
+        assertEquals(2, cmds.size());
+        assertEquals("ph raw 0x1234 0x01 0x01 0x0006 { 053412FF040102 }", cmds.get(0));
     }
 
     @Test

@@ -47,7 +47,7 @@ export default {
         console.log(this.command.values);
         for (var arg of this.command.values) {
           if (arg.value) {
-            setArgs.push(arg.value);
+            setArgs.push({"value": arg.value, "type": arg.name});
           } else {
             // break out after first null
             break;
