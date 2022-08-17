@@ -7,14 +7,21 @@
             {{ command.name }}
           </v-btn>
         </div>
-        <input
-          v-for="(arg, i) in command.values"
-          type="text"
+        <span v-for="(arg, i) in command.values" :key="i">
+        <input v-if="arg.name.toUpperCase() == 'TIME'"
+          type="time"
           class="form-control"
           v-model="arg.value"
           :placeholder="arg.name"
-          :key="i"
         />
+        <input v-else
+               type="text"
+               class="form-control"
+               v-model="arg.value"
+               :placeholder="arg.name"
+        />
+
+          </span>
       </div>
     </div>
     <div v-else>

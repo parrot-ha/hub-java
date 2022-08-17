@@ -216,17 +216,17 @@ public class ZigBeeTest {
 
         ZigBeeImpl zigbee = new ZigBeeImpl(deviceWrapperMock);
         Map<String, Object> additionalParams = new HashMap<>();
-        additionalParams.put("mfgCode", "1234");
+        additionalParams.put("mfgCode", 1234);
         List<String> cmds = zigbee.command(6, 4, "0102", additionalParams);
         assertNotNull(cmds);
         assertEquals(2, cmds.size());
-        assertEquals("ph raw 0x1234 0x01 0x01 0x0006 { 05D204FF040102 }", cmds.get(0));
+        assertEquals("ph cmd 0x1234 0x01 0x0006 0x04 {0102} {04D2}", cmds.get(0));
 
         additionalParams.put("mfgCode", "0x1234");
         cmds = zigbee.command(6, 4, "0102", additionalParams);
         assertNotNull(cmds);
         assertEquals(2, cmds.size());
-        assertEquals("ph raw 0x1234 0x01 0x01 0x0006 { 053412FF040102 }", cmds.get(0));
+        assertEquals("ph cmd 0x1234 0x01 0x0006 0x04 {0102} {1234}", cmds.get(0));
     }
 
     @Test
@@ -247,7 +247,62 @@ public class ZigBeeTest {
         assertNotNull(cmds);
         assertEquals(1, cmds.size());
         assertEquals("ph rattr 0x1234 0x01 0x0001 0x0021", cmds.get(0));
+    }
 
+    @Test
+    public void testReadAttributeWithManufacturerSpecific() {
+        // zigbee.readAttribute(0x0511, 0x0023, [mfgCode: '0x1A34'])
+        // [zcl mfg-code 0x1039, delay 200, zcl global read 0x0201 0x0023, delay 200, send 0xFC6E 0x01 0x01, delay 2000]
+        // ph rattr 0x1234 0x01 0x0511, 0x0023 {1A34}
+        DeviceWrapper deviceWrapperMock = Mockito.mock(DeviceWrapper.class);
+        when(deviceWrapperMock.getDeviceNetworkId()).thenReturn("1234");
+        when(deviceWrapperMock.getEndpointId()).thenReturn(1);
+        when(deviceWrapperMock.getZigbeeId()).thenReturn("0123456789");
+        ZigBeeImpl zigbee = new ZigBeeImpl(deviceWrapperMock);
+        Map<String, Object> additionalParams = new HashMap<>();
+        additionalParams.put("mfgCode", "0x1A34");
+        List<String> cmds = zigbee.readAttribute(0x0511, 0x0023, additionalParams);
+        assertNotNull(cmds);
+        assertEquals(2, cmds.size());
+        assertEquals("ph rattr 0x1234 0x01 0x0511 0x0023 {1A34}", cmds.get(0));
+        assertEquals("delay 2000", cmds.get(1));
+
+        cmds = zigbee.readAttribute(0x0001, 0x0021, additionalParams, 0);
+        assertNotNull(cmds);
+        assertEquals(1, cmds.size());
+        assertEquals("ph rattr 0x1234 0x01 0x0001 0x0021 {1A34}", cmds.get(0));
+    }
+
+    @Test
+    public void testWriteAttribute() {
+        DeviceWrapper deviceWrapperMock = Mockito.mock(DeviceWrapper.class);
+        when(deviceWrapperMock.getDeviceNetworkId()).thenReturn("1234");
+        when(deviceWrapperMock.getEndpointId()).thenReturn(1);
+        when(deviceWrapperMock.getZigbeeId()).thenReturn("0123456789");
+        ZigBeeImpl zigbee = new ZigBeeImpl(deviceWrapperMock);
+        List<String> cmds = zigbee.writeAttribute(0x05A3, 0x0015, 0x21, 0xffff);
+
+        assertNotNull(cmds);
+        assertEquals(2, cmds.size());
+        assertEquals("ph wattr 0x1234 0x01 0x05A3 0x0015 0x21 {FFFF}", cmds.get(0));
+        assertEquals("delay 2000", cmds.get(1));
+    }
+
+    @Test
+    public void testWriteAttributeWithMfgCode() {
+        DeviceWrapper deviceWrapperMock = Mockito.mock(DeviceWrapper.class);
+        when(deviceWrapperMock.getDeviceNetworkId()).thenReturn("1234");
+        when(deviceWrapperMock.getEndpointId()).thenReturn(1);
+        when(deviceWrapperMock.getZigbeeId()).thenReturn("0123456789");
+        ZigBeeImpl zigbee = new ZigBeeImpl(deviceWrapperMock);
+        Map<String, Object> additionalParams = new HashMap<>();
+        additionalParams.put("mfgCode", "0xA156");
+        List<String> cmds = zigbee.writeAttribute(0x05A3, 0x0015, 0x21, 0xffff, additionalParams);
+
+        assertNotNull(cmds);
+        assertEquals(2, cmds.size());
+        assertEquals("ph wattr 0x1234 0x01 0x05A3 0x0015 0x21 {FFFF} {A156}", cmds.get(0));
+        assertEquals("delay 2000", cmds.get(1));
     }
 
     @Test

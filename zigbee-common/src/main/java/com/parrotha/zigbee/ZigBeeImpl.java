@@ -18,14 +18,13 @@
  */
 package com.parrotha.zigbee;
 
-import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.math.NumberUtils;
 import com.parrotha.app.DeviceWrapper;
-import com.parrotha.exception.NotYetImplementedException;
 import com.parrotha.internal.utils.HexUtils;
 import com.parrotha.internal.utils.ObjectUtils;
 import com.parrotha.zigbee.clusters.iaszone.ZoneStatus;
 import com.parrotha.zigbee.zcl.DataType;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.math.NumberUtils;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -78,8 +77,9 @@ public class ZigBeeImpl implements ZigBee {
     //"catchall: 0104 0500 01 01 0040 00 ACFE 01 00 0000 00 01 010000000000"
     //[raw:0104 0500 01 01 0040 00 ACFE 01 00 0000 00 01 010000000000, profileId:0104, clusterId:0500, sourceEndpoint:01, destinationEndpoint:01, options:0040, messageType:00, dni:ACFE, isClusterSpecific:true, isManufacturerSpecific:false, manufacturerId:0000, command:00, direction:01, data:[01, 00, 00, 00, 00, 00], clusterInt:1280, commandInt:0]
     public static Map<String, Object> parseDescriptionAsMap(String description) {
-        if (description == null)
+        if (description == null) {
             return null;
+        }
         if (description.startsWith("read attr - ")) {
             HashMap<String, Object> descriptionMap = new HashMap<>();
             String[] descriptionArray = description.substring("read attr -".length()).split(",");
@@ -142,7 +142,9 @@ public class ZigBeeImpl implements ZigBee {
     // [name:switch, value:on]
     public static Map<String, String> getEvent(String description) {
         Map event = new HashMap<>();
-        if (StringUtils.isEmpty(description)) return event;
+        if (StringUtils.isEmpty(description)) {
+            return event;
+        }
 
         if (description.startsWith("read attr - ")) {
             Map parsedDescription = parseDescriptionAsMap(description);
@@ -170,96 +172,60 @@ public class ZigBeeImpl implements ZigBee {
         return event;
     }
 
+    public List<String> command(Integer cluster, Integer command) {
+        return command(cluster, command, null, null, DEFAULT_DELAY);
+    }
+
+    List command(Integer cluster, Integer command, Map additionalParams, int delay, String... payload) {
+        if (payload != null && payload.length > 0) {
+            return command(cluster, command, String.join("", payload), additionalParams, delay);
+        } else {
+            return command(cluster, command, null, additionalParams, delay);
+        }
+    }
+
     // zigbee.command(0x0300, 0x06, "01", "02", "03")
     // [st cmd 0xFC6E 0x01 0x0300 0x06 {010203}, delay 2000]
-    public List<String> command(Integer Cluster, Integer Command, String... payload) {
-        return null;
+    public List<String> command(Integer cluster, Integer command, String... payload) {
+        if (payload != null && payload.length > 0) {
+            return command(cluster, command, String.join("", payload), null);
+        } else {
+            return command(cluster, command, null, null);
+        }
+    }
+
+    public List<String> command(Integer cluster, Integer command, String payload, Map<String, Object> additionalParams) {
+        return command(cluster, command, payload, additionalParams, DEFAULT_DELAY);
     }
 
     // zigbee.command(zigbee.ONOFF_CLUSTER, 0x00, "", [destEndpoint: 0x02])
     // [st cmd 0xFC6E 0x02 0x0006 0x00 {}, delay 2000]
     // zigbee.command(6, 4, "0102", [mfgCode:"1234"])
     // [raw 0x0006 { 05D204FF040102 }, delay 200, send 0xFC6E 0x01 0x01, delay 2000]
-    public List<String> command(Integer cluster, Integer command, String payload, Map<String, Object> additionalParams) {
-        // take a page from hubitat and combine raw and send command into one.
-        if (additionalParams != null && additionalParams.containsKey("mfgCode")) {
-            /*
-            https://community.hubitat.com/t/need-help-converting-st-zigbee-dth-to-he/13658/2:
-
-            ST raw zigbee frame
-            List cmds = ["raw 0x501 {09 01 00 04}","send 0x${device.deviceNetworkId} 1 1"]
-
-            HE raw zigbee frame (for the same command)
-            List cmds = ["he raw 0x${device.deviceNetworkId} 1 1 0x0501 {09 01 00 04}"]
-
-            he raw
-            0x${device.deviceNetworkId} 16 bit hex address
-            1							source endpoint, always one
-            1 							destination endpoint, device dependent
-            0x0501 						zigbee cluster id
-            {09 						frame control
-	            01 						sequence, always 01
-		            00 					command
-			            04}				command parameter(s)
-             */
-
-            ArrayList<String> arrayList = new ArrayList<>();
-            Integer endpointId = device.getEndpointId();
-
-            Integer mfgCode = 0;
-            Object mfgCodeObject = additionalParams.get("mfgCode");
-            if (mfgCodeObject instanceof Integer) {
-                mfgCode = (Integer) mfgCodeObject;
+    public List<String> command(Integer cluster, Integer command, String payload, Map<String, Object> additionalParams, int delay) {
+        ArrayList<String> arrayList = new ArrayList<>();
+        Integer endpointId = device.getEndpointId();
+        if (additionalParams != null && additionalParams.containsKey("destEndpoint")) {
+            Object destEndpointObject = additionalParams.get("destEndpoint");
+            if (destEndpointObject instanceof Integer) {
+                endpointId = (Integer) destEndpointObject;
             } else {
-                mfgCode = NumberUtils.createInteger(mfgCodeObject.toString());
+                endpointId = NumberUtils.createInteger(destEndpointObject.toString());
             }
-
-            if (additionalParams.containsKey("destEndpoint")) {
-                Object destEndpointObject = additionalParams.get("destEndpoint");
-                if (destEndpointObject instanceof Integer) {
-                    endpointId = (Integer) destEndpointObject;
-                } else {
-                    endpointId = NumberUtils.createInteger(destEndpointObject.toString());
-                }
-            }
-
-            StringBuilder rawPayload = new StringBuilder();
-            // add frame control (frame type = 01, manufacturer specific = 1)
-            rawPayload.append("05");
-            // add mfg code
-            rawPayload.append(DataType.pack(mfgCode, DataType.UINT16, true));
-            // add seq num
-            rawPayload.append("FF");
-            // add command
-            rawPayload.append(DataType.pack(command, DataType.UINT8));
-            // add remaining payload
-            rawPayload.append(payload);
-
-            arrayList.add(String.format("ph raw 0x%s 0x01 0x%02X 0x%04X { %s }", device.getDeviceNetworkId(), endpointId, cluster, rawPayload.toString()));
-            arrayList.add("delay " + DEFAULT_DELAY);
-            return arrayList;
-            // TODO: build raw message
-            //return null;
-        } else {
-            ArrayList<String> arrayList = new ArrayList<>();
-            Integer endpointId = device.getEndpointId();
-            if (additionalParams != null && additionalParams.containsKey("destEndpoint")) {
-                Object destEndpointObject = additionalParams.get("destEndpoint");
-                if (destEndpointObject instanceof Integer) {
-                    endpointId = (Integer) destEndpointObject;
-                } else {
-                    endpointId = NumberUtils.createInteger(destEndpointObject.toString());
-                }
-            }
-            if (StringUtils.isNotEmpty(payload)) {
-                arrayList.add(String.format("ph cmd 0x%s 0x%02X 0x%04X 0x%02X {%s}", device.getDeviceNetworkId(), endpointId, cluster, command, payload));
-            } else {
-                arrayList.add(String.format("ph cmd 0x%s 0x%02X 0x%04X 0x%02X {}", device.getDeviceNetworkId(), endpointId, cluster, command));
-            }
-            arrayList.add("delay " + DEFAULT_DELAY);
-            return arrayList;
         }
 
+        int mfgCode = getMfgCode(additionalParams);
+        if (mfgCode > -1) {
+            arrayList.add(String.format("ph cmd 0x%s 0x%02X 0x%04X 0x%02X {%s} {%04X}", device.getDeviceNetworkId(), endpointId, cluster, command,
+                    payload != null ? payload : "", mfgCode));
+        } else if (StringUtils.isNotEmpty(payload)) {
+            arrayList.add(
+                    String.format("ph cmd 0x%s 0x%02X 0x%04X 0x%02X {%s}", device.getDeviceNetworkId(), endpointId, cluster, command, payload));
+        } else {
+            arrayList.add(String.format("ph cmd 0x%s 0x%02X 0x%04X 0x%02X {}", device.getDeviceNetworkId(), endpointId, cluster, command));
+        }
+        arrayList.add("delay " + DEFAULT_DELAY);
+        return arrayList;
     }
 
     public List<String> on() {
@@ -273,8 +239,9 @@ public class ZigBeeImpl implements ZigBee {
     private List<String> on(int delay) {
         ArrayList<String> arrayList = new ArrayList<>();
         arrayList.add(String.format("ph cmd 0x%s 0x%02X 6 1 {}", device.getDeviceNetworkId(), device.getEndpointId()));
-        if (delay > 0)
+        if (delay > 0) {
             arrayList.add("delay " + delay);
+        }
         return arrayList;
     }
 
@@ -290,8 +257,9 @@ public class ZigBeeImpl implements ZigBee {
     private List<String> off(int delay) {
         ArrayList<String> arrayList = new ArrayList<>();
         arrayList.add(String.format("ph cmd 0x%s 0x%02X 6 0 {}", device.getDeviceNetworkId(), device.getEndpointId()));
-        if (delay > 0)
+        if (delay > 0) {
             arrayList.add("delay " + delay);
+        }
         return arrayList;
     }
 
@@ -307,8 +275,9 @@ public class ZigBeeImpl implements ZigBee {
     private List<String> onOffRefresh(int delay) {
         ArrayList<String> arrayList = new ArrayList<>();
         arrayList.add(String.format("ph rattr 0x%s 0x%02X 0x0006 0x0000", device.getDeviceNetworkId(), device.getEndpointId()));
-        if (delay > 0)
+        if (delay > 0) {
             arrayList.add("delay " + delay);
+        }
         return arrayList;
     }
 
@@ -337,12 +306,16 @@ public class ZigBeeImpl implements ZigBee {
 
     private List<String> onOffConfig(int minReportTime, int maxReportTime, int delay) {
         ArrayList<String> arrayList = new ArrayList<>();
-        arrayList.add(String.format("zdo bind 0x%s 0x%02X 0x01 0x0006 {%s} {}", device.getDeviceNetworkId(), device.getEndpointId(), device.getZigbeeId()));
-        if (delay > 0)
+        arrayList.add(
+                String.format("zdo bind 0x%s 0x%02X 0x01 0x0006 {%s} {}", device.getDeviceNetworkId(), device.getEndpointId(), device.getZigbeeId()));
+        if (delay > 0) {
             arrayList.add("delay " + delay);
-        arrayList.add(String.format("ph cr 0x%s 0x%02X 0x0006 0x0000 0x10 0x%04X 0x%04X {}", device.getDeviceNetworkId(), device.getEndpointId(), minReportTime, maxReportTime));
-        if (delay > 0)
+        }
+        arrayList.add(String.format("ph cr 0x%s 0x%02X 0x0006 0x0000 0x10 0x%04X 0x%04X {}", device.getDeviceNetworkId(), device.getEndpointId(),
+                minReportTime, maxReportTime));
+        if (delay > 0) {
             arrayList.add("delay " + delay);
+        }
         return arrayList;
     }
 
@@ -359,7 +332,8 @@ public class ZigBeeImpl implements ZigBee {
     }
 
     public List<String> levelConfig(Object minReportTime, Object maxReportTime, Object reportableChange) {
-        return levelConfig(ObjectUtils.objectToInt(minReportTime), ObjectUtils.objectToInt(maxReportTime), ObjectUtils.objectToInt(reportableChange), DEFAULT_DELAY);
+        return levelConfig(ObjectUtils.objectToInt(minReportTime), ObjectUtils.objectToInt(maxReportTime), ObjectUtils.objectToInt(reportableChange),
+                DEFAULT_DELAY);
     }
 
     // zigbee.levelConfig():
@@ -369,14 +343,20 @@ public class ZigBeeImpl implements ZigBee {
     //[zdo bind 0xFC6E 0x01 0x01 0x0008 {000D6F00055D8FA6} {}, delay 2000, st cr 0xFC6E 0x01 0x0008 0x0000 0x20 0x0ABC 0x0CDF {XYZ}, delay 2000]
     private List<String> levelConfig(int minReportTime, int maxReportTime, int reportableChange, int delay) {
         ArrayList<String> arrayList = new ArrayList<>();
-        arrayList.add(String.format("zdo bind 0x%s 0x%02X 0x01 0x0008 {%s} {}", device.getDeviceNetworkId(), device.getEndpointId(), device.getZigbeeId()));
-        if (delay > 0)
+        arrayList.add(
+                String.format("zdo bind 0x%s 0x%02X 0x01 0x0008 {%s} {}", device.getDeviceNetworkId(), device.getEndpointId(), device.getZigbeeId()));
+        if (delay > 0) {
             arrayList.add("delay " + delay);
-        if (reportableChange < 1) reportableChange = 1;
-        arrayList.add(String.format("ph cr 0x%s 0x%02X 0x0008 0x0000 0x20 0x%04X 0x%04X {%s}", device.getDeviceNetworkId(), device.getEndpointId(), minReportTime, maxReportTime, DataType.pack(reportableChange, 0x20)));
+        }
+        if (reportableChange < 1) {
+            reportableChange = 1;
+        }
+        arrayList.add(String.format("ph cr 0x%s 0x%02X 0x0008 0x0000 0x20 0x%04X 0x%04X {%s}", device.getDeviceNetworkId(), device.getEndpointId(),
+                minReportTime, maxReportTime, DataType.pack(reportableChange, 0x20)));
 
-        if (delay > 0)
+        if (delay > 0) {
             arrayList.add("delay " + delay);
+        }
 
         return arrayList;
     }
@@ -393,8 +373,9 @@ public class ZigBeeImpl implements ZigBee {
     private List<String> levelRefresh(int delay) {
         ArrayList<String> arrayList = new ArrayList<>();
         arrayList.add(String.format("ph rattr 0x%s 0x%02X 0x0008 0x0000", device.getDeviceNetworkId(), device.getEndpointId()));
-        if (delay > 0)
+        if (delay > 0) {
             arrayList.add("delay " + delay);
+        }
         return arrayList;
     }
 
@@ -403,24 +384,34 @@ public class ZigBeeImpl implements ZigBee {
     }
 
     public List<String> setLevel(Object level, Object rate) {
-        if (rate == null)
+        if (rate == null) {
             return setLevel(ObjectUtils.objectToInt(level), 0xffff, DEFAULT_DELAY);
-        else
+        } else {
             return setLevel(ObjectUtils.objectToInt(level), ObjectUtils.objectToInt(rate), DEFAULT_DELAY);
+        }
     }
 
     private List<String> setLevel(int level, int rate, int delay) {
         ArrayList<String> arrayList = new ArrayList<>();
         // level is 0 - 254
-        if (level > 100) level = 100;
-        else if (level < 0) level = 0;
+        if (level > 100) {
+            level = 100;
+        } else if (level < 0) {
+            level = 0;
+        }
         level = (int) Math.round((level / 100.0) * 254.0);
-        if (rate < 0) rate = 0;
-        if (rate > 100 && rate != 0xffff) rate = 100;
+        if (rate < 0) {
+            rate = 0;
+        }
+        if (rate > 100 && rate != 0xffff) {
+            rate = 100;
+        }
 
-        arrayList.add(String.format("ph cmd 0x%s 0x%02X 0x0008 0x04 {%02X %s}", device.getDeviceNetworkId(), device.getEndpointId(), level, DataType.pack(rate, DataType.UINT16, true)));
-        if (delay > 0)
+        arrayList.add(String.format("ph cmd 0x%s 0x%02X 0x0008 0x04 {%02X %s}", device.getDeviceNetworkId(), device.getEndpointId(), level,
+                DataType.pack(rate, DataType.UINT16, true)));
+        if (delay > 0) {
             arrayList.add("delay " + delay);
+        }
         return arrayList;
     }
 
@@ -453,20 +444,18 @@ public class ZigBeeImpl implements ZigBee {
         if (additionalParams != null && additionalParams.containsKey("destEndpoint")) {
             destEndpoint = ObjectUtils.objectToInt(additionalParams.get("destEndpoint"));
         }
-        int mfgCode = -1;
-        if (additionalParams != null && additionalParams.containsKey("mfgCode")) {
-            mfgCode = ObjectUtils.objectToInt(additionalParams.get("mfgCode"));
-        }
 
+        int mfgCode = getMfgCode(additionalParams);
         if (mfgCode > -1) {
-            // TODO: build raw message for read attribute with mfgCode
-            throw new NotYetImplementedException();
+            arrayList.add(String.format("ph rattr 0x%s 0x%02X 0x%04X 0x%04X {%04X}", device.getDeviceNetworkId(), destEndpoint, cluster, attributeId,
+                    mfgCode));
         } else {
             arrayList.add(String.format("ph rattr 0x%s 0x%02X 0x%04X 0x%04X", device.getDeviceNetworkId(), destEndpoint, cluster, attributeId));
         }
 
-        if (delay > 0)
+        if (delay > 0) {
             arrayList.add("delay " + delay);
+        }
 
         return arrayList;
     }
@@ -474,7 +463,6 @@ public class ZigBeeImpl implements ZigBee {
     public List<String> writeAttribute(Integer cluster, Integer attributeId, Integer dataType, Object value) {
         return writeAttribute(cluster, attributeId, dataType, value, null);
     }
-
 
     public List<String> writeAttribute(Integer cluster, Integer attributeId, Integer dataType, Object value, Map additionalParams) {
         return writeAttribute(cluster, attributeId, dataType, value, additionalParams, DEFAULT_DELAY);
@@ -497,28 +485,37 @@ public class ZigBeeImpl implements ZigBee {
         if (additionalParams != null && additionalParams.containsKey("destEndpoint")) {
             destEndpoint = ObjectUtils.objectToInt(additionalParams.get("destEndpoint"));
         }
-        int mfgCode = -1;
-        if (additionalParams != null && additionalParams.containsKey("mfgCode")) {
-            mfgCode = ObjectUtils.objectToInt(additionalParams.get("mfgCode"));
-        }
+        int mfgCode = getMfgCode(additionalParams);
 
+        // TODO: should this use DataType.pack() for the value instead?
         String stringValue;
-        if(value instanceof Number) {
-            stringValue = HexUtils.integerToHexString(((Number) value).intValue(),1);
+        if (value instanceof Number) {
+            stringValue = HexUtils.integerToHexString(((Number) value).intValue(), 1);
         } else {
             stringValue = value.toString();
         }
 
         if (mfgCode > -1) {
-            arrayList.add(String.format("ph wattr 0x%s 0x%02X 0x%04X 0x%04X 0x%04X {%s} {%04X}", device.getDeviceNetworkId(), destEndpoint, cluster, attributeId, dataType, stringValue, mfgCode));
+            arrayList.add(String.format("ph wattr 0x%s 0x%02X 0x%04X 0x%04X 0x%02X {%s} {%04X}", device.getDeviceNetworkId(), destEndpoint, cluster,
+                    attributeId, dataType, stringValue, mfgCode));
         } else {
-            arrayList.add(String.format("ph wattr 0x%s 0x%02X 0x%04X 0x%04X 0x%04X {%s}", device.getDeviceNetworkId(), destEndpoint, cluster, attributeId, dataType, stringValue));
+            arrayList.add(
+                    String.format("ph wattr 0x%s 0x%02X 0x%04X 0x%04X 0x%02X {%s}", device.getDeviceNetworkId(), destEndpoint, cluster, attributeId,
+                            dataType, stringValue));
         }
 
-        if (delay > 0)
+        if (delay > 0) {
             arrayList.add("delay " + delay);
+        }
 
         return arrayList;
+    }
+
+    private int getMfgCode(Map additionalParams) {
+        if (additionalParams != null && additionalParams.containsKey("mfgCode")) {
+            return ObjectUtils.objectToInt(additionalParams.get("mfgCode"));
+        }
+        return -1;
     }
 
     //TODO: implement additional methods listed here: https://docs.smartthings.com/en/latest/ref-docs/zigbee-ref.html
