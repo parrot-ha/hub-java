@@ -46,14 +46,18 @@ public enum Capabilities {
             Arrays.asList(new Command("lock"), new Command("unlock")))),
     MOTION_SENSOR("MotionSensor", new Capability("", "MotionSensor", "capability.motionSensor",
             Arrays.asList(new Attribute("", "ENUM", "motion", Arrays.asList(new String[]{"action", "inactive"}))), null)),
+    OUTLET("Outlet", new Capability("", "Outlet", "capability.outlet",
+            Arrays.asList(new Attribute("", "ENUM", "switch", Arrays.asList(new String[]{"on", "off"}))),
+            Arrays.asList(new Command("on"), new Command("off")))),
     POLLING("Polling", new Capability("", "Polling", "capability.polling", null,
             Arrays.asList(new Command("poll")))),
     POWER_METER("PowerMeter", new Capability("", "PowerMeter", "capability.powerMeter",
             Arrays.asList(new Attribute("", "NUMBER", "power", null)), null)),
     REFRESH("Refresh", new Capability("", "Refresh", "capability.refresh", null,
             Arrays.asList(new Command("refresh")))),
-    RELATIVE_HUMIDITY_MEASURMENT("RelativeHumidityMeasurement", new Capability("", "RelativeHumidityMeasurement", "capability.relativeHumidityMeasurement",
-            Arrays.asList(new Attribute("", "NUMBER", "humidity", null)), null)),
+    RELATIVE_HUMIDITY_MEASURMENT("RelativeHumidityMeasurement",
+            new Capability("", "RelativeHumidityMeasurement", "capability.relativeHumidityMeasurement",
+                    Arrays.asList(new Attribute("", "NUMBER", "humidity", null)), null)),
     SENSOR("Sensor", new Capability("", "Sensor", "capability.sensor", null, null)),
     SMOKE_DETECTOR("SmokeDetector", new Capability("", "SmokeDetector", "capability.smokeDetector",
             Arrays.asList(new Attribute("", "ENUM", "smoke", Arrays.asList(new String[]{"clear", "detected", "tested"}))), null)),
@@ -67,9 +71,9 @@ public enum Capabilities {
             Arrays.asList(new Command("setLevel", "level", "duration")))),
     TEMPERATURE_MEASUREMENT("TemperatureMeasurement", new Capability("", "TemperatureMeasurement", "capability.temperatureMeasurement",
             Arrays.asList(new Attribute("", "NUMBER", "temperature", null)), null)),
-    OUTLET("Outlet", new Capability("", "Outlet", "capability.outlet",
-            Arrays.asList(new Attribute("", "ENUM", "switch", Arrays.asList(new String[]{"on", "off"}))),
-            Arrays.asList(new Command("on"), new Command("off")))),
+    VALVE("Valve", new Capability("", "Valve", "capability.valve",
+            Arrays.asList(new Attribute("", "ENUM", "valve", Arrays.asList(new String[]{"open", "closed"}))),
+            Arrays.asList(new Command("open"), new Command("close")))),
     WATER_SENSOR("WaterSensor", new Capability("", "WaterSensor", "capability.waterSensor",
             Arrays.asList(new Attribute("", "ENUM", "water", Arrays.asList(new String[]{"dry", "wet"}))), null));
 
@@ -84,7 +88,9 @@ public enum Capabilities {
     private static Map<String, Capability> capabilityMap;
 
     private synchronized static void createType() {
-        if (capabilityMap != null) return;
+        if (capabilityMap != null) {
+            return;
+        }
 
         Map<String, Capability> newCapabilityMap = new HashMap<>();
         for (Capabilities c : values()) {

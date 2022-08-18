@@ -7,14 +7,21 @@
             {{ command.name }}
           </v-btn>
         </div>
-        <input
-          v-for="(arg, i) in command.values"
-          type="text"
+        <span v-for="(arg, i) in command.values" :key="i">
+        <input v-if="arg.name.toUpperCase() == 'TIME'"
+          type="time"
           class="form-control"
           v-model="arg.value"
           :placeholder="arg.name"
-          :key="i"
         />
+        <input v-else
+               type="text"
+               class="form-control"
+               v-model="arg.value"
+               :placeholder="arg.name"
+        />
+
+          </span>
       </div>
     </div>
     <div v-else>
@@ -47,7 +54,7 @@ export default {
         console.log(this.command.values);
         for (var arg of this.command.values) {
           if (arg.value) {
-            setArgs.push(arg.value);
+            setArgs.push({"value": arg.value, "type": arg.name});
           } else {
             // break out after first null
             break;

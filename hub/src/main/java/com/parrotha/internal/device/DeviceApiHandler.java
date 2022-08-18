@@ -25,6 +25,7 @@ import groovy.json.JsonBuilder;
 import groovy.json.JsonSlurper;
 import io.javalin.Javalin;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.math.NumberUtils;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -359,7 +360,7 @@ public class DeviceApiHandler extends BaseApiHandler {
             if (StringUtils.isNotBlank(body)) {
                 Object jsonBodyObj = new JsonSlurper().parseText(body);
                 if (jsonBodyObj instanceof List) {
-                    entityService.runDeviceMethod(id, command, ((List) jsonBodyObj).toArray());
+                    entityService.runDeviceMethod(id, command, castArgs((List) jsonBodyObj));
                 }
             } else {
                 entityService.runDeviceMethod(id, command);
@@ -479,5 +480,28 @@ public class DeviceApiHandler extends BaseApiHandler {
             ctx.result(new JsonBuilder(pageInfo).toString());
 
         });
+    }
+
+    private Object castArgs(List args) {
+        if (args == null || args.size() == 0) {
+            return null;
+        }
+
+        Object[] retArgs = new Object[args.size()];
+        for (int i = 0; i < args.size(); i++) {
+            Map arg = (Map) args.get(i);
+            String argType = ((String) arg.get("type")).toUpperCase();
+            if ("NUMBER".equals(argType)) {
+                retArgs[i] = NumberUtils.createNumber(arg.get("value").toString());
+            } else {
+                retArgs[i] = arg.get("value").toString();
+            }
+        }
+
+        if (retArgs.length == 1) {
+            return retArgs[0];
+        } else {
+            return retArgs;
+        }
     }
 }
