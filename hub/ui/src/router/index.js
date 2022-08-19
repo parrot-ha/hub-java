@@ -26,6 +26,11 @@ const routes = [
     component: () => import('../views/device/Device.vue')
   },
   {
+    path: '/devices/:id/config',
+    name: 'DeviceConfig',
+    component: () => import('../views/device/DeviceConfig.vue')
+  },
+  {
     path: '/devices/:id/events',
     name: 'DeviceEvents',
     component: () => import('../views/device/DeviceEvents.vue')

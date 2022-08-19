@@ -16,7 +16,12 @@
             <v-card-title>
               Add
               <v-spacer></v-spacer>
-              <v-btn color="primary" @click="saveCode">
+              <v-progress-circular
+                v-show="savePending"
+                indeterminate
+                color="primary"
+              ></v-progress-circular>
+              <v-btn color="primary" :disabled="savePending" @click="saveCode">
                 Save
               </v-btn>
             </v-card-title>
@@ -73,6 +78,7 @@ export default {
   },
   data() {
     return {
+      savePending: false,
       editor: null,
       editorHeight: '500px',
       alert: false,
@@ -83,6 +89,7 @@ export default {
   },
   methods: {
     saveCode() {
+      this.savePending = true;
       this.alert = false;
       this.alertMessage = '';
 
@@ -95,6 +102,7 @@ export default {
           return response.json();
         })
         .then(data => {
+          this.savePending = false;
           if (!data.success) {
             this.alertMessage = data.message;
             this.alert = true;
@@ -103,6 +111,7 @@ export default {
           }
         })
         .catch(error => {
+          this.savePending = false;
           console.log(error);
         });
     },

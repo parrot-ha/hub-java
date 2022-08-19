@@ -16,8 +16,19 @@
             <v-card-title>
               Edit
               <v-spacer></v-spacer>
+
               <div>
-                <v-btn color="primary" @click="saveCode" mx-2>
+                <v-progress-circular
+                  v-show="savePending"
+                  indeterminate
+                  color="primary"
+                ></v-progress-circular>
+                <v-btn
+                  color="primary"
+                  @click="saveCode"
+                  :disabled="savePending"
+                  mx-2
+                >
                   Save
                 </v-btn>
                 <v-btn
@@ -83,6 +94,7 @@ export default {
   },
   data() {
     return {
+      savePending: false,
       editor: null,
       editorHeight: '500px',
       alert: false,
@@ -94,6 +106,7 @@ export default {
   },
   methods: {
     saveCode() {
+      this.savePending = true;
       this.alert = false;
       this.alertMessage = '';
 
@@ -106,6 +119,7 @@ export default {
           return response.json();
         })
         .then(data => {
+          this.savePending = false;
           if (!data.success) {
             this.alertMessage = data.message;
             this.alert = true;
@@ -114,6 +128,7 @@ export default {
           //this.$router.push(`/iaas/${data.id}/cfg`);
         })
         .catch(error => {
+          this.savePending = false;
           console.log(error);
         });
     },

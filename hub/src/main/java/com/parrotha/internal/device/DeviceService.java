@@ -200,7 +200,7 @@ public class DeviceService implements ExtensionStateListener {
                 }
                 Thread.sleep(delay);
             } catch (InterruptedException e) {
-                e.printStackTrace();
+                logger.warn("Interrupted Exception in delay process", e);
             }
         } else {
             // we don't have a protocol, so send to integration if it exists
@@ -223,7 +223,7 @@ public class DeviceService implements ExtensionStateListener {
                     }
                     Thread.sleep(delay);
                 } catch (InterruptedException e) {
-                    e.printStackTrace();
+                    logger.warn("Interrupted Exception in delay", e);
                 }
             } else {
                 return integrationRegistry.processAction(integrationId, action);
@@ -623,7 +623,7 @@ public class DeviceService implements ExtensionStateListener {
             Enumeration<URL> resources = classLoader.getResources("deviceHandlerClasses.yaml");
             deviceHandlerInfo.putAll(getDeviceHandlersFromResources(resources, DeviceHandler.Type.SYSTEM, classLoader, null));
         } catch (IOException e) {
-            e.printStackTrace();
+            logger.warn("IO Exception loading precompiled device handler", e);
         }
 
         // load device handlers from data store
@@ -695,7 +695,7 @@ public class DeviceService implements ExtensionStateListener {
                 }
             }
         } catch (IOException | ClassNotFoundException | IllegalAccessException | InstantiationException | NoSuchMethodException | InvocationTargetException e) {
-            e.printStackTrace();
+            logger.warn("Exception in loading device handlers from resources", e);
         }
 
         return deviceHandlerInfo;
