@@ -36,6 +36,7 @@ import com.parrotha.internal.device.DeviceHandler;
 import com.parrotha.internal.device.DevicePreferencesDelegate;
 import com.parrotha.internal.device.DeviceScriptDelegateImpl;
 import com.parrotha.internal.device.DeviceService;
+import com.parrotha.internal.device.DeviceTilesDelegate;
 import com.parrotha.internal.device.Fingerprint;
 import com.parrotha.internal.hub.EventService;
 import com.parrotha.internal.hub.LocationService;
@@ -1049,6 +1050,15 @@ public class EntityServiceImpl implements EntityService {
         return null;
     }
 
+    @Override
+    public Map<String, Object> getDeviceTileLayout(String id) {
+        Class<Script> deviceScript = getScriptForDevice(id);
+        Device device = deviceService.getDeviceById(id);
+
+        //TODO: throw device or device handler not found exception?
+        return getDeviceTileLayout(deviceScript, device);
+    }
+
     public Map<String, Object> getDevicePreferencesLayout(String id) {
         Class<Script> deviceScript = getScriptForDevice(id);
         Device device = deviceService.getDeviceById(id);
@@ -1106,6 +1116,41 @@ public class EntityServiceImpl implements EntityService {
             DeviceScriptDelegateImpl dsd = (DeviceScriptDelegateImpl) parrotHubDelegatingScript.getDelegate();
             if (dsd.metadataValue != null) {
                 ArrayList list = (ArrayList) dsd.metadataValue.get("preferences");
+                Map<String, List> section = new HashMap<>();
+                section.put("input", list);
+                section.put("body", list);
+
+                List<Map> sections = new ArrayList<>();
+                sections.add(section);
+
+                Map<String, Object> preferences = new HashMap<>();
+                preferences.put("sections", sections);
+                return preferences;
+            } else {
+                return new HashMap<>();
+            }
+        } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
+            e.printStackTrace();
+        }
+
+        return null;
+    }
+
+    private Map<String, Object> getDeviceTileLayout(Class<Script> deviceScript, Device device) {
+        if (deviceScript == null) {
+            return null;
+        }
+
+        try {
+            ParrotHubDelegatingScript parrotHubDelegatingScript = (ParrotHubDelegatingScript) deviceScript.getConstructor()
+                    .newInstance();
+            parrotHubDelegatingScript.setDelegate(new DeviceTilesDelegate(null));
+
+            parrotHubDelegatingScript.invokeMethod("run", null);
+
+            DeviceTilesDelegate dtd = (DeviceTilesDelegate) parrotHubDelegatingScript.getDelegate();
+            if (dtd.getTiles() != null) {
+                ArrayList list = (ArrayList) dtd.getTiles();
                 Map<String, List> section = new HashMap<>();
                 section.put("input", list);
                 section.put("body", list);
