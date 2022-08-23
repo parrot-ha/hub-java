@@ -106,6 +106,8 @@ public interface EntityService {
 
     Object getInstalledAutomationAppConfigurationPage(String id, String pageName);
 
+    Map<String, Object> getDeviceTileLayout(String id);
+
     Map<String, Object> getDevicePreferencesLayout(String id);
 
     Map<String, Object> getDeviceHandlerPreferencesLayout(String deviceHandlerId);
