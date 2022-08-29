@@ -25,6 +25,7 @@ import com.parrotha.app.DeviceWrapperImpl;
 import com.parrotha.app.EventWrapper;
 import com.parrotha.app.EventWrapperImpl;
 import com.parrotha.device.Event;
+import com.parrotha.device.HubAction;
 import com.parrotha.exception.NotFoundException;
 import com.parrotha.internal.ChangeTrackingMap;
 import com.parrotha.internal.app.AutomationAppScriptDelegateImpl;
@@ -268,10 +269,10 @@ public class EntityServiceImpl implements EntityService {
 
     private void processReturnObject(Object returnObject, Device device) {
         if (returnObject instanceof List) {
-            List<String> returnObjectStringList = new ArrayList<>();
+            List<Object> returnObjectActionList = new ArrayList<>();
             for (Object returnObjectItem : (List) returnObject) {
-                if (returnObjectItem instanceof String || returnObjectItem instanceof GString) {
-                    returnObjectStringList.add(returnObjectItem.toString());
+                if (returnObjectItem instanceof String || returnObjectItem instanceof GString || returnObjectItem instanceof HubAction) {
+                    returnObjectActionList.add(returnObjectItem.toString());
                 } else if (returnObjectItem instanceof List) {
                     processReturnObject(returnObjectItem, device);
                 } else if (returnObjectItem instanceof Map) {
@@ -279,8 +280,8 @@ public class EntityServiceImpl implements EntityService {
                             new DeviceWrapperImpl(device, deviceService, this, locationService));
                 }
             }
-            if (returnObjectStringList.size() > 0) {
-                deviceService.processReturnObj(device, returnObjectStringList);
+            if (returnObjectActionList.size() > 0) {
+                deviceService.processReturnObj(device, returnObjectActionList);
             }
         } else if (returnObject instanceof Map) {
             sendEvent((Map) returnObject, new DeviceWrapperImpl(device, deviceService, this, locationService));

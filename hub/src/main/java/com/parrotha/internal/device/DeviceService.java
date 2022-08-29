@@ -163,7 +163,6 @@ public class DeviceService implements ExtensionStateListener {
                     } else {
                         logger.warn("TODO: process this: " + obj.getClass().getName());
                     }
-                    //TODO: process HubAction
                 }
             } else if (retObj instanceof String || retObj instanceof GString) {
                 processStringRetObj(device, retObj.toString());
