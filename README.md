@@ -10,6 +10,9 @@ Requirements:
 - Ember based zigbee stick (ie Nortek HUSBZB-1) if you want to control zigbee devices
 - Z/IP Gateway and Z-Wave Bridge Controller stick (ie UZB-7) if you want to control z-wave devices
 
+## Installing on a Raspberry Pi (or another compatible linux system)
+https://github.com/parrot-ha/scripts/blob/main/rpi/README.md
+
 ## Compile (requires JDK 11 and npm to be installed):
 1. Check out code to new directory.
 2. run ```npm install``` in hub/ui directory
