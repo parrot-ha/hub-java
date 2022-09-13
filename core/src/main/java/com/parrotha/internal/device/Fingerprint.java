@@ -38,6 +38,7 @@ public class Fingerprint {
     private String deviceJoinName;
     private String mfr;
     private String prod;
+    private String intg;
 
 
     public Fingerprint() {
@@ -54,6 +55,7 @@ public class Fingerprint {
         this.deviceJoinName = values.get("deviceJoinName");
         this.mfr = values.get("mfr");
         this.prod = values.get("prod");
+        this.intg = values.get("intg");
     }
 
     @Override
@@ -71,6 +73,7 @@ public class Fingerprint {
             if (!StringUtils.equals(this.deviceJoinName, ((Fingerprint) obj).getDeviceJoinName())) return false;
             if (!StringUtils.equals(this.mfr, ((Fingerprint) obj).getMfr())) return false;
             if (!StringUtils.equals(this.prod, ((Fingerprint) obj).getProd())) return false;
+            if (!StringUtils.equals(this.intg, ((Fingerprint) obj).getIntg())) return false;
         }
         return true;
     }
@@ -174,6 +177,14 @@ public class Fingerprint {
         this.prod = prod;
     }
 
+    public String getIntg() {
+        return intg;
+    }
+
+    public void setIntg(String intg) {
+        this.intg = intg;
+    }
+
     @Override
     public String toString() {
         return "Fingerprint(" +
@@ -187,6 +198,7 @@ public class Fingerprint {
                 ", deviceJoinName: '" + deviceJoinName + '\'' +
                 ", mfr: '" + mfr + '\'' +
                 ", prod: '" + prod + '\'' +
+                ", intg: '" + intg + '\'' +
                 ')';
     }
 }

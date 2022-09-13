@@ -9,33 +9,24 @@
               <router-link :to="{ name: 'AutomationAppCodeAdd' }"
                 >Add Automation App Code</router-link
               >
-              <v-simple-table>
-                <thead>
-                  <tr>
-                    <th scope="col" style="width:4%"></th>
-                    <th scope="col" style="width:48%">Name</th>
-                    <th scope="col" style="width:48%">Namespace</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr
-                    v-for="automationAppCode in automationAppCodeList"
-                    :key="automationAppCode.id"
+              <v-data-table
+                :headers="headers"
+                :items="codeList"
+                sort-by="name"
+                disable-pagination
+                hide-default-footer
+                class="elevation-1"
+              >
+                <template v-slot:item.name="{ item }">
+                  <router-link
+                    :to="{
+                      name: 'AutomationAppCodeEdit',
+                      params: { id: item.id }
+                    }"
+                    >{{ item.name }}</router-link
                   >
-                    <td></td>
-                    <td>
-                      <router-link
-                        :to="{
-                          name: 'AutomationAppCodeEdit',
-                          params: { id: automationAppCode.id }
-                        }"
-                        >{{ automationAppCode.name }}</router-link
-                      >
-                    </td>
-                    <td>{{ automationAppCode.namespace }}</td>
-                  </tr>
-                </tbody>
-              </v-simple-table>
+                </template>
+              </v-data-table>
             </v-card-text>
             <v-card-actions> </v-card-actions>
           </v-card>
@@ -49,7 +40,11 @@ export default {
   name: 'AutomationAppCodeList',
   data() {
     return {
-      automationAppCodeList: []
+      codeList: [],
+      headers: [
+        { text: 'Name', value: 'name' },
+        { text: 'Namespace', value: 'namespace' }
+      ]
     };
   },
   mounted: function() {
@@ -57,7 +52,7 @@ export default {
       .then(response => response.json())
       .then(data => {
         if (typeof data !== 'undefined' && data != null) {
-          this.automationAppCodeList = data;
+          this.codeList = data;
         }
       });
   }

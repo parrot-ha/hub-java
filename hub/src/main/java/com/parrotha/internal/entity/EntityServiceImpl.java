@@ -25,6 +25,7 @@ import com.parrotha.app.DeviceWrapperImpl;
 import com.parrotha.app.EventWrapper;
 import com.parrotha.app.EventWrapperImpl;
 import com.parrotha.device.Event;
+import com.parrotha.device.HubAction;
 import com.parrotha.exception.NotFoundException;
 import com.parrotha.internal.ChangeTrackingMap;
 import com.parrotha.internal.app.AutomationAppScriptDelegateImpl;
@@ -36,6 +37,7 @@ import com.parrotha.internal.device.DeviceHandler;
 import com.parrotha.internal.device.DevicePreferencesDelegate;
 import com.parrotha.internal.device.DeviceScriptDelegateImpl;
 import com.parrotha.internal.device.DeviceService;
+import com.parrotha.internal.device.DeviceTilesDelegate;
 import com.parrotha.internal.device.Fingerprint;
 import com.parrotha.internal.hub.EventService;
 import com.parrotha.internal.hub.LocationService;
@@ -267,10 +269,10 @@ public class EntityServiceImpl implements EntityService {
 
     private void processReturnObject(Object returnObject, Device device) {
         if (returnObject instanceof List) {
-            List<String> returnObjectStringList = new ArrayList<>();
+            List<Object> returnObjectActionList = new ArrayList<>();
             for (Object returnObjectItem : (List) returnObject) {
-                if (returnObjectItem instanceof String || returnObjectItem instanceof GString) {
-                    returnObjectStringList.add(returnObjectItem.toString());
+                if (returnObjectItem instanceof String || returnObjectItem instanceof GString || returnObjectItem instanceof HubAction) {
+                    returnObjectActionList.add(returnObjectItem.toString());
                 } else if (returnObjectItem instanceof List) {
                     processReturnObject(returnObjectItem, device);
                 } else if (returnObjectItem instanceof Map) {
@@ -278,8 +280,8 @@ public class EntityServiceImpl implements EntityService {
                             new DeviceWrapperImpl(device, deviceService, this, locationService));
                 }
             }
-            if (returnObjectStringList.size() > 0) {
-                deviceService.processReturnObj(device, returnObjectStringList);
+            if (returnObjectActionList.size() > 0) {
+                deviceService.processReturnObj(device, returnObjectActionList);
             }
         } else if (returnObject instanceof Map) {
             sendEvent((Map) returnObject, new DeviceWrapperImpl(device, deviceService, this, locationService));
@@ -427,6 +429,7 @@ public class EntityServiceImpl implements EntityService {
         boolean mfrMatch = false;
         boolean modelMatch = false;
         boolean prodMatch = false;
+        boolean intgMatch = false;
 
         if (StringUtils.isNotBlank(fingerprint.getProfileId())) {
             fingerprintItemCount++;
@@ -501,19 +504,33 @@ public class EntityServiceImpl implements EntityService {
             }
         }
 
+        if (StringUtils.isNotBlank(fingerprint.getIntg())) {
+            fingerprintItemCount++;
+            if (fingerprint.getIntg().equals(deviceInfo.get("intg"))) {
+                intgMatch = true;
+                matchCount++;
+                weight += 3;
+            }
+        }
+
+        if (mfrMatch && modelMatch && prodMatch && intgMatch && (fingerprintItemCount == 4)) {
+            // matched all four, best match
+            return 100;
+        }
+
         if (mfrMatch && modelMatch && prodMatch && (fingerprintItemCount == 3)) {
             // matched all three, best match
-            return 100;
+            return 99;
         }
 
         // similar match, all items, slightly less score
         if (fingerprintItemCount == matchCount && weight > 4) {
-            return 99;
+            return 98;
         }
 
         // similar match, all items, even less score
         if (fingerprintItemCount == matchCount && weight > 3) {
-            return 98;
+            return 97;
         }
 
         int score = ((matchCount / fingerprintItemCount) * 100) + weight;
@@ -1049,6 +1066,15 @@ public class EntityServiceImpl implements EntityService {
         return null;
     }
 
+    @Override
+    public Map<String, Object> getDeviceTileLayout(String id) {
+        Class<Script> deviceScript = getScriptForDevice(id);
+        Device device = deviceService.getDeviceById(id);
+
+        //TODO: throw device or device handler not found exception?
+        return getDeviceTileLayout(deviceScript, device);
+    }
+
     public Map<String, Object> getDevicePreferencesLayout(String id) {
         Class<Script> deviceScript = getScriptForDevice(id);
         Device device = deviceService.getDeviceById(id);
@@ -1106,6 +1132,41 @@ public class EntityServiceImpl implements EntityService {
             DeviceScriptDelegateImpl dsd = (DeviceScriptDelegateImpl) parrotHubDelegatingScript.getDelegate();
             if (dsd.metadataValue != null) {
                 ArrayList list = (ArrayList) dsd.metadataValue.get("preferences");
+                Map<String, List> section = new HashMap<>();
+                section.put("input", list);
+                section.put("body", list);
+
+                List<Map> sections = new ArrayList<>();
+                sections.add(section);
+
+                Map<String, Object> preferences = new HashMap<>();
+                preferences.put("sections", sections);
+                return preferences;
+            } else {
+                return new HashMap<>();
+            }
+        } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
+            e.printStackTrace();
+        }
+
+        return null;
+    }
+
+    private Map<String, Object> getDeviceTileLayout(Class<Script> deviceScript, Device device) {
+        if (deviceScript == null) {
+            return null;
+        }
+
+        try {
+            ParrotHubDelegatingScript parrotHubDelegatingScript = (ParrotHubDelegatingScript) deviceScript.getConstructor()
+                    .newInstance();
+            parrotHubDelegatingScript.setDelegate(new DeviceTilesDelegate(null));
+
+            parrotHubDelegatingScript.invokeMethod("run", null);
+
+            DeviceTilesDelegate dtd = (DeviceTilesDelegate) parrotHubDelegatingScript.getDelegate();
+            if (dtd.getTiles() != null) {
+                ArrayList list = (ArrayList) dtd.getTiles();
                 Map<String, List> section = new HashMap<>();
                 section.put("input", list);
                 section.put("body", list);

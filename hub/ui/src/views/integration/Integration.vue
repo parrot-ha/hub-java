@@ -106,8 +106,8 @@
                 <div v-if="bodyItem.type === 'table'">
                   <table>
                     <thead>
-                      <tr v-for="column in bodyItem.columns" :key="column.data">
-                        <th>{{ column.title }}</th>
+                      <tr>
+                        <th v-for="column in bodyItem.columns" :key="column.data">{{ column.title }}</th>
                       </tr>
                     </thead>
                     <tbody>

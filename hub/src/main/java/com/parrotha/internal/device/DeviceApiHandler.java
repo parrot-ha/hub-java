@@ -86,6 +86,18 @@ public class DeviceApiHandler extends BaseApiHandler {
             ctx.result(new JsonBuilder(pageInfo).toString());
         });
 
+        app.get("/api/devices/:id/tiles", ctx -> {
+            // get device handler preferences.
+            String id = ctx.pathParam("id");
+            Object pageInfo = entityService.getDevicePreferencesLayout(id);
+            if (pageInfo == null) {
+                pageInfo = new HashMap<>();
+            }
+            ctx.status(200);
+            ctx.contentType("application/json");
+            ctx.result(new JsonBuilder(pageInfo).toString());
+        });
+
         app.get("/api/devices", ctx -> {
             String filter = ctx.queryParam("filter");
             Collection<Device> devices;
