@@ -429,6 +429,7 @@ public class EntityServiceImpl implements EntityService {
         boolean mfrMatch = false;
         boolean modelMatch = false;
         boolean prodMatch = false;
+        boolean intgMatch = false;
 
         if (StringUtils.isNotBlank(fingerprint.getProfileId())) {
             fingerprintItemCount++;
@@ -503,19 +504,33 @@ public class EntityServiceImpl implements EntityService {
             }
         }
 
+        if (StringUtils.isNotBlank(fingerprint.getIntg())) {
+            fingerprintItemCount++;
+            if (fingerprint.getIntg().equals(deviceInfo.get("intg"))) {
+                intgMatch = true;
+                matchCount++;
+                weight += 3;
+            }
+        }
+
+        if (mfrMatch && modelMatch && prodMatch && intgMatch && (fingerprintItemCount == 4)) {
+            // matched all four, best match
+            return 100;
+        }
+
         if (mfrMatch && modelMatch && prodMatch && (fingerprintItemCount == 3)) {
             // matched all three, best match
-            return 100;
+            return 99;
         }
 
         // similar match, all items, slightly less score
         if (fingerprintItemCount == matchCount && weight > 4) {
-            return 99;
+            return 98;
         }
 
         // similar match, all items, even less score
         if (fingerprintItemCount == matchCount && weight > 3) {
-            return 98;
+            return 97;
         }
 
         int score = ((matchCount / fingerprintItemCount) * 100) + weight;
