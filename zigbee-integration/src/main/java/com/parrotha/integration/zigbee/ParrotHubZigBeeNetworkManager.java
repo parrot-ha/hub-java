@@ -18,11 +18,11 @@
  */
 package com.parrotha.integration.zigbee;
 
+import com.parrotha.internal.utils.HexUtils;
 import com.zsmartsystems.zigbee.ZigBeeNetworkManager;
 import com.zsmartsystems.zigbee.aps.ZigBeeApsFrame;
 import com.zsmartsystems.zigbee.dongle.ember.ezsp.structure.EmberStatus;
 import com.zsmartsystems.zigbee.transport.ZigBeeTransportTransmit;
-import com.parrotha.internal.utils.HexUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,8 +42,16 @@ public class ParrotHubZigBeeNetworkManager extends ZigBeeNetworkManager {
     }
 
     @Override
+    public void shutdown() {
+        this.zigBeeIntegration = null;
+        super.shutdown();
+    }
+
+    @Override
     public void receiveCommand(final ZigBeeApsFrame incomingApsFrame) {
-        if (logger.isDebugEnabled()) logger.debug("Recieved APS Frame in Parrot Hub " + incomingApsFrame.toString());
+        if (logger.isDebugEnabled()) {
+            logger.debug("Recieved APS Frame in Parrot Hub " + incomingApsFrame.toString());
+        }
 
         // don't transform messages from the radio
         if (incomingApsFrame.getSourceAddress() != 0) {
