@@ -30,16 +30,20 @@ import org.yaml.snakeyaml.introspector.BeanAccess;
 import org.yaml.snakeyaml.nodes.Node;
 import org.yaml.snakeyaml.nodes.ScalarNode;
 import org.yaml.snakeyaml.nodes.Tag;
+import org.yaml.snakeyaml.scanner.ScannerException;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.time.ZonedDateTime;
 import java.util.Calendar;
 import java.util.HashSet;
 import java.util.Set;
+
+import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 
 /**
  * Serializes and deserializes the ZigBee network state to yaml files.
@@ -60,8 +64,12 @@ public class ZigBeeYamlDataStore implements ZigBeeNetworkDataStore {
         }
     }
 
-    private File getFile(IeeeAddress address) {
-        return new File(networkId + address + ".yaml");
+    private File getFile(IeeeAddress address, boolean tmpFile) {
+        if (tmpFile) {
+            return new File(networkId + ".tmp_" + address + ".yaml");
+        } else {
+            return new File(networkId + address + ".yaml");
+        }
     }
 
     @Override
@@ -92,16 +100,26 @@ public class ZigBeeYamlDataStore implements ZigBeeNetworkDataStore {
 
     @Override
     public ZigBeeNodeDao readNode(IeeeAddress address) {
-        File file = getFile(address);
 
         ZigBeeNodeDao node = null;
         try {
+            File file = getFile(address, false);
             Yaml yaml = new Yaml(new CalendarConstructor());
 
             yaml.setBeanAccess(BeanAccess.FIELD);
             node = yaml.load(new FileInputStream(file));
         } catch (FileNotFoundException e) {
             e.printStackTrace();
+        } catch (ScannerException se) {
+            // there was a problem loading the file, try the tmp file
+            File file = getFile(address, true);
+            Yaml yaml = new Yaml(new CalendarConstructor());
+            yaml.setBeanAccess(BeanAccess.FIELD);
+            try {
+                node = yaml.load(new FileInputStream(file));
+            } catch (FileNotFoundException e) {
+                throw se;
+            }
         }
 
         return node;
@@ -110,24 +128,36 @@ public class ZigBeeYamlDataStore implements ZigBeeNetworkDataStore {
 
     @Override
     public void writeNode(ZigBeeNodeDao node) {
-        try {
-            Yaml yaml = new Yaml();
-            yaml.setBeanAccess(BeanAccess.FIELD);
-            File file = getFile(node.getIeeeAddress());
-            FileWriter fileWriter = new FileWriter(file);
+        synchronized (networkId) {
+            try {
+                Yaml yaml = new Yaml(new CalendarConstructor());
+                yaml.setBeanAccess(BeanAccess.FIELD);
+                File file = getFile(node.getIeeeAddress(), true);
+                FileWriter fileWriter = new FileWriter(file);
 
-            yaml.dump(node, fileWriter);
-            fileWriter.close();
-        } catch (IOException e) {
-            e.printStackTrace();
+                yaml.dump(node, fileWriter);
+                fileWriter.close();
+
+                ZigBeeNodeDao tmpNode = yaml.load(new FileInputStream(file));
+                if (tmpNode != null) {
+                    // the node was loaded successfully, copy it to the existing file.
+                    Files.copy(file.toPath(), getFile(node.getIeeeAddress(), false).toPath(), REPLACE_EXISTING);
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 
     @Override
     public void removeNode(IeeeAddress address) {
-        File file = getFile(address);
+        File file = getFile(address, false);
         if (!file.delete()) {
             logger.error("{}: Error removing network state", address);
+        }
+        file = getFile(address, true);
+        if (!file.delete()) {
+            logger.error("{}: Error removing network state temp file", address);
         }
     }
 
