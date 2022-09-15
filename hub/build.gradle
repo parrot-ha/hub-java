@@ -52,7 +52,7 @@ dependencies {
     implementation "org.codehaus.groovy:groovy-all:${groovyAllVersion}"
     implementation group: 'org.codehaus.groovy', name: 'groovy-dateutil', version: "${groovyAllVersion}"
 
-    implementation 'io.javalin:javalin:3.13.3'
+    implementation 'io.javalin:javalin:3.13.11'
     implementation "com.github.spullara.mustache.java:compiler:0.9.6"
 
     //compile 'org.slf4j:slf4j-simple:1.7.30'
@@ -65,12 +65,12 @@ dependencies {
     implementation 'org.apache.httpcomponents:httpclient:4.5.13'
 
     implementation 'commons-io:commons-io:2.8.0'
-    implementation 'org.yaml:snakeyaml:1.29'
+    implementation 'org.yaml:snakeyaml:1.32'
 
     implementation 'com.google.guava:guava:30.0-jre'
 
     // used to calculate sunrise and sunset times.
-    implementation 'org.shredzone.commons:commons-suncalc:3.4'
+    implementation 'org.shredzone.commons:commons-suncalc:3.5'
 
     // needed for scheduling
     implementation 'org.quartz-scheduler:quartz:2.3.2'

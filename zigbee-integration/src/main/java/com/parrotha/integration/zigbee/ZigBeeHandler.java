@@ -191,7 +191,6 @@ public class ZigBeeHandler implements ZigBeeNetworkStateListener, ZigBeeAnnounce
         networkManager = null;
     }
 
-
     public boolean changeChannel(int channel) {
         EmberStatus status = ((ParrotHubZigBeeNetworkManager) networkManager).changeChannel(channel);
         return EmberStatus.EMBER_SUCCESS == status;
@@ -205,7 +204,12 @@ public class ZigBeeHandler implements ZigBeeNetworkStateListener, ZigBeeAnnounce
         } else if ((state == ZigBeeNetworkState.OFFLINE || state == ZigBeeNetworkState.SHUTDOWN) && this.running && this.restartCount < 5) {
             // zigbee shutdown, but it should be running
             this.restartCount++;
+            if (this.networkManager != null) {
+                this.networkManager.shutdown();
+                this.networkManager = null;
+            }
             this.startWithReset(false);
+            //TODO: if this fails, we should have a watchdog to start the network again.
         }
     }
 
@@ -219,7 +223,6 @@ public class ZigBeeHandler implements ZigBeeNetworkStateListener, ZigBeeAnnounce
         } else if (deviceStatus == ZigBeeNodeStatus.DEVICE_LEFT) {
             // TODO: device left, remove it
             logger.warn("Device Left");
-
         }
     }
 

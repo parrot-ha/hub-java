@@ -32,6 +32,7 @@ import com.zsmartsystems.zigbee.zcl.field.AttributeReportingConfigurationRecord;
 import com.zsmartsystems.zigbee.zcl.protocol.ZclCommandDirection;
 import com.zsmartsystems.zigbee.zcl.protocol.ZclDataType;
 import com.zsmartsystems.zigbee.zdo.command.BindRequest;
+import com.zsmartsystems.zigbee.zdo.field.BindingTable;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -200,8 +201,14 @@ public class ZigBeeMessageTransformer {
             int destEndpoint = HexUtils.hexStringToInt(msgParts[2].trim());
             int cluster = HexUtils.hexStringToInt(msgParts[3].trim());
 
-            final BindRequest command = new BindRequest(networkManager.getNode(networkAddress).getIeeeAddress(), endpoint,
-                    cluster, 3, destAddress, destEndpoint);
+            BindingTable bindingTable = new BindingTable();
+            bindingTable.setSrcAddr(networkManager.getNode(networkAddress).getIeeeAddress());
+            bindingTable.setSrcEndpoint(endpoint);
+            bindingTable.setClusterId(cluster);
+            bindingTable.setDstAddrMode(3);
+            bindingTable.setDstAddr(destAddress);
+            bindingTable.setDstNodeEndpoint(destEndpoint);
+            final BindRequest command = new BindRequest(bindingTable);
             command.setDestinationAddress(new ZigBeeEndpointAddress(networkAddress));
             return command;
             //getNode(networkAddress).getEndpoint(endpoint).getInputCluster(cluster).bind(destAddress, destEndpoint);

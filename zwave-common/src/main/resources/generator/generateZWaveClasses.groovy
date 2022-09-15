@@ -16,7 +16,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-@Grab(group = 'org.yaml', module = 'snakeyaml', version = '1.29')
+@Grab(group = 'org.yaml', module = 'snakeyaml', version = '1.32')
 import org.yaml.snakeyaml.Yaml
 
 String fileToParse = "zwaveClasses.yaml"
