@@ -225,6 +225,28 @@ public class IntegrationApiHandler extends BaseApiHandler {
             }
         });
 
+        app.post("/api/integrations/:id/button-action", ctx -> {
+            String id = ctx.pathParam("id");
+            AbstractIntegration abstractIntegration = integrationService.getIntegrationById(id);
+
+            if (abstractIntegration != null) {
+                String body = ctx.body();
+                Map bodyMap = (Map) (new JsonSlurper().parseText(body));
+                String action = (String) bodyMap.get("action");
+                Object responseData = abstractIntegration.processButtonAction(action);
+
+                Map<String, Object> model = new HashMap<>();
+                model.put("success", true);
+                model.put("responseData", responseData);
+
+                ctx.status(200);
+                ctx.contentType("application/json");
+                ctx.result(new JsonBuilder(model).toString());
+            } else {
+                ctx.status(404);
+            }
+        });
+
         app.post("/api/integrations/:id/features/:feature", ctx -> {
             String id = ctx.pathParam("id");
             String feature = ctx.pathParam("feature");

@@ -141,4 +141,8 @@ public abstract class AbstractIntegration {
     public List<IntegrationSetting> getSettings() {
         return configurationService.getConfiguration(id);
     }
+
+    public Object processButtonAction(String action) {
+        return null;
+    }
 }

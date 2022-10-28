@@ -128,7 +128,7 @@
                 <div v-if="bodyItem.type === 'button'">
                   <v-btn
                     :color="bodyItem.color"
-                    @click="handleButtonAction(bodyItem.action)"
+                    @click="handleButtonAction(bodyItem.action, bodyItem.response)"
                     :disabled="pageData[bodyItem.disabled]"
                   >
                     {{ bodyItem.title }}
@@ -258,8 +258,19 @@ export default {
     };
   },
   methods: {
-    handleButtonAction: function(action) {
-      console.log('handleButtonAction ' + action);
+    handleButtonAction: function(action, responseIndex) {
+      console.log('handleButtonAction ' + action + ' response ' + responseIndex);
+
+      fetch(`/api/integrations/${this.integrationId}/button-action`, {
+        method: 'POST',
+        body: JSON.stringify({"action": action})
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (typeof data !== 'undefined' && data != null) {
+          this.pageData[responseIndex] = data.responseData;
+        }
+      });
     },
     deleteIntegration: function() {
       fetch(`/api/integrations/${this.integrationId}`, {
