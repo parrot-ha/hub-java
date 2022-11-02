@@ -42,13 +42,17 @@ public class Integration implements Serializable {
         this.id = id;
     }
 
-    public Object getOption(String option) {
-        if (options == null) return null;
+    public String getOption(String option) {
+        if (options == null) {
+            return null;
+        }
         return options.get(option);
     }
 
     public void setOption(String option, String value) {
-        if (options == null) options = new HashMap<>();
+        if (options == null) {
+            options = new HashMap<>();
+        }
         options.put(option, value);
     }
 

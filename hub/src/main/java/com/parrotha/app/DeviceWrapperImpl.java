@@ -27,7 +27,9 @@ import com.parrotha.internal.hub.Hub;
 import com.parrotha.internal.hub.LocationService;
 import com.parrotha.internal.utils.HexUtils;
 import com.parrotha.internal.utils.ObjectUtils;
+import groovy.json.JsonSlurper;
 import groovy.lang.GroovyObjectSupport;
+import org.apache.commons.lang3.math.NumberUtils;
 
 import java.util.Date;
 import java.util.List;
@@ -91,6 +93,29 @@ public class DeviceWrapperImpl extends GroovyObjectSupport implements DeviceWrap
     public String getZigbeeId() {
         if (device.getIntegration() != null) {
             return (String) device.getIntegration().getOption("zigbeeId");
+        }
+        return null;
+    }
+
+    public Map getZwaveInfo() {
+        if (device.getIntegration() != null) {
+            String zwaveInfoStr = device.getIntegration().getOption("zwaveInfo");
+            if (zwaveInfoStr != null) {
+                Object jsonInfo = new JsonSlurper().parseText(zwaveInfoStr);
+                if (jsonInfo instanceof Map) {
+                    return (Map) jsonInfo;
+                }
+            }
+        }
+        return null;
+    }
+
+    public Integer getZwaveHubNodeId() {
+        if (device.getIntegration() != null) {
+            String zwaveHubNodeIdStr = device.getIntegration().getOption("zwaveHubNodeId");
+            if (zwaveHubNodeIdStr != null) {
+                return NumberUtils.createInteger(zwaveHubNodeIdStr);
+            }
         }
         return null;
     }

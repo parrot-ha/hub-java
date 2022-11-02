@@ -69,7 +69,7 @@ void generateCommandClassesJava(List zwaveClasses, String basePackage, String ba
         f << licenseText
         f << "package com.parrotha.zwave.commandclasses;\n"
         f << "\n"
-        f << "import org.apache.commons.beanutils.BeanUtils;\n"
+        f << "import com.parrotha.zwave.internal.BeanUtils;\n"
         f << "\n"
         f << "import java.lang.reflect.InvocationTargetException;\n"
         f << "import java.util.Map;\n"
