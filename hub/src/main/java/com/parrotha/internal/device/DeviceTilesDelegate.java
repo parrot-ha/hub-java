@@ -38,8 +38,9 @@ public class DeviceTilesDelegate {
         tiles.put("main", new ArrayList());
         tiles.put("details", new ArrayList());
 
-        if (options != null)
+        if (options != null) {
             tiles.putAll(options);
+        }
     }
 
     private Map tempTile;
@@ -52,8 +53,9 @@ public class DeviceTilesDelegate {
         tempTile.put("inactiveLabel", true);
         tempTile.put("canChangeBackground", false);
         tempTile.put("states", new ArrayList());
-        if (options != null)
+        if (options != null) {
             tempTile.putAll(options);
+        }
         if (closure != null) {
             closure.setDelegate(this);
             closure.run();
@@ -73,8 +75,9 @@ public class DeviceTilesDelegate {
         tempTile.put("inactiveLabel", true);
         tempTile.put("canChangeBackground", false);
         tempTile.put("states", new ArrayList());
-        if (options != null)
+        if (options != null) {
             tempTile.putAll(options);
+        }
 
         if (closure != null) {
             closure.setDelegate(this);
@@ -98,6 +101,10 @@ public class DeviceTilesDelegate {
             closure.setDelegate(this);
             closure.run();
         }
+    }
+
+    void valueTile(Map options, String name, String attribute, Closure closure) {
+
     }
 
     void attributeState(Map options, String name) {

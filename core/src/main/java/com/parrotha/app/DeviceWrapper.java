@@ -48,6 +48,10 @@ public interface DeviceWrapper {
 
     Integer getEndpointId();
 
+    Map getZwaveInfo();
+
+    Integer getZwaveHubNodeId();
+
     State currentState(String attributeName);
 
     String getLabel();

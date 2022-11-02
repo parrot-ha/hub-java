@@ -27,6 +27,7 @@ import com.parrotha.app.LocationWrapper;
 import com.parrotha.app.ParentDeviceWrapperImpl;
 import com.parrotha.device.HubAction;
 import com.parrotha.device.HubMultiAction;
+import com.parrotha.device.Protocol;
 import com.parrotha.internal.ChangeTrackingMap;
 import com.parrotha.internal.app.AutomationAppService;
 import com.parrotha.internal.app.InstalledAutomationApp;
@@ -191,6 +192,14 @@ public class DeviceScriptDelegateImpl extends EntityScriptDelegateCommon impleme
             zwave = new Zwave();
         }
         return zwave;
+    }
+
+    public Map getZwaveInfo() {
+        return device.getZwaveInfo();
+    }
+
+    public Integer getZwaveHubNodeId() {
+        return device.getZwaveHubNodeId();
     }
 
     public LocationWrapper getLocation() {
@@ -427,7 +436,15 @@ public class DeviceScriptDelegateImpl extends EntityScriptDelegateCommon impleme
         return delayBetween(commands, 100);
     }
 
-    HubMultiAction response(List<String> action) {
+    public HubAction response(com.parrotha.zwave.Command zWaveCommand) {
+        return new HubAction(zWaveCommand.format(), Protocol.ZWAVE);
+    }
+
+    public HubAction response(String action) {
+        return new HubAction(action);
+    }
+
+    public HubMultiAction response(List<String> action) {
         return new HubMultiAction(action);
     }
 

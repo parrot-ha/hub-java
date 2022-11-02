@@ -112,6 +112,14 @@
       payload:
         - {name: groupingIdentifier, type: Short, data: 0, defaultValue: 0}
         - {name: nodeId, type: List<Short>, data: '1~RAW[(payload.size() - 1)]', defaultValue: null}
+      additionalImports: "import java.util.ArrayList;\n"
+      additionalMethods:
+        - "\n    public void setNodeId(Integer nodeId) {\n"
+        - "        if (this.nodeId == null) {\n"
+        - "            this.nodeId = new ArrayList<>();\n"
+        - "        }\n"
+        - "        this.nodeId.add(nodeId.shortValue());\n"
+        - "    }\n"
     AssociationGet:
       value: 0x02
       payload:

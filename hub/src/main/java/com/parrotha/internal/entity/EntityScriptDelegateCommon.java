@@ -19,6 +19,7 @@
 package com.parrotha.internal.entity;
 
 import com.google.common.collect.Maps;
+import groovy.json.JsonSlurper;
 import groovy.lang.Closure;
 import groovyx.net.http.HttpResponseDecorator;
 import groovyx.net.http.ParrotHubHTTPBuilder;
@@ -29,6 +30,13 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class EntityScriptDelegateCommon {
+    /**
+     * From docs.smartthings.com/en/latest/ref-docs/smartapp-ref.html#parsejson
+     */
+    public Object parseJson(String stringToParse) {
+        return new JsonSlurper().parseText(stringToParse);
+    }
+
     public Object httpGet(String uri, Closure closure) throws IOException, URISyntaxException {
         Map params = new HashMap();
         params.put("uri", uri);

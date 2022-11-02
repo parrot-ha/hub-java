@@ -18,7 +18,7 @@
  */
 package com.parrotha.zwave.commandclasses;
 
-import org.apache.commons.beanutils.BeanUtils;
+import com.parrotha.zwave.internal.BeanUtils;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.Map;
