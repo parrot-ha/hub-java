@@ -371,6 +371,17 @@ public class AutomationAppService implements ExtensionStateListener {
         }
     }
 
+    public ClassLoader getClassLoaderForAutomationApp(String automationAppId) {
+        AutomationApp automationApp = getAutomationAppById(automationAppId);
+        if (automationApp.getType() == AutomationApp.Type.EXTENSION) {
+            return extensionService.getExtensionClassloader(automationApp.getExtensionId());
+        } else if (automationApp.getType() == AutomationApp.Type.SYSTEM) {
+            return Main.class.getClassLoader();
+        } else {
+            return null;
+        }
+    }
+
     public void reprocessAutomationApp(String id) {
         AutomationApp existingAutomationApp = getAutomationAppById(id);
         String fileName = existingAutomationApp.getFile();

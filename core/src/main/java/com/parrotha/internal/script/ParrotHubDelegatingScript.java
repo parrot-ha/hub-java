@@ -39,15 +39,17 @@ public abstract class ParrotHubDelegatingScript extends DelegatingScript {
                     Map settings = entityScriptDelegate.getSettings();
                     if (settings != null) {
                         Object propertyObj = settings.get(property);
-                        if (propertyObj != null)
+                        if (propertyObj != null) {
                             return propertyObj;
+                        }
                     }
                 }
                 // look for method in the entity (this is for automation app subscribe)
                 for (MetaMethod method : getMetaClass().getMethods()) {
                     if (method.getName().equals(property) &&
-                            (method.getDeclaringClass().getName().startsWith("AA_") ||
-                                    method.getDeclaringClass().getName().startsWith("DH_"))) {
+                            (method.getDeclaringClass().getCachedSuperClass() != null &&
+                                    method.getDeclaringClass().getCachedSuperClass().getName()
+                                            .equals(ParrotHubDelegatingScript.class.getName()))) {
                         return method;
                     }
                 }

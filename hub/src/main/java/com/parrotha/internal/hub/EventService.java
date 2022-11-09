@@ -193,7 +193,7 @@ public class EventService {
                     Subscription subscriptionInfo = getSubscriptionInfo(subscriptionId);
                     if (subscriptionInfo != null) {
                         String attributeNameAndValue = subscriptionInfo.getAttributeNameAndValue();
-                        if (event.getName() != null && (event.getName().equals(attributeNameAndValue) ||
+                        if (attributeNameAndValue == null || event.getName() != null && (event.getName().equals(attributeNameAndValue) ||
                                 (event.getValue() != null && (event.getName() + "." + event.getValue()).equals(attributeNameAndValue)))) {
                             String handlerMethod = subscriptionInfo.getHandlerMethod();
                             String installedAutomationAppId = subscriptionInfo.getSubscribedAppId();

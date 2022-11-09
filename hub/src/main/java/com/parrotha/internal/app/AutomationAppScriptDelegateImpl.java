@@ -368,6 +368,12 @@ public class AutomationAppScriptDelegateImpl extends EntityScriptDelegateCommon 
         }
     }
 
+    public void subscribe(Object object, String handlerMethod) {
+        if (handlerMethod != null) {
+            subscribe(object, null, handlerMethod, null);
+        }
+    }
+
     public void subscribe(Object object, String attributeName, MetaMethod handlerMethod, Map options) {
         if (handlerMethod != null) {
             subscribe(object, attributeName, handlerMethod.getName(), options);

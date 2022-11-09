@@ -109,7 +109,7 @@ public class ParrotHubHTTPBuilder {
 
     protected final Map<Object, Object> defaultRequestHeaders = new StringHashMap<>();
 
-    protected EncoderRegistry encoders = new EncoderRegistry();
+    protected EncoderRegistry encoders = new ParrotHubEncoderRegistry();
     protected ParserRegistry parsers = new ParserRegistry();
 
     /**
