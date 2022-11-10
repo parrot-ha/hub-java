@@ -39,5 +39,11 @@ public class ZwaveTest {
         Assertions.assertNotNull(cmd);
         Assertions.assertTrue(cmd instanceof com.parrotha.zwave.commands.switchmultilevelv3.SwitchMultilevelReport);
 
+        map.clear();
+        map.put(0x71, 2);
+        cmd = new Zwave().parse("zw device: 0A, command: 7105, payload: 15 01 ", map);
+        Assertions.assertNotNull(cmd);
+        Assertions.assertTrue(cmd instanceof com.parrotha.zwave.commands.alarmv2.AlarmReport);
+
     }
 }
