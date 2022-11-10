@@ -152,6 +152,11 @@ public class EntityServiceImpl implements EntityService {
     }
 
     private void processEvent(Event event) {
+        // skip any events that have a null name
+        if (event.getName() == null) {
+            return;
+        }
+
         List<Subscription> subscriptions = eventService.getAutomationAppList(event);
 
         if ((subscriptions != null && subscriptions.size() > 0) || event.isStateChange()) {
