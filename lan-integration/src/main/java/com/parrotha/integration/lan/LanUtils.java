@@ -92,10 +92,10 @@ public class LanUtils {
             return;
         }
 
-        String portHexString = String.format("%02X", remotePort);
+        String portHexString = String.format("%04x", remotePort);
         String ipAddressHexString = Stream.of(remoteAddress.split("\\."))
                 .reduce("", (partialString, element) ->
-                        partialString + String.format("%02X", Integer.parseInt(element)));
+                        partialString + String.format("%02x", Integer.parseInt(element)));
 
         // next look for device based on ip address : port
         String ipAddressAndPortHexString = ipAddressHexString + ":" + portHexString;

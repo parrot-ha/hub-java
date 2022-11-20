@@ -94,14 +94,20 @@ public class DeviceSetting implements Serializable {
     public Object getValueAsType() {
         if ("bool".equals(type)) {
             return Boolean.parseBoolean(getValue());
-        } else if ("boolean".equals(type) || "email".equals(type) || "text".equals(type) || "enum".equals(type) || "time".equals(type)) {
+        } else if ("boolean".equals(type) || "email".equals(type) || "text".equals(type) || "string".equals(type) || "enum".equals(type) ||
+                "time".equals(type)) {
             return getValue();
         } else if ("decimal".equals(type)) {
             return new BigDecimal(getValue());
         } else if ("number".equals(type)) {
-            if (getValue() != null) return Integer.valueOf(getValue());
+            if (getValue() != null) {
+                return Integer.valueOf(getValue());
+            }
+            //TODO; handle hub, icon, password, phone
+        } else {
+            return getValue();
         }
-        //TODO; handle hub, icon, password, phone
+
 
         return null;
     }
