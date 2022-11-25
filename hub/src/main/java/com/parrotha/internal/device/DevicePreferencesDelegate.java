@@ -66,6 +66,31 @@ public class DevicePreferencesDelegate {
         preferences.put("sections", sections);
     }
 
+    public void section(Map<String, Object> options, Closure closure) {
+        // TODO: handle sections in ui, for now just ignore them and add all inputs to preferences by running closure
+        if (closure != null) {
+            closure.run();
+        }
+    }
+
+    public void section(Map<String, Object> options, String sectionTitle, Closure closure) {
+        if (options == null) {
+            options = new HashMap<>();
+        }
+        if (sectionTitle != null) {
+            options.put("title", sectionTitle);
+        }
+        section(options, closure);
+    }
+
+    public void section(String sectionTitle, Closure closure) {
+        section(null, sectionTitle, closure);
+    }
+
+    public void section(Closure closure) {
+        section(null, null, closure);
+    }
+
     public void input(Map<String, Object> params, String name, String type) {
         HashMap<String, Object> tempInput = new HashMap<>(params);
         tempInput.put("name", name);

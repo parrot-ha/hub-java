@@ -36,13 +36,8 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.PrintWriter;
-import java.net.DatagramPacket;
-import java.net.InetAddress;
-import java.net.MulticastSocket;
-import java.net.Socket;
-import java.net.SocketTimeoutException;
-import java.net.URI;
-import java.net.UnknownHostException;
+import java.io.Reader;
+import java.net.*;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -102,7 +97,9 @@ public class LanIntegration extends DeviceIntegration {
 
     @Override
     public void settingValueChanged(List<String> keys) {
-        if (logger.isDebugEnabled()) logger.debug("values changed " + keys);
+        if (logger.isDebugEnabled()) {
+            logger.debug("values changed " + keys);
+        }
         if (keys.contains("serverPort")) {
             // restart the integration
             this.stop();
@@ -159,7 +156,9 @@ public class LanIntegration extends DeviceIntegration {
         String ssdpUSN = insensitiveHeaders.getOrDefault("usn", "");
         String ssdpTerm = insensitiveHeaders.getOrDefault("st", "");
         String ssdpNTS = insensitiveHeaders.getOrDefault("nts", "");
-        String description = String.format("devicetype:04, mac:%s, networkAddress:%s, deviceAddress:%s, stringCount:04, ssdpPath:%s, ssdpUSN:%s, ssdpTerm:%s, ssdpNTS:%s", mac, networkAddress, deviceAddress, ssdpPath, ssdpUSN, ssdpTerm, ssdpNTS);
+        String description = String.format(
+                "devicetype:04, mac:%s, networkAddress:%s, deviceAddress:%s, stringCount:04, ssdpPath:%s, ssdpUSN:%s, ssdpTerm:%s, ssdpNTS:%s", mac,
+                networkAddress, deviceAddress, ssdpPath, ssdpUSN, ssdpTerm, ssdpNTS);
         Map<String, Object> properties = new HashMap<>();
         properties.put("name", "ssdpTerm");
         properties.put("value", ssdpTerm);
@@ -169,9 +168,13 @@ public class LanIntegration extends DeviceIntegration {
 
     @Override
     public HubResponse processAction(HubAction hubAction) {
-        if (hubAction == null) return null;
+        if (hubAction == null) {
+            return null;
+        }
         if (hubAction.getAction().startsWith("lan discovery")) {
-            if (logger.isDebugEnabled()) logger.debug("lan action: {}", hubAction.getAction());
+            if (logger.isDebugEnabled()) {
+                logger.debug("lan action: {}", hubAction.getAction());
+            }
             String searchValue = hubAction.getAction().substring("lan discovery ".length());
 
             try {
@@ -191,70 +194,155 @@ public class LanIntegration extends DeviceIntegration {
             // also: options.get("type") : LAN_TYPE_UDPCLIENT
             // https://community.smartthings.com/t/udp-not-possible-they-said-wait-whats-this/13466
             if (hubAction.getProtocol() == Protocol.LAN) {
-                //https://stackoverflow.com/questions/106179/regular-expression-to-match-dns-hostname-or-ip-address
-                Pattern pattern = Pattern.compile(HOST_REGEX);
-                Matcher matcher = pattern.matcher(hubAction.getAction());
-                String hostHeader = null;
-                if (matcher.find()) {
-                    hostHeader = matcher.group().substring("host:".length()).trim();
-                }
-
-                String[] hostArray = hostHeader.split(":");
-                int port = 80;
-                if (hostArray.length > 1) {
-                    port = Integer.parseInt(hostArray[1]);
-                }
-                String hostname = hostArray[0];
-
-                //https://www.codejava.net/java-se/networking/java-socket-client-examples-tcp-ip
-                try (Socket socket = new Socket(hostname, port)) {
-
-                    OutputStream output = socket.getOutputStream();
-                    PrintWriter writer = new PrintWriter(output, true);
-
-                    writer.print(hubAction.getAction());
-                    writer.flush();
-                    InputStream input = socket.getInputStream();
-                    BufferedReader reader = new BufferedReader(new InputStreamReader(input));
-                    String line;
-
-                    StringBuilder head = new StringBuilder();
-                    StringBuilder body = new StringBuilder();
-
-                    boolean foundBody = false;
-                    while ((line = reader.readLine()) != null) {
-                        if (TextUtils.isBlank(line)) {
-                            foundBody = true;
-                        } else {
-                            if (foundBody) {
-                                body.append(line).append("\n");
-                            } else {
-                                head.append(line).append("\n");
-                            }
-                        }
-                    }
-                    if (hubAction.getCallback() != null) {
-                        hubResponse.setBody(body.toString());
-                    } else {
-                        // send message to device
-                        LanUtils.processLanMessage(this,
-                                LanUtils.getFormattedMacAddressForIpAddress(hostname),
-                                hostname,
-                                port,
-                                body.toString(),
-                                head.toString());
-                    }
-                } catch (UnknownHostException ex) {
-                    System.out.println("Server not found: " + ex.getMessage());
-                } catch (IOException ex) {
-                    System.out.println("I/O error: " + ex.getMessage());
-                }
+                hubResponse = sendRawHubAction(hubAction);
             } else {
                 logger.warn("Not implemented yet, Protocol: {} action: {}", hubAction.getProtocol(), hubAction.getAction());
             }
             return hubResponse;
         }
         return null;
+    }
+
+    private HubResponse sendRawHubAction(HubAction hubAction) {
+        HubResponse hubResponse = new HubResponse();
+
+        //https://stackoverflow.com/questions/106179/regular-expression-to-match-dns-hostname-or-ip-address
+        Pattern pattern = Pattern.compile(HOST_REGEX);
+        Matcher matcher = pattern.matcher(hubAction.getAction());
+        String hostHeader = null;
+        if (matcher.find()) {
+            hostHeader = matcher.group().substring("host:".length()).trim();
+        }
+
+        String[] hostArray = hostHeader.split(":");
+        int port = 80;
+        if (hostArray.length > 1) {
+            port = Integer.parseInt(hostArray[1]);
+        }
+        String hostname = hostArray[0];
+
+        //https://www.codejava.net/java-se/networking/java-socket-client-examples-tcp-ip
+        try (Socket socket = new Socket(hostname, port)) {
+
+            OutputStream output = socket.getOutputStream();
+            PrintWriter writer = new PrintWriter(output, true);
+
+            writer.print(hubAction.getAction());
+            writer.flush();
+            InputStream input = socket.getInputStream();
+            BufferedReader reader = new BufferedReader(new InputStreamReader(input));
+
+            StringBuilder head = new StringBuilder();
+            String body = "";
+
+            try {
+                // read the headers
+                while (true) {
+                    String headerLine = reader.readLine();
+                    if (headerLine.length() == 0) {
+                        break;
+                    }
+                    head.append(headerLine).append("\n");
+                }
+
+                StringBuffer buf = new StringBuffer();
+                InputStream in = new HttpInputStream(reader, head.toString().split("\n"));
+                int c;
+                while ((c = in.read()) != -1) {
+                    buf.append((char) c);
+                }
+                body = buf.toString();
+            } catch (IOException ioExcep) {
+                logger.info("IOException", ioExcep);
+            }
+            if (hubAction.getCallback() != null) {
+                hubResponse.setBody(body.toString());
+            } else {
+                // send message to device
+                LanUtils.processLanMessage(this,
+                        LanUtils.getFormattedMacAddressForIpAddress(hostname),
+                        hostname,
+                        port,
+                        body.toString(),
+                        head.toString());
+            }
+        } catch (UnknownHostException ex) {
+            System.out.println("Server not found: " + ex.getMessage());
+        } catch (IOException ex) {
+            System.out.println("I/O error: " + ex.getMessage());
+        }
+
+        return hubResponse;
+    }
+
+    // thanks to https://commandlinefanatic.com/cgi-bin/showarticle.cgi?article=art077
+    private class HttpInputStream extends InputStream  {
+        private Reader source;
+        private int bytesRemaining;
+        private boolean chunked = false;
+
+        public HttpInputStream(Reader source, String[] headers) throws IOException  {
+            this.source = source;
+
+            for(String header : headers) {
+                if (header.toLowerCase().startsWith("transfer-encoding") && header.contains("chunked")) {
+                    chunked = true;
+                    bytesRemaining = parseChunkSize();
+                } else if (header.toLowerCase().startsWith("content-length")) {
+                    try  {
+                        String[] contentLengthHeader = header.split(":");
+                        Integer.parseInt(header.split(":")[1]);
+                    } catch (Exception e)  {
+                        throw new IOException("Malformed or missing Content-Length header");
+                    }
+                }
+            }
+        }
+
+        private int parseChunkSize() throws IOException {
+            int b;
+            int chunkSize = 0;
+
+            while ((b = source.read()) != '\r') {
+                chunkSize = (chunkSize << 4) |
+                        ((b > '9') ?
+                                (b > 'F') ?
+                                        (b - 'a' + 10) :
+                                        (b - 'A' + 10) :
+                                (b - '0'));
+            }
+            // Consume the trailing '\n'
+            if (source.read() != '\n')  {
+                throw new IOException("Malformed chunked encoding");
+            }
+
+            return chunkSize;
+        }
+
+        public int read() throws IOException  {
+            if (bytesRemaining == 0)  {
+                if (!chunked) {
+                    return -1;
+                } else  {
+                    // Read next chunk size; return -1 if 0 indicating end of stream
+                    // Read and discard extraneous \r\n
+                    if (source.read() != '\r')  {
+                        throw new IOException("Malformed chunked encoding");
+                    }
+                    if (source.read() != '\n')  {
+                        throw new IOException("Malformed chunked encoding");
+                    }
+                    bytesRemaining = parseChunkSize();
+
+                    if (bytesRemaining == 0)  {
+                        return -1;
+                    }
+                }
+            }
+
+            bytesRemaining -= 1;
+            return source.read();
+        }
     }
 
     //https://objectpartners.com/2014/03/25/a-groovy-time-with-upnp-and-wemo/

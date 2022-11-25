@@ -16,23 +16,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.parrotha.zwave.internal;
+package groovyx.net.http;
 
-import groovy.beans.DefaultPropertyWriter;
-import org.codehaus.groovy.runtime.typehandling.GroovyCastException;
+import groovy.json.JsonBuilder;
+import org.apache.http.HttpEntity;
 
-import java.lang.reflect.InvocationTargetException;
-import java.util.Map;
+import java.io.UnsupportedEncodingException;
 
-public class BeanUtils {
-    public static void populate(final Object bean, final Map<String, ? extends Object> properties)
-            throws IllegalAccessException, InvocationTargetException {
-        for (Object key : properties.keySet()) {
-            try {
-                DefaultPropertyWriter.INSTANCE.write(bean, (String) key, properties.get(key));
-            } catch (GroovyCastException gce) {
-                gce.printStackTrace();
-            }
+public class ParrotHubEncoderRegistry extends EncoderRegistry {
+    @Override
+    public HttpEntity encodeJSON(Object model, Object contentType) throws UnsupportedEncodingException {
+        JsonBuilder json = new JsonBuilder(model);
+
+        if (contentType == null) {
+            contentType = ContentType.JSON;
         }
+        return this.createEntity(contentType, json.toString());
     }
 }

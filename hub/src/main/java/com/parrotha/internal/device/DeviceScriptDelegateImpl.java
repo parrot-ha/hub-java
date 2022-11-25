@@ -41,6 +41,7 @@ import com.parrotha.zigbee.ZigBee;
 import com.parrotha.zwave.Zwave;
 import groovy.lang.Closure;
 import groovy.lang.MetaMethod;
+import org.codehaus.groovy.runtime.GStringImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -412,27 +413,46 @@ public class DeviceScriptDelegateImpl extends EntityScriptDelegateCommon impleme
      * @param delay
      * @return
      */
-    public List<String> delayBetween(List<String> commands, int delay) {
+    public List<String> delayBetween(List<Object> commands, int delay) {
         if (commands == null) {
             return null;
         }
         if (commands.size() == 0) {
-            return commands;
+            return new ArrayList<>();
         }
 
+        List<Object> flatList = flattenList(commands);
         List<String> returnList = new ArrayList<>();
-        int index = 0;
-        for (String command : commands) {
-            if (index > 0) {
-                returnList.add(String.format("delay %d", delay));
+
+        boolean addDelay = false;
+        for (Object listItem : flatList) {
+            if (listItem instanceof String || listItem instanceof GStringImpl) {
+                if (addDelay) {
+                    returnList.add(String.format("delay %d", delay));
+                    addDelay = false;
+                }
+                if (!listItem.toString().startsWith("delay")) {
+                    returnList.add(listItem.toString());
+                    addDelay = true;
+                }
             }
-            returnList.add(command);
-            index++;
         }
         return returnList;
     }
 
-    public List<String> delayBetween(List<String> commands) {
+    private List<Object> flattenList(List<Object> list) {
+        List<Object> returnList = new ArrayList<>();
+        for (Object listItem : list) {
+            if (listItem instanceof List) {
+                returnList.addAll(flattenList((List<Object>) listItem));
+            } else {
+                returnList.add(listItem);
+            }
+        }
+        return returnList;
+    }
+
+    public List<String> delayBetween(List<Object> commands) {
         return delayBetween(commands, 100);
     }
 
@@ -510,10 +530,35 @@ public class DeviceScriptDelegateImpl extends EntityScriptDelegateCommon impleme
         closure.run();
     }
 
+    public void section(Map<String, Object> options, Closure closure) {
+        // TODO: handle sections in ui, for now just ignore them and add all inputs to preferences by running closure
+        if (closure != null) {
+            closure.run();
+        }
+    }
+
+    public void section(Map<String, Object> options, String sectionTitle, Closure closure) {
+        if (options == null) {
+            options = new HashMap<>();
+        }
+        if (sectionTitle != null) {
+            options.put("title", sectionTitle);
+        }
+        section(options, closure);
+    }
+
+    public void section(String sectionTitle, Closure closure) {
+        section(null, sectionTitle, closure);
+    }
+
+    public void section(Closure closure) {
+        section(null, null, closure);
+    }
+
     void input(Map options, String name, String type) {
         options.put("name", name);
         options.put("type", type);
-        ((List<Map>) metadataValue.get("preferences")).add(options);
+        input(options);
     }
 
     void input(Map options) {

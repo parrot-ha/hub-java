@@ -38,6 +38,10 @@ public class HubAction {
     public HubAction() {
     }
 
+    public HubAction(Map params) {
+        this(params, null);
+    }
+
     public HubAction(String action) {
         this.action = action;
     }
@@ -60,7 +64,6 @@ public class HubAction {
     public HubAction(Map params, String dni, Map options) {
         this.protocol = (Protocol) params.getOrDefault("protocol", Protocol.LAN);
         this.options = options;
-
 
         StringBuilder actionStringBuilder = new StringBuilder();
         actionStringBuilder.append(params.getOrDefault("method", "POST")).append(" ");

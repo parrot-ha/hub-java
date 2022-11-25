@@ -28,6 +28,7 @@ import com.parrotha.device.Event;
 import com.parrotha.device.HubAction;
 import com.parrotha.exception.NotFoundException;
 import com.parrotha.internal.ChangeTrackingMap;
+import com.parrotha.internal.app.AutomationApp;
 import com.parrotha.internal.app.AutomationAppScriptDelegateImpl;
 import com.parrotha.internal.app.AutomationAppService;
 import com.parrotha.internal.app.InstalledAutomationApp;
@@ -151,6 +152,11 @@ public class EntityServiceImpl implements EntityService {
     }
 
     private void processEvent(Event event) {
+        // skip any events that have a null name
+        if (event.getName() == null) {
+            return;
+        }
+
         List<Subscription> subscriptions = eventService.getAutomationAppList(event);
 
         if ((subscriptions != null && subscriptions.size() > 0) || event.isStateChange()) {
@@ -915,38 +921,53 @@ public class EntityServiceImpl implements EntityService {
         InstalledAutomationApp installedAutomationApp = automationAppService.getInstalledAutomationApp(id);
 
         if (installedAutomationApp != null) {
-
             String automationAppId = installedAutomationApp.getAutomationAppId();
-            if (automationAppId == null) {
-                return null;
-            }
+            return getScriptForAutomationApp(automationAppId);
+        }
+        return null;
+    }
 
-            Class<Script> s = automationAppScripts.get(automationAppId);
-            if (s == null) {
-                CompilerConfiguration config = new CompilerConfiguration();
-                config.setScriptBaseClass("com.parrotha.internal.script.ParrotHubDelegatingScript");
-                //GroovyShell shell = new GroovyShell(getClass().getClassLoader(), new Binding(), config);
-                try {
-                    //InputStream is = getClass().getClassLoader().getResourceAsStream(automationAppFileName);
-                    String automationAppFileName = automationAppService.getAutomationAppById(automationAppId).getFile();
-                    InputStream is = new FileInputStream(automationAppFileName);
+    public Class<Script> getScriptForAutomationApp(String automationAppId) {
+        if (automationAppId == null) {
+            return null;
+        }
+        AutomationApp automationApp = automationAppService.getAutomationAppById(automationAppId);
+
+        Class<Script> s = automationAppScripts.get(automationAppId);
+        if (s == null) {
+            try {
+                if (automationApp.getType() == AutomationApp.Type.USER || automationApp.getType() == AutomationApp.Type.EXTENSION_SOURCE) {
+                    InputStream is = new FileInputStream(automationApp.getFile());
                     if (is != null) {
                         String srcCode = IOUtils.toString(is, StandardCharsets.UTF_8);
-                        //Script script = shell.parse(srcCode);
+
+                        CompilerConfiguration config = new CompilerConfiguration();
+                        config.setScriptBaseClass("com.parrotha.internal.script.ParrotHubDelegatingScript");
+
                         GroovyClassLoader gcl = new GroovyClassLoader(this.getClass().getClassLoader(), config);
                         Class<Script> scriptClass = (Class<Script>) gcl.parseClass(srcCode, "AA_" + automationAppId);
 
                         automationAppScripts.put(automationAppId, scriptClass);
                         s = scriptClass;
                     }
-                } catch (IOException e) {
-                    e.printStackTrace();
+                } else {
+                    //process class in classpath
+                    try {
+                        ClassLoader myClassLoader = automationAppService.getClassLoaderForAutomationApp(automationAppId);
+                        Class<Script> scriptClass = (Class<Script>) Class
+                                .forName(automationApp.getFile().substring("class:".length()), false, myClassLoader);
+                        automationAppScripts.put(automationAppId, scriptClass);
+                        s = scriptClass;
+                    } catch (ClassNotFoundException classNotFoundException) {
+                        classNotFoundException.printStackTrace();
+                    }
                 }
+            } catch (IOException e) {
+                e.printStackTrace();
             }
-
-            return s;
         }
-        return null;
+
+        return s;
     }
 
 

@@ -21,6 +21,7 @@ package com.parrotha.internal.device;
 import com.parrotha.app.exception.UnknownDeviceTypeException;
 import com.parrotha.device.Event;
 import com.parrotha.device.HubAction;
+import com.parrotha.device.HubMultiAction;
 import com.parrotha.device.HubResponse;
 import com.parrotha.device.Protocol;
 import com.parrotha.internal.ChangeTrackingMap;
@@ -159,7 +160,11 @@ public class DeviceService implements ExtensionStateListener {
                     if (obj instanceof String || obj instanceof GString) {
                         processStringRetObj(device, obj.toString());
                     } else if (obj instanceof HubAction) {
-                        processHubAction(device.getIntegration().getId(), (HubAction) obj);
+                        HubAction hubAction = (HubAction) retObj;
+                        if (hubAction.getDni() == null) {
+                            hubAction.setDni(device.getDeviceNetworkId());
+                        }
+                        processHubAction(device.getIntegration().getId(), hubAction);
                     } else {
                         logger.warn("TODO: process this: " + obj.getClass().getName());
                     }
@@ -171,7 +176,22 @@ public class DeviceService implements ExtensionStateListener {
                 if (device.getIntegration() != null) {
                     integrationId = device.getIntegration().getId();
                 }
-                processHubAction(integrationId, (HubAction) retObj);
+                HubAction hubAction = (HubAction) retObj;
+                if (hubAction.getDni() == null) {
+                    hubAction.setDni(device.getDeviceNetworkId());
+                }
+                processHubAction(integrationId, hubAction);
+            } else if (retObj instanceof HubMultiAction) {
+                String integrationId = null;
+                if (device.getIntegration() != null) {
+                    integrationId = device.getIntegration().getId();
+                }
+                for (HubAction hubAction : ((HubMultiAction) retObj).getActions()) {
+                    if (hubAction.getDni() == null) {
+                        hubAction.setDni(device.getDeviceNetworkId());
+                    }
+                    processHubAction(integrationId, hubAction);
+                }
             } else {
                 if (retObj != null) {
                     logger.warn("TODO: process this retObj: " + retObj.getClass().getName());

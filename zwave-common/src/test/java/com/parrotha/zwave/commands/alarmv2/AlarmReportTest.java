@@ -16,23 +16,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.parrotha.zwave.internal;
+package com.parrotha.zwave.commands.alarmv2;
 
-import groovy.beans.DefaultPropertyWriter;
-import org.codehaus.groovy.runtime.typehandling.GroovyCastException;
+import com.parrotha.internal.utils.HexUtils;
+import org.junit.jupiter.api.Test;
 
-import java.lang.reflect.InvocationTargetException;
-import java.util.Map;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class BeanUtils {
-    public static void populate(final Object bean, final Map<String, ? extends Object> properties)
-            throws IllegalAccessException, InvocationTargetException {
-        for (Object key : properties.keySet()) {
-            try {
-                DefaultPropertyWriter.INSTANCE.write(bean, (String) key, properties.get(key));
-            } catch (GroovyCastException gce) {
-                gce.printStackTrace();
-            }
-        }
+public class AlarmReportTest {
+    @Test
+    public void testSetPayload() {
+        AlarmReport alarmReport = new AlarmReport();
+        alarmReport.setPayload(HexUtils.hexStringToShortList("15 01"));
+
+        assertEquals((short) 21, alarmReport.getAlarmType());
+        assertEquals((short) 1, alarmReport.getAlarmLevel());
     }
 }

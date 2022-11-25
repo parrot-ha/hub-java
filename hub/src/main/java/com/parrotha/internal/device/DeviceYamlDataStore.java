@@ -60,11 +60,14 @@ public class DeviceYamlDataStore implements DeviceDataStore {
             return devices;
         }
         for (Device device : getAllDevices()) {
-            List<String> capabilityList = getDeviceHandler(device.getDeviceHandlerId()).getCapabilityList();
-            if (capabilityList != null) {
-                for (String deviceCapability : capabilityList) {
-                    if (capability.equalsIgnoreCase(StringUtils.deleteWhitespace(deviceCapability))) {
-                        devices.add(device);
+            DeviceHandler deviceHandler = getDeviceHandler(device.getDeviceHandlerId());
+            if (deviceHandler != null) {
+                List<String> capabilityList = deviceHandler.getCapabilityList();
+                if (capabilityList != null) {
+                    for (String deviceCapability : capabilityList) {
+                        if (capability.equalsIgnoreCase(StringUtils.deleteWhitespace(deviceCapability))) {
+                            devices.add(device);
+                        }
                     }
                 }
             }

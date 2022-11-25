@@ -18,6 +18,8 @@
  */
 package com.parrotha.internal.utils;
 
+import org.apache.commons.lang3.StringUtils;
+
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -41,7 +43,7 @@ public class HexUtils {
         if (value == null)
             throw new NullPointerException("Value to convert cannot be null.");
 
-        value = value.trim();
+        value = StringUtils.deleteWhitespace(value);
         if (value.startsWith(HEX_HEADER))
             value = value.substring((HEX_HEADER).length());
         int len = value.length();
