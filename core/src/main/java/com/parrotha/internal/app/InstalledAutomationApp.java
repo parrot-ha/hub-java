@@ -100,11 +100,14 @@ public class InstalledAutomationApp implements Serializable, Cloneable {
     }
 
     public Map getState() {
+        if(state == null) {
+            state = new LinkedHashMap<>();
+        }
         return state;
     }
 
     public void setState(Map state) {
-        this.state = state != null ? new LinkedHashMap(state) : null;
+        this.state = (state != null) ? new LinkedHashMap(state) : null;
     }
 
     public String getParentInstalledAutomationAppId() {
