@@ -260,6 +260,10 @@ public class ZigBeeHandler implements ZigBeeNetworkStateListener, ZigBeeAnnounce
     }
 
     private synchronized boolean checkAndUpdateNodeInitializing(ZigBeeNode node) {
+        // wait for node added message where node has endpoints.
+        if(node.getEndpoints() == null || node.getEndpoints().size() == 0) {
+            return false;
+        }
         if (joinedDevices == null || !joinedDevices.containsKey(node.getIeeeAddress())) {
             return false;
         }
