@@ -99,7 +99,7 @@ public class DeviceYamlDataStore implements DeviceDataStore {
 
     @Override
     public Device getDeviceByIntegrationAndDNI(String integrationId, String deviceNetworkId) {
-        Device device = getDevices().get(getDeviceDNItoIDMap().get((integrationId != null ? integrationId : "null") + ":" + deviceNetworkId));
+        Device device = getDevices().get(getDeviceDNItoIDMap().get((integrationId != null ? integrationId : "null") + ":" + deviceNetworkId.toUpperCase()));
         if (device != null) {
             return SerializationUtils.clone(device);
         }
@@ -313,7 +313,7 @@ public class DeviceYamlDataStore implements DeviceDataStore {
                         Map deviceMap = yaml.load(new FileInputStream(f));
                         Device d = createDeviceFromMap(deviceMap);
                         newDevices.put(d.getId(), d);
-                        newDeviceDNItoIdMap.put((d.getIntegration() != null ? d.getIntegration().getId() : "null") + ":" + d.getDeviceNetworkId(),
+                        newDeviceDNItoIdMap.put((d.getIntegration() != null ? d.getIntegration().getId() : "null") + ":" + d.getDeviceNetworkId().toUpperCase(),
                                 d.getId());
                         if (StringUtils.isNotEmpty(d.getParentDeviceId())) {
                             addChildDevice(newChildDeviceMap, d.getParentDeviceId(), d.getId());
