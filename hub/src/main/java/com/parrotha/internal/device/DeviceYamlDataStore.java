@@ -99,7 +99,8 @@ public class DeviceYamlDataStore implements DeviceDataStore {
 
     @Override
     public Device getDeviceByIntegrationAndDNI(String integrationId, String deviceNetworkId) {
-        Device device = getDevices().get(getDeviceDNItoIDMap().get((integrationId != null ? integrationId : "null") + ":" + deviceNetworkId.toUpperCase()));
+        Device device = getDevices().get(
+                getDeviceDNItoIDMap().get((integrationId != null ? integrationId : "null") + ":" + deviceNetworkId.toUpperCase()));
         if (device != null) {
             return SerializationUtils.clone(device);
         }
@@ -191,9 +192,14 @@ public class DeviceYamlDataStore implements DeviceDataStore {
     public boolean updateDevice(Device device) {
         Device existingDevice = getDevices().get(device.getId());
         if (existingDevice != null) {
+            // if device network id was updated, update dni to id map
+            if (!existingDevice.getDeviceNetworkId().equals(device.getDeviceNetworkId())) {
+                getDeviceDNItoIDMap().remove(existingDevice.getDeviceNetworkId());
+                getDeviceDNItoIDMap().put(device.getDeviceNetworkId(), existingDevice.getId());
+                existingDevice.setDeviceNetworkId(device.getDeviceNetworkId());
+            }
             // TODO: check for changes instead of assigning all values and writing
             existingDevice.setDeviceHandlerId(device.getDeviceHandlerId());
-            existingDevice.setDeviceNetworkId(device.getDeviceNetworkId());
             existingDevice.setName(device.getName());
             existingDevice.setCurrentStates(device.getCurrentStates());
             existingDevice.setLabel(device.getLabel());
@@ -313,7 +319,8 @@ public class DeviceYamlDataStore implements DeviceDataStore {
                         Map deviceMap = yaml.load(new FileInputStream(f));
                         Device d = createDeviceFromMap(deviceMap);
                         newDevices.put(d.getId(), d);
-                        newDeviceDNItoIdMap.put((d.getIntegration() != null ? d.getIntegration().getId() : "null") + ":" + d.getDeviceNetworkId().toUpperCase(),
+                        newDeviceDNItoIdMap.put(
+                                (d.getIntegration() != null ? d.getIntegration().getId() : "null") + ":" + d.getDeviceNetworkId().toUpperCase(),
                                 d.getId());
                         if (StringUtils.isNotEmpty(d.getParentDeviceId())) {
                             addChildDevice(newChildDeviceMap, d.getParentDeviceId(), d.getId());
