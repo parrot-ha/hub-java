@@ -18,6 +18,10 @@
                       <td>{{ hub.id }}</td>
                     </tr>
                     <tr>
+                      <td>Version</td>
+                      <td>{{ hub.version }}</td>
+                    </tr>
+                    <tr>
                       <td>Date Created</td>
                       <td></td>
                     </tr>
@@ -34,8 +38,8 @@
                       <td>
                         <ul>
                           <li
-                            v-for="(value, name, j) in integration.settings"
-                            :key="j"
+                            v-for="(value, name) in integration.settings"
+                            :key="name"
                           >
                             {{ name }}: <strong>{{ value }}</strong>
                           </li>

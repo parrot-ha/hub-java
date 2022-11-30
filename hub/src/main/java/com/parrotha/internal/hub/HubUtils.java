@@ -19,11 +19,19 @@
 package com.parrotha.internal.hub;
 
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Properties;
 
 /**
  * Utility methods that are used in multiple hub code locations
  */
 public class HubUtils {
+    private static final Logger logger = LoggerFactory.getLogger(HubUtils.class);
+
     public static Long timeOffset(Object object) {
         if (object == null) return 0L;
         if (object instanceof Number) return timeOffset((Number)object);
@@ -51,5 +59,25 @@ public class HubUtils {
             }
         }
         return 0L;
+    }
+
+    private static String hubVersion = null;
+    public static String getHubVersion() {
+        if(hubVersion == null) {
+            ClassLoader loader = HubUtils.class.getClassLoader();
+            Properties props = new Properties();
+            try (InputStream resourceStream = loader.getResourceAsStream("parrot-hub-version.properties")) {
+                if(resourceStream != null) {
+                    props.load(resourceStream);
+                    hubVersion = props.getProperty("version");
+                }
+            } catch (IOException e) {
+                logger.warn("Unable to load parrot-hub-version.properties file", e);
+            }
+            if(hubVersion == null) {
+                hubVersion = "DEVELOPMENT";
+            }
+        }
+        return hubVersion;
     }
 }

@@ -87,9 +87,14 @@ public class IntegrationApiHandler extends BaseApiHandler {
                 ctx.contentType("application/json");
                 ctx.result(new JsonBuilder(integrationList).toString());
             } else {
+                List<Map<String, Object>> integrationList = new ArrayList<>();
+                for (IntegrationConfiguration integration : integrations) {
+                    integrationList.add(integration.getDisplayValues());
+                }
+
                 ctx.status(200);
                 ctx.contentType("application/json");
-                ctx.result(new JsonBuilder(integrations).toString());
+                ctx.result(new JsonBuilder(integrationList).toString());
             }
         });
 

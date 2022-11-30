@@ -95,7 +95,7 @@ public class LocationApiHandler extends BaseApiHandler {
             Hub hub = locationService.getHub();
             model.put("id", hub.getId());
             model.put("name", hub.getName());
-
+            model.put("version", HubUtils.getHubVersion());
             ctx.status(200);
             ctx.contentType("application/json");
             ctx.result(new JsonBuilder(model).toString());

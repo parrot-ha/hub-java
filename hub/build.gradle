@@ -112,6 +112,20 @@ task copyIntellijResources(type: Copy) {
     into "${projectDir}/out/production/resources/web"
 }
 
+task createProperties(dependsOn: processResources) {
+    doLast {
+        new File("$buildDir/resources/main/parrot-hub-version.properties").withWriter { w ->
+            Properties p = new Properties()
+            p['version'] = project.version.toString()
+            p.store w, null
+        }
+    }
+}
+
+compileJava {
+    dependsOn createProperties
+}
+
 jar {
     archiveBaseName = 'parrot-hub'
 }
