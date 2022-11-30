@@ -83,7 +83,7 @@ public class ZigBeeYamlDataStore implements ZigBeeNetworkDataStore {
         }
 
         for (File file : files) {
-            if (!file.getName().toLowerCase().endsWith(".yaml")) {
+            if (file.getName().toLowerCase().startsWith(".tmp_") || !file.getName().toLowerCase().endsWith(".yaml")) {
                 continue;
             }
 
