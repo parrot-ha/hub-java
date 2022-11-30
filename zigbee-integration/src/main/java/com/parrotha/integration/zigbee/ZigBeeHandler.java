@@ -201,13 +201,10 @@ public class ZigBeeHandler implements ZigBeeNetworkStateListener, ZigBeeAnnounce
         logger.info("Network State Updated: " + state.toString());
         if (state == ZigBeeNetworkState.ONLINE) {
             this.restartCount = 0;
-        } else if ((state == ZigBeeNetworkState.OFFLINE || state == ZigBeeNetworkState.SHUTDOWN) && this.running && this.restartCount < 5) {
+        } else if (state == ZigBeeNetworkState.OFFLINE && this.running && this.restartCount < 5) {
             // zigbee shutdown, but it should be running
             this.restartCount++;
-            if (this.networkManager != null) {
-                this.networkManager.shutdown();
-                this.networkManager = null;
-            }
+            this.stop();
             this.startWithReset(false);
             //TODO: if this fails, we should have a watchdog to start the network again.
         }
@@ -261,7 +258,7 @@ public class ZigBeeHandler implements ZigBeeNetworkStateListener, ZigBeeAnnounce
 
     private synchronized boolean checkAndUpdateNodeInitializing(ZigBeeNode node) {
         // wait for node added message where node has endpoints.
-        if(node.getEndpoints() == null || node.getEndpoints().size() == 0) {
+        if (node.getEndpoints() == null || node.getEndpoints().size() == 0) {
             return false;
         }
         if (joinedDevices == null || !joinedDevices.containsKey(node.getIeeeAddress())) {
