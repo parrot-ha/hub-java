@@ -116,7 +116,9 @@
                           v-model="settings[body.name].value"
                         ></v-text-field>
                       </div>
-                      <div v-if="body.type === 'text' || body.type === 'string'">
+                      <div
+                        v-if="body.type === 'text' || body.type === 'string'"
+                      >
                         <v-text-field
                           :id="body.name"
                           :name="body.name"

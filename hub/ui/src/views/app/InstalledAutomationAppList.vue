@@ -19,17 +19,20 @@
               >
                 <template v-slot:item.label="{ item }">
                   <router-link
-                    :to="{ name: 'InstalledAutomationAppConfig', params: { id: item.id } }"
+                    :to="{
+                      name: 'InstalledAutomationAppConfig',
+                      params: { id: item.id }
+                    }"
                     >{{ item.label }}</router-link
                   >
                 </template>
                 <template v-slot:item.id="{ item }">
                   <router-link
-                          :to="{
-                          name: 'InstalledAutomationAppInfo',
-                          params: { id: item.id }
-                        }"
-                  ><v-icon>mdi-alert-circle-outline</v-icon></router-link
+                    :to="{
+                      name: 'InstalledAutomationAppInfo',
+                      params: { id: item.id }
+                    }"
+                    ><v-icon>mdi-alert-circle-outline</v-icon></router-link
                   >
                 </template>
               </v-data-table>
@@ -56,7 +59,7 @@ export default {
           width: '5%'
         },
         { text: 'Label', value: 'label' },
-        { text: 'Type', value: 'type' },
+        { text: 'Type', value: 'type' }
       ]
     };
   },

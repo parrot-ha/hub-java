@@ -107,7 +107,12 @@
                   <table>
                     <thead>
                       <tr>
-                        <th v-for="column in bodyItem.columns" :key="column.data">{{ column.title }}</th>
+                        <th
+                          v-for="column in bodyItem.columns"
+                          :key="column.data"
+                        >
+                          {{ column.title }}
+                        </th>
                       </tr>
                     </thead>
                     <tbody>
@@ -128,7 +133,9 @@
                 <div v-if="bodyItem.type === 'button'">
                   <v-btn
                     :color="bodyItem.color"
-                    @click="handleButtonAction(bodyItem.action, bodyItem.response)"
+                    @click="
+                      handleButtonAction(bodyItem.action, bodyItem.response)
+                    "
                     :disabled="pageData[bodyItem.disabled]"
                   >
                     {{ bodyItem.title }}
@@ -259,18 +266,20 @@ export default {
   },
   methods: {
     handleButtonAction: function(action, responseIndex) {
-      console.log('handleButtonAction ' + action + ' response ' + responseIndex);
+      console.log(
+        'handleButtonAction ' + action + ' response ' + responseIndex
+      );
 
       fetch(`/api/integrations/${this.integrationId}/button-action`, {
         method: 'POST',
-        body: JSON.stringify({"action": action})
+        body: JSON.stringify({ action: action })
       })
-      .then(response => response.json())
-      .then(data => {
-        if (typeof data !== 'undefined' && data != null) {
-          this.pageData[responseIndex] = data.responseData;
-        }
-      });
+        .then(response => response.json())
+        .then(data => {
+          if (typeof data !== 'undefined' && data != null) {
+            this.pageData[responseIndex] = data.responseData;
+          }
+        });
     },
     deleteIntegration: function() {
       fetch(`/api/integrations/${this.integrationId}`, {

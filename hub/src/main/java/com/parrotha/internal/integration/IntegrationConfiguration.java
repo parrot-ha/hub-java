@@ -23,8 +23,10 @@ import org.apache.commons.lang3.StringUtils;
 
 import java.beans.Transient;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 public class IntegrationConfiguration {
     private String id;
@@ -61,6 +63,26 @@ public class IntegrationConfiguration {
         } else {
             return null;
         }
+    }
+
+    @Transient
+    public Map<String, Object> getDisplayValues() {
+        Map<String, Object> integrationMap = new HashMap<>();
+        integrationMap.put("id", getId());
+        integrationMap.put("name", getName());
+        integrationMap.put("label", getLabel() != null ? getLabel() : getName());
+        if (getSettings() != null) {
+            Map<String, String> settingsMap = new HashMap<>();
+            for (IntegrationSetting integrationSetting : getSettings()) {
+                if (!"password".equals(integrationSetting.getType())) {
+                    settingsMap.put(integrationSetting.getName(), integrationSetting.getValue());
+                } else {
+                    settingsMap.put(integrationSetting.getName(), "********");
+                }
+            }
+            integrationMap.put("settings", settingsMap);
+        }
+        return integrationMap;
     }
 
     public String getId() {

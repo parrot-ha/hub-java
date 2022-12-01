@@ -24,7 +24,8 @@
                   >
                 </template>
                 <template v-slot:item.id="{ item }">
-                  <router-link :to="{ name: 'DeviceConfig', params: { id: item.id } }"
+                  <router-link
+                    :to="{ name: 'DeviceConfig', params: { id: item.id } }"
                     ><v-icon>mdi-alert-circle-outline</v-icon></router-link
                   >
                 </template>
