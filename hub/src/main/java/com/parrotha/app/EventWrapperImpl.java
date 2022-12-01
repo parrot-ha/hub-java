@@ -182,4 +182,9 @@ public class EventWrapperImpl implements EventWrapper {
     public boolean isPhysical() {
         return !isDigital();
     }
+
+    @Override
+    public String toString() {
+        return event.toString();
+    }
 }
