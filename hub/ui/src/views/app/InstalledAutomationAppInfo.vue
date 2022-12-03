@@ -80,6 +80,33 @@
           <v-btn color="primary" @click="runUpdatedMethod">
             Run Updated Method
           </v-btn>
+          <v-dialog
+            v-model="iaaUninstallDialog"
+            persistent
+            max-width="290"
+          >
+            <template v-slot:activator="{ on, attrs }">
+              <v-btn color="error" v-bind="attrs" v-on="on">Uninstall</v-btn>
+            </template>
+            <v-card>
+              <v-card-title class="headline">
+                Are you sure?
+              </v-card-title>
+              <v-card-text
+                >Are you sure you want to uninstall this Automation
+                App?</v-card-text
+              >
+              <v-card-actions>
+                <v-spacer></v-spacer>
+                <v-btn color="primary" text @click="iaaUninstallDialog = false">
+                  Cancel
+                </v-btn>
+                <v-btn color="error" text @click="uninstallClick">
+                  Delete
+                </v-btn>
+              </v-card-actions>
+            </v-card>
+          </v-dialog>
         </v-col>
       </v-row>
     </v-layout>
@@ -99,6 +126,7 @@ export default {
     return {
       iaaId: '',
       installedAutomationApp: {},
+      iaaUninstallDialog: false,
       schedules: {}
     };
   },
@@ -127,9 +155,21 @@ export default {
       })
         .then(handleErrors)
         .then(response => {});
+    },
+    uninstallClick: function(event) {
+      fetch(`/api/iaas/${this.iaaId}`, {
+        method: 'DELETE'
+      })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            this.$router.push('/iaas');
+          } else {
+            console.log('problem deleting automation app');
+          }
+        });
     }
   },
-
   mounted: function() {
     this.iaaId = this.$route.params.id;
 

@@ -96,23 +96,26 @@
                                   </v-card>
                                 </v-dialog>
                                 <v-tooltip
-                                        bottom
-                                        v-if="extension.updateAvailable"
-                                ><template v-slot:activator="{ on }">
-                                  <v-btn
-                                          class="ma-2"
-                                          text
-                                          icon
-                                          color="blue lighten-2"
-                                          @click="updateExtension(extension.id)"
-                                          v-on="on"
-                                  >
-                                    <v-icon
-                                    >mdi-cloud-download-outline</v-icon
+                                  bottom
+                                  v-if="extension.updateAvailable"
+                                  ><template v-slot:activator="{ on }">
+                                    <v-btn
+                                      class="ma-2"
+                                      text
+                                      icon
+                                      color="blue lighten-2"
+                                      @click="updateExtension(extension.id)"
+                                      v-on="on"
                                     >
-                                  </v-btn>
-                                </template>
-                                  <span>Update to version {{ extension.updateInfo.version }}</span>
+                                      <v-icon
+                                        >mdi-cloud-download-outline</v-icon
+                                      >
+                                    </v-btn>
+                                  </template>
+                                  <span
+                                    >Update to version
+                                    {{ extension.updateInfo.version }}</span
+                                  >
                                 </v-tooltip>
                               </div>
                             </td>

@@ -197,7 +197,9 @@ public class EventService {
                                 (event.getValue() != null && (event.getName() + "." + event.getValue()).equals(attributeNameAndValue)))) {
                             String handlerMethod = subscriptionInfo.getHandlerMethod();
                             String installedAutomationAppId = subscriptionInfo.getSubscribedAppId();
-                            if (handlerMethod != null && installedAutomationAppId != null) {
+                            // if subscription has filter events = false or event is a state change
+                            if ((!subscriptionInfo.isFilterEvents() || event.isStateChange()) && handlerMethod != null &&
+                                    installedAutomationAppId != null) {
                                 subscriptionListReturnValue.add(subscriptionInfo);
                             }
                         }
@@ -217,7 +219,8 @@ public class EventService {
                                 (event.getValue() != null && (event.getName() + "." + event.getValue()).equals(attributeNameAndValue)))) {
                             String handlerMethod = subscriptionInfo.getHandlerMethod();
                             String installedAutomationAppId = subscriptionInfo.getSubscribedAppId();
-                            if (handlerMethod != null && installedAutomationAppId != null) {
+                            if ((!subscriptionInfo.isFilterEvents() || event.isStateChange()) && handlerMethod != null &&
+                                    installedAutomationAppId != null) {
                                 subscriptionListReturnValue.add(subscriptionInfo);
                             }
                         }
@@ -244,15 +247,15 @@ public class EventService {
         //remove subscription from device to subscription map, location to subscription map and subscription map
         List<Map.Entry<String, Subscription>> subscriptions = getSubscriptionInfo().entrySet().stream()
                 .filter(entry -> installedAutomationAppId.equals(entry.getValue().getSubscribedAppId())).collect(Collectors.toList());
-        for(Map.Entry<String, Subscription> subscription : subscriptions) {
-            if(subscription.getValue().getDeviceId() != null) {
+        for (Map.Entry<String, Subscription> subscription : subscriptions) {
+            if (subscription.getValue().getDeviceId() != null) {
                 List<String> deviceSubscription = getDeviceToSubscriptionMap().get(subscription.getValue().getDeviceId());
-                if(deviceSubscription != null) {
+                if (deviceSubscription != null) {
                     deviceSubscription.remove(installedAutomationAppId);
                 }
             } else if (subscription.getValue().getLocationId() != null) {
                 List<String> locationSubscription = getLocationToSubscriptionMap().get(subscription.getValue().getLocationId());
-                if(locationSubscription != null) {
+                if (locationSubscription != null) {
                     locationSubscription.remove(installedAutomationAppId);
                 }
             }
@@ -262,13 +265,16 @@ public class EventService {
 
     }
 
-    public void addLocationSubscription(String locationId, String subscribedAppId, String attributeNameAndValue, String handlerMethod) {
+    public void addLocationSubscription(String locationId, String subscribedAppId, String attributeNameAndValue, String handlerMethod, Map options) {
         Subscription subscription = new Subscription();
         subscription.setId(UUID.randomUUID().toString());
         subscription.setLocationId(locationId);
         subscription.setAttributeNameAndValue(attributeNameAndValue);
         subscription.setSubscribedAppId(subscribedAppId);
         subscription.setHandlerMethod(handlerMethod);
+        if (options.containsKey("filterEvents")) {
+            subscription.setFilterEvents((Boolean) options.get("filterEvents"));
+        }
 
         // check for existing subscription
         if (!getSubscriptionInfo().values().stream().anyMatch(si -> si.equals(subscription))) {
@@ -285,13 +291,16 @@ public class EventService {
         }
     }
 
-    public void addDeviceSubscription(String deviceId, String subscribedAppId, String attributeNameAndValue, String handlerMethod) {
+    public void addDeviceSubscription(String deviceId, String subscribedAppId, String attributeNameAndValue, String handlerMethod, Map options) {
         Subscription subscription = new Subscription();
         subscription.setId(UUID.randomUUID().toString());
         subscription.setDeviceId(deviceId);
         subscription.setAttributeNameAndValue(attributeNameAndValue);
         subscription.setSubscribedAppId(subscribedAppId);
         subscription.setHandlerMethod(handlerMethod);
+        if (options.containsKey("filterEvents")) {
+            subscription.setFilterEvents((Boolean) options.get("filterEvents"));
+        }
 
         if (!getSubscriptionInfo().values().contains(subscription)) {
             getSubscriptionInfo().put(subscription.getId(), subscription);

@@ -19,14 +19,18 @@
 package com.parrotha.internal.app;
 
 import com.google.common.collect.Maps;
-import com.parrotha.app.*;
-import groovy.json.JsonSlurperClassic;
-import groovy.lang.Closure;
-import groovy.lang.MetaMethod;
-import org.apache.commons.lang3.SerializationUtils;
-import org.apache.commons.lang3.StringUtils;
 import com.parrotha.api.Request;
 import com.parrotha.api.Response;
+import com.parrotha.app.AtomicState;
+import com.parrotha.app.ChildDeviceWrapper;
+import com.parrotha.app.ChildDeviceWrapperImpl;
+import com.parrotha.app.DeviceWrapper;
+import com.parrotha.app.DeviceWrapperImpl;
+import com.parrotha.app.DeviceWrapperList;
+import com.parrotha.app.DeviceWrapperListImpl;
+import com.parrotha.app.InstalledAutomationAppWrapper;
+import com.parrotha.app.InstalledAutomationAppWrapperImpl;
+import com.parrotha.app.LocationWrapper;
 import com.parrotha.device.HubAction;
 import com.parrotha.device.HubResponse;
 import com.parrotha.integration.CloudIntegration;
@@ -35,14 +39,19 @@ import com.parrotha.internal.device.Device;
 import com.parrotha.internal.device.DeviceService;
 import com.parrotha.internal.entity.EntityPreferencesHelper;
 import com.parrotha.internal.entity.EntityScriptDelegateCommon;
+import com.parrotha.internal.entity.EntityService;
 import com.parrotha.internal.entity.LiveLogger;
 import com.parrotha.internal.hub.EventService;
 import com.parrotha.internal.hub.LocationService;
 import com.parrotha.internal.hub.ScheduleService;
 import com.parrotha.internal.integration.AbstractIntegration;
 import com.parrotha.internal.integration.IntegrationRegistry;
-import com.parrotha.internal.entity.EntityService;
 import com.parrotha.internal.script.app.AutomationAppScriptDelegate;
+import groovy.json.JsonSlurperClassic;
+import groovy.lang.Closure;
+import groovy.lang.MetaMethod;
+import org.apache.commons.lang3.SerializationUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import java.text.DateFormat;
 import java.text.ParseException;
@@ -391,17 +400,18 @@ public class AutomationAppScriptDelegateImpl extends EntityScriptDelegateCommon 
     }
 
     public void subscribe(Object object, String attributeName, String handlerMethod, Map options) {
-        //TODO: handle options
         if (object != null && handlerMethod != null) {
             if (object instanceof DeviceWrapper) {
-                eventService.addDeviceSubscription(((DeviceWrapper) object).getId(), installedAutomationApp.getId(), attributeName, handlerMethod);
+                eventService.addDeviceSubscription(((DeviceWrapper) object).getId(), installedAutomationApp.getId(), attributeName, handlerMethod,
+                        options);
             } else if (object instanceof DeviceWrapperList) {
-                for(DeviceWrapper deviceWrapper : (DeviceWrapperList) object) {
-                    eventService.addDeviceSubscription(deviceWrapper.getId(), installedAutomationApp.getId(), attributeName, handlerMethod);
+                for (DeviceWrapper deviceWrapper : (DeviceWrapperList) object) {
+                    eventService.addDeviceSubscription(deviceWrapper.getId(), installedAutomationApp.getId(), attributeName, handlerMethod, options);
                 }
             } else if (object instanceof LocationWrapper) {
                 eventService
-                        .addLocationSubscription(((LocationWrapper) object).getId(), installedAutomationApp.getId(), attributeName, handlerMethod);
+                        .addLocationSubscription(((LocationWrapper) object).getId(), installedAutomationApp.getId(), attributeName, handlerMethod,
+                                options);
             }
         }
     }
