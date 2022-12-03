@@ -36,9 +36,10 @@
                       <v-simple-table>
                         <thead>
                           <tr>
-                            <th scope="col" style="width:5%">Actions</th>
+                            <th scope="col" style="width:15%">Actions</th>
                             <th scope="col" style="width:20%">Name</th>
-                            <th scope="col" style="width:75%">Description</th>
+                            <th scope="col" style="width:55%">Description</th>
+                            <th scope="col" style="width:10%">Version</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -48,26 +49,6 @@
                           >
                             <td>
                               <div>
-                                <v-tooltip
-                                  bottom
-                                  v-if="extension.updateAvailable"
-                                  ><template v-slot:activator="{ on }">
-                                    <v-btn
-                                      class="ma-2"
-                                      text
-                                      icon
-                                      color="blue lighten-2"
-                                      @click="updateExtension(extension.id)"
-                                      v-on="on"
-                                    >
-                                      <v-icon
-                                        >mdi-cloud-download-outline</v-icon
-                                      >
-                                    </v-btn>
-                                  </template>
-                                  <span>Update</span>
-                                </v-tooltip>
-
                                 <v-dialog v-model="deleteDialog" width="500">
                                   <template v-slot:activator="{ on, attrs }">
                                     <v-btn
@@ -114,6 +95,25 @@
                                     </v-card-actions>
                                   </v-card>
                                 </v-dialog>
+                                <v-tooltip
+                                        bottom
+                                        v-if="extension.updateAvailable"
+                                ><template v-slot:activator="{ on }">
+                                  <v-btn
+                                          class="ma-2"
+                                          text
+                                          icon
+                                          color="blue lighten-2"
+                                          @click="updateExtension(extension.id)"
+                                          v-on="on"
+                                  >
+                                    <v-icon
+                                    >mdi-cloud-download-outline</v-icon
+                                    >
+                                  </v-btn>
+                                </template>
+                                  <span>Update to version {{ extension.updateInfo.version }}</span>
+                                </v-tooltip>
                               </div>
                             </td>
                             <td>
@@ -126,6 +126,7 @@
                               >
                             </td>
                             <td>{{ extension.description }}</td>
+                            <td>{{ extension.version }}</td>
                           </tr>
                         </tbody>
                       </v-simple-table>
