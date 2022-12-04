@@ -27,6 +27,7 @@ public class Subscription {
     private String attributeNameAndValue;
     private String handlerMethod;
     private String subscribedAppId;
+    private boolean filterEvents = true;
 
     public Subscription() {
     }
@@ -84,6 +85,14 @@ public class Subscription {
         this.attributeNameAndValue = attributeNameAndValue;
     }
 
+    public boolean isFilterEvents() {
+        return filterEvents;
+    }
+
+    public void setFilterEvents(boolean filterEvents) {
+        this.filterEvents = filterEvents;
+    }
+
     /**
      * Equals method ignores id so that duplicates can be eliminated.
      *
@@ -101,7 +110,8 @@ public class Subscription {
         Subscription that = (Subscription) o;
         return Objects.equals(deviceId, that.deviceId) &&
                 Objects.equals(locationId, that.locationId) && Objects.equals(attributeNameAndValue, that.attributeNameAndValue) &&
-                Objects.equals(handlerMethod, that.handlerMethod) && Objects.equals(subscribedAppId, that.subscribedAppId);
+                Objects.equals(handlerMethod, that.handlerMethod) && Objects.equals(subscribedAppId, that.subscribedAppId) &&
+                (filterEvents == that.filterEvents);
     }
 
     @Override
@@ -118,6 +128,7 @@ public class Subscription {
                 ", attributeNameAndValue='" + attributeNameAndValue + '\'' +
                 ", handlerMethod='" + handlerMethod + '\'' +
                 ", subscribedAppId='" + subscribedAppId + '\'' +
+                ", filterEvents='" + filterEvents + '\'' +
                 '}';
     }
 }
