@@ -66,7 +66,7 @@ public class LanUtils {
                 }
             }
         } catch (IOException | InterruptedException e) {
-            e.printStackTrace();
+            logger.warn("Exception while getting mac address for ip address", e);
         }
         return null;
     }

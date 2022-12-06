@@ -18,15 +18,14 @@
  */
 package com.parrotha.integration.lan;
 
-import org.apache.commons.collections4.map.CaseInsensitiveMap;
-import org.apache.http.util.TextUtils;
-import org.eclipse.jetty.server.Server;
 import com.parrotha.device.HubAction;
 import com.parrotha.device.HubResponse;
 import com.parrotha.device.Protocol;
 import com.parrotha.integration.DeviceIntegration;
 import com.parrotha.internal.utils.HexUtils;
 import com.parrotha.ui.PreferencesBuilder;
+import org.apache.commons.collections4.map.CaseInsensitiveMap;
+import org.eclipse.jetty.server.Server;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,7 +36,13 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.io.Reader;
-import java.net.*;
+import java.net.DatagramPacket;
+import java.net.InetAddress;
+import java.net.MulticastSocket;
+import java.net.Socket;
+import java.net.SocketTimeoutException;
+import java.net.URI;
+import java.net.UnknownHostException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -69,7 +74,7 @@ public class LanIntegration extends DeviceIntegration {
         try {
             server.start();
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.warn("Exception while starting LAN server", e);
         }
     }
 
@@ -79,7 +84,7 @@ public class LanIntegration extends DeviceIntegration {
             try {
                 server.stop();
             } catch (Exception e) {
-                e.printStackTrace();
+                logger.warn("Exception while stopping LAN server", e);
             }
         }
     }
@@ -185,7 +190,7 @@ public class LanIntegration extends DeviceIntegration {
                     sendDiscoveryPacketAndListenForResponse(new String[]{searchValue});
                 }
             } catch (IOException ioException) {
-                ioException.printStackTrace();
+                logger.warn("Exception while processing lan discovery message", ioException);
             }
         } else {
             // send message out
@@ -276,23 +281,23 @@ public class LanIntegration extends DeviceIntegration {
     }
 
     // thanks to https://commandlinefanatic.com/cgi-bin/showarticle.cgi?article=art077
-    private class HttpInputStream extends InputStream  {
+    private class HttpInputStream extends InputStream {
         private Reader source;
         private int bytesRemaining;
         private boolean chunked = false;
 
-        public HttpInputStream(Reader source, String[] headers) throws IOException  {
+        public HttpInputStream(Reader source, String[] headers) throws IOException {
             this.source = source;
 
-            for(String header : headers) {
+            for (String header : headers) {
                 if (header.toLowerCase().startsWith("transfer-encoding") && header.contains("chunked")) {
                     chunked = true;
                     bytesRemaining = parseChunkSize();
                 } else if (header.toLowerCase().startsWith("content-length")) {
-                    try  {
+                    try {
                         String[] contentLengthHeader = header.split(":");
                         Integer.parseInt(header.split(":")[1]);
-                    } catch (Exception e)  {
+                    } catch (Exception e) {
                         throw new IOException("Malformed or missing Content-Length header");
                     }
                 }
@@ -312,29 +317,29 @@ public class LanIntegration extends DeviceIntegration {
                                 (b - '0'));
             }
             // Consume the trailing '\n'
-            if (source.read() != '\n')  {
+            if (source.read() != '\n') {
                 throw new IOException("Malformed chunked encoding");
             }
 
             return chunkSize;
         }
 
-        public int read() throws IOException  {
-            if (bytesRemaining == 0)  {
+        public int read() throws IOException {
+            if (bytesRemaining == 0) {
                 if (!chunked) {
                     return -1;
-                } else  {
+                } else {
                     // Read next chunk size; return -1 if 0 indicating end of stream
                     // Read and discard extraneous \r\n
-                    if (source.read() != '\r')  {
+                    if (source.read() != '\r') {
                         throw new IOException("Malformed chunked encoding");
                     }
-                    if (source.read() != '\n')  {
+                    if (source.read() != '\n') {
                         throw new IOException("Malformed chunked encoding");
                     }
                     bytesRemaining = parseChunkSize();
 
-                    if (bytesRemaining == 0)  {
+                    if (bytesRemaining == 0) {
                         return -1;
                     }
                 }
@@ -379,17 +384,15 @@ public class LanIntegration extends DeviceIntegration {
                         } catch (SocketTimeoutException e) {
                         }
                     }
-                } catch (IOException e) {
-                    e.printStackTrace();
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    logger.warn("Exception while sending discovery packet", e);
                 } finally {
 
                     if (socket != null) {
                         try {
                             socket.leaveGroup(multicastAddress);
                         } catch (IOException ioException) {
-                            ioException.printStackTrace();
+                            logger.warn("Exception while leaving multicast group", ioException);
                         }
                         socket.disconnect();
                         socket.close();
@@ -414,7 +417,7 @@ public class LanIntegration extends DeviceIntegration {
                 try {
                     Thread.sleep(1000);
                 } catch (InterruptedException e) {
-                    e.printStackTrace();
+                    logger.warn("Exception during sleep for discovery packet", e);
                 }
             }
         } catch (IOException e) {
