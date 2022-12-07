@@ -56,7 +56,7 @@ public class IntegrationRegistry {
         }
     }
 
-    private void registerIntegration(AbstractIntegration.IntegrationType integrationType, AbstractIntegration integration) {
+    private synchronized void registerIntegration(AbstractIntegration.IntegrationType integrationType, AbstractIntegration integration) {
         if (integrationRegistry.get(integrationType) == null) {
             integrationRegistry.put(integrationType, new ArrayList<>());
         }

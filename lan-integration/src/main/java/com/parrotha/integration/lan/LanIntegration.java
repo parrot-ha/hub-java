@@ -66,6 +66,7 @@ public class LanIntegration extends DeviceIntegration {
 
     @Override
     public void start() {
+        logger.info("Starting LAN integration");
         serverPort = getSettingAsInteger("serverPort", 39500);
 
         server = new Server(serverPort);
@@ -73,6 +74,7 @@ public class LanIntegration extends DeviceIntegration {
 
         try {
             server.start();
+            logger.info("Started LAN integration");
         } catch (Exception e) {
             logger.warn("Exception while starting LAN server", e);
         }

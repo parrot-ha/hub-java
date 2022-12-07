@@ -282,15 +282,20 @@ public class EntityServiceImpl implements EntityService {
                 } else if (returnObjectItem instanceof List) {
                     processReturnObject(returnObjectItem, device);
                 } else if (returnObjectItem instanceof Map) {
-                    sendEvent((Map) returnObjectItem,
-                            new DeviceWrapperImpl(device, deviceService, this, locationService));
+                    Map properties = (Map) returnObjectItem;
+                    if (properties.get("name") != null && properties.get("value") != null) {
+                        sendEvent(properties, new DeviceWrapperImpl(device, deviceService, this, locationService));
+                    }
                 }
             }
             if (returnObjectActionList.size() > 0) {
                 deviceService.processReturnObj(device, returnObjectActionList);
             }
         } else if (returnObject instanceof Map) {
-            sendEvent((Map) returnObject, new DeviceWrapperImpl(device, deviceService, this, locationService));
+            Map properties = (Map) returnObject;
+            if (properties.get("name") != null && properties.get("value") != null) {
+                sendEvent(properties, new DeviceWrapperImpl(device, deviceService, this, locationService));
+            }
         } else {
             deviceService.processReturnObj(device, returnObject);
         }
