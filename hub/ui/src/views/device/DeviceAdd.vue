@@ -21,18 +21,18 @@
                   v-model="device.deviceNetworkId"
                 ></v-text-field>
                 <v-select
+                        :items="integrations"
+                        :item-text="item => item.label"
+                        item-value="id"
+                        label="Integration"
+                        v-model="device.integrationId"
+                ></v-select>
+                <v-select
                   :items="deviceHandlers"
                   :item-text="item => item.name + ' (' + item.namespace + ')'"
                   item-value="id"
                   label="Type"
                   v-model="device.deviceHandlerId"
-                ></v-select>
-                <v-select
-                  :items="integrations"
-                  :item-text="item => item.label"
-                  item-value="id"
-                  label="Integration"
-                  v-model="device.integrationId"
                 ></v-select>
               </v-form>
             </v-card-text>

@@ -120,7 +120,7 @@
                         :id="body.name"
                         :name="body.name"
                         :label="body.title"
-                        v-model="settings[body.name].value"
+                        v-model="settings[body.name].valueAsType"
                       ></v-switch>
                     </div>
                     <div v-if="body.type === 'decimal'">
@@ -130,7 +130,7 @@
                         :id="body.name"
                         :name="body.name"
                         :label="body.title"
-                        v-model="settings[body.name].value"
+                        v-model="settings[body.name].valueAsType"
                       ></v-text-field>
                     </div>
                     <div v-if="body.type === 'email'">
@@ -139,7 +139,7 @@
                         :id="body.name"
                         :name="body.name"
                         :label="body.title"
-                        v-model="settings[body.name].value"
+                        v-model="settings[body.name].valueAsType"
                       ></v-text-field>
                     </div>
                     <div v-if="body.type === 'enum'">
@@ -147,7 +147,7 @@
                         v-if="settings[body.name]"
                         v-bind:options="body.options"
                         v-bind:body="body"
-                        v-model="settings[body.name].value"
+                        v-model="settings[body.name].valueAsType"
                       ></enum-input>
                     </div>
                     <div v-if="body.type === 'number'">
@@ -157,7 +157,7 @@
                         :id="body.name"
                         :name="body.name"
                         :label="body.title"
-                        v-model="settings[body.name].value"
+                        v-model="settings[body.name].valueAsType"
                       ></v-text-field>
                     </div>
                     <div v-if="body.type === 'password'">
@@ -166,7 +166,7 @@
                         :label="body.title"
                         :id="body.name"
                         :name="body.name"
-                        v-model="settings[body.name].value"
+                        v-model="settings[body.name].valueAsType"
                       ></v-text-field>
                     </div>
                     <div v-if="body.type === 'phone'">
@@ -175,7 +175,7 @@
                         :id="body.name"
                         :name="body.name"
                         :label="body.title"
-                        v-model="settings[body.name].value"
+                        v-model="settings[body.name].valueAsType"
                       ></v-text-field>
                     </div>
                     <div v-if="body.type === 'time'">
@@ -184,7 +184,7 @@
                         :id="body.name"
                         :name="body.name"
                         :label="body.title"
-                        v-model="settings[body.name].value"
+                        v-model="settings[body.name].valueAsType"
                       ></v-text-field>
                     </div>
                     <div v-if="body.type === 'text' || body.type === 'string'">
@@ -192,7 +192,7 @@
                         :id="body.name"
                         :name="body.name"
                         :label="body.title"
-                        v-model="settings[body.name].value"
+                        v-model="settings[body.name].valueAsType"
                       ></v-text-field>
                     </div>
                   </div>
@@ -301,7 +301,7 @@ export default {
                 if (typeof this.settings[input.name] === 'undefined') {
                   this.settings[input.name] = {
                     name: input.name,
-                    value:
+                    valueAsType:
                       input.defaultValue == null ||
                       typeof input.defaultValue === 'undefined'
                         ? null
@@ -310,11 +310,11 @@ export default {
                     multiple: input.multiple ? true : false
                   };
                 } else if (
-                  this.settings[input.name].value == null &&
+                  this.settings[input.name].valueAsType == null &&
                   input.defaultValue != null &&
                   typeof input.defaultValue !== 'undefined'
                 ) {
-                  this.settings[input.name].value = input.defaultValue;
+                  this.settings[input.name].valueAsType = input.defaultValue;
                 }
               }
             }

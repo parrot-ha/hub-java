@@ -61,6 +61,7 @@ public class IntegrationRegistry {
             integrationRegistry.put(integrationType, new ArrayList<>());
         }
         integrationRegistry.get(integrationType).add(integration);
+        logger.warn("int registry size {}, type {}", integrationRegistry.get(integrationType).size(), integrationType.toString());
     }
 
     public void unregisterIntegration(AbstractIntegration integration) {

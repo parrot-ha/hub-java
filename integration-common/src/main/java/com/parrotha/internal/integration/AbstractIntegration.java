@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 public abstract class AbstractIntegration {
     public enum IntegrationType {
@@ -144,5 +145,40 @@ public abstract class AbstractIntegration {
 
     public Object processButtonAction(String action) {
         return null;
+    }
+
+    /**
+     * Override this method and return a cron schedule if you want a watchdog to call your
+     * monitoring method.
+     *
+     * @return String cron expression for calling {@link #monitorIntegration()}
+     */
+    public String getMonitorSchedule() {
+        return null;
+    }
+
+    /**
+     * Override and implement this method in combination with getMonitorSchedule to have the integration monitored
+     * on a schedule. Typically, this method would check if the integration is running correctly and restart it if not.
+     */
+    public void monitorIntegration() {
+    }
+
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        AbstractIntegration that = (AbstractIntegration) o;
+        return id.equals(that.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
     }
 }
