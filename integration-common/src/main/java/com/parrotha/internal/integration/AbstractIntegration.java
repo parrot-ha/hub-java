@@ -147,24 +147,6 @@ public abstract class AbstractIntegration {
         return null;
     }
 
-    /**
-     * Override this method and return a cron schedule if you want a watchdog to call your
-     * monitoring method.
-     *
-     * @return String cron expression for calling {@link #monitorIntegration()}
-     */
-    public String getMonitorSchedule() {
-        return null;
-    }
-
-    /**
-     * Override and implement this method in combination with getMonitorSchedule to have the integration monitored
-     * on a schedule. Typically, this method would check if the integration is running correctly and restart it if not.
-     */
-    public void monitorIntegration() {
-    }
-
-
     @Override
     public boolean equals(Object o) {
         if (this == o) {
