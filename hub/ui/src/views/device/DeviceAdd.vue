@@ -21,11 +21,11 @@
                   v-model="device.deviceNetworkId"
                 ></v-text-field>
                 <v-select
-                        :items="integrations"
-                        :item-text="item => item.label"
-                        item-value="id"
-                        label="Integration"
-                        v-model="device.integrationId"
+                  :items="integrations"
+                  :item-text="item => item.label"
+                  item-value="id"
+                  label="Integration"
+                  v-model="device.integrationId"
                 ></v-select>
                 <v-select
                   :items="deviceHandlers"

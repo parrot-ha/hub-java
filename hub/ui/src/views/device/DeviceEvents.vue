@@ -15,6 +15,9 @@
                 sort-desc
                 class="elevation-1"
               >
+                <template v-slot:item.date="{ item }">
+                  <span>{{ new Date(item.date).toLocaleString() }}</span>
+                </template>
               </v-data-table>
             </v-card-text>
             <v-card-actions> </v-card-actions>
