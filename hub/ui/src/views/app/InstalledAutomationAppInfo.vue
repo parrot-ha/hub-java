@@ -80,11 +80,7 @@
           <v-btn color="primary" @click="runUpdatedMethod">
             Run Updated Method
           </v-btn>
-          <v-dialog
-            v-model="iaaUninstallDialog"
-            persistent
-            max-width="290"
-          >
+          <v-dialog v-model="iaaUninstallDialog" persistent max-width="290">
             <template v-slot:activator="{ on, attrs }">
               <v-btn color="error" v-bind="attrs" v-on="on">Uninstall</v-btn>
             </template>

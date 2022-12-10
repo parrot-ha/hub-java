@@ -227,7 +227,7 @@ public class IntegrationService implements ExtensionStateListener {
                             abstractIntegration.setId(integrationId);
                             abstractIntegration.start();
                         } catch (Exception e) {
-                            logger.warn("Exception while starting integration", e);
+                            logger.warn("Exception while starting integration {}", integrationId, e);
                         }
                     }).start();
                 }

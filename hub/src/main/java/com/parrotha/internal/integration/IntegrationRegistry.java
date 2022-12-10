@@ -56,15 +56,16 @@ public class IntegrationRegistry {
         }
     }
 
-    private void registerIntegration(AbstractIntegration.IntegrationType integrationType, AbstractIntegration integration) {
-        if (!integrationRegistry.containsKey(integrationType)) {
+    private synchronized void registerIntegration(AbstractIntegration.IntegrationType integrationType, AbstractIntegration integration) {
+        if (integrationRegistry.get(integrationType) == null) {
             integrationRegistry.put(integrationType, new ArrayList<>());
         }
         integrationRegistry.get(integrationType).add(integration);
+        logger.warn("int registry size {}, type {}", integrationRegistry.get(integrationType).size(), integrationType.toString());
     }
 
     public void unregisterIntegration(AbstractIntegration integration) {
-        if(integration == null) {
+        if (integration == null) {
             return;
         }
         integrationIdMap.remove(integration.getId());
