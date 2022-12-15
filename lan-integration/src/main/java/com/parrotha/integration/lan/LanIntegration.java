@@ -170,6 +170,7 @@ public class LanIntegration extends DeviceIntegration {
         properties.put("name", "ssdpTerm");
         properties.put("value", ssdpTerm);
         properties.put("description", description);
+        properties.put("isStateChange", true);
         sendHubEvent(properties);
     }
 
@@ -298,7 +299,7 @@ public class LanIntegration extends DeviceIntegration {
                 } else if (header.toLowerCase().startsWith("content-length")) {
                     try {
                         String[] contentLengthHeader = header.split(":");
-                        Integer.parseInt(header.split(":")[1]);
+                        bytesRemaining = Integer.parseInt(contentLengthHeader[1].trim());
                     } catch (Exception e) {
                         throw new IOException("Malformed or missing Content-Length header");
                     }

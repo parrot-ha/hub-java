@@ -272,7 +272,7 @@ public class EventService {
         subscription.setAttributeNameAndValue(attributeNameAndValue);
         subscription.setSubscribedAppId(subscribedAppId);
         subscription.setHandlerMethod(handlerMethod);
-        if (options.containsKey("filterEvents")) {
+        if (options != null && options.containsKey("filterEvents")) {
             subscription.setFilterEvents((Boolean) options.get("filterEvents"));
         }
 
@@ -298,7 +298,7 @@ public class EventService {
         subscription.setAttributeNameAndValue(attributeNameAndValue);
         subscription.setSubscribedAppId(subscribedAppId);
         subscription.setHandlerMethod(handlerMethod);
-        if (options.containsKey("filterEvents")) {
+        if (options != null && options.containsKey("filterEvents")) {
             subscription.setFilterEvents((Boolean) options.get("filterEvents"));
         }
 

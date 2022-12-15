@@ -18,8 +18,8 @@
  */
 package com.parrotha.integration.lan;
 
-import org.apache.commons.io.IOUtils;
 import com.parrotha.integration.DeviceIntegration;
+import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -113,19 +113,19 @@ public class LanUtils {
 
         // look for device based on mac address first
         if (integration.deviceExists(macAddress, true)) {
-            integration.sendDeviceMessage(macAddress, deviceDescription);
+            integration.sendDeviceMessage(macAddress, deviceDescription, true);
             return;
         }
 
         // next look for device based on ip address : port
         if (integration.deviceExists(ipAddressAndPortHexString, true)) {
-            integration.sendDeviceMessage(ipAddressAndPortHexString, deviceDescription);
+            integration.sendDeviceMessage(ipAddressAndPortHexString, deviceDescription, true);
             return;
         }
 
         // look for device based on ip address
         if (integration.deviceExists(ipAddressHexString, true)) {
-            integration.sendDeviceMessage(ipAddressHexString, deviceDescription);
+            integration.sendDeviceMessage(ipAddressHexString, deviceDescription, true);
         }
     }
 }

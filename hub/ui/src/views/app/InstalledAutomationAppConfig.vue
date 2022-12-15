@@ -217,6 +217,8 @@ export default {
       iaaId: '',
       page: {},
       settings: {},
+      savedSettings: {},
+      previousSettings: {},
       devices: {},
       breadcrumb: [],
       iaaUninstallDialog: false,
@@ -312,6 +314,23 @@ export default {
         });
     },
     populateSettingsFromInputs: function() {
+      if (Object.keys(this.settings).length == 0) {
+        this.settings = JSON.parse(JSON.stringify(this.savedSettings));
+        this.previousSettings = JSON.parse(JSON.stringify(this.savedSettings));
+      } else {
+        for (var ssKey of Object.keys(this.savedSettings)) {
+          if (
+            this.savedSettings[ssKey].value !=
+              this.previousSettings[ssKey].value &&
+            this.previousSettings[ssKey].value == this.settings[ssKey].value
+          ) {
+            // the value changed on the hub and not on the ui.
+            this.settings[ssKey] = JSON.parse(
+              JSON.stringify(this.savedSettings[ssKey])
+            );
+          }
+        }
+      }
       for (var section of this.page.sections) {
         for (var input of section.input) {
           if (typeof this.settings[input.name] === 'undefined') {
@@ -359,7 +378,7 @@ export default {
         .then(response => response.json())
         .then(data => {
           if (typeof data !== 'undefined' && data != null) {
-            this.settings = data;
+            this.savedSettings = data;
             this.loadPage();
           }
         });
@@ -397,12 +416,14 @@ export default {
               this.$router.push(`/iaas/${this.iaaId}/cfg/${newPath}`);
             }
             if (
+              this.refreshFunction == null &&
               typeof this.page.refreshInterval !== 'undefined' &&
               this.page.refreshInterval != null &&
               this.page.refreshInterval != '' &&
               this.page.refreshInterval > 0
             ) {
-              this.refreshFunction = setTimeout(function() {
+              this.refreshFunction = setInterval(function() {
+                this.refreshFunction = null;
                 vm.loadInformation();
               }, vm.page.refreshInterval * 1000);
             }
