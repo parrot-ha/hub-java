@@ -382,7 +382,7 @@ public class LanIntegration extends DeviceIntegration {
                         DatagramPacket input = new DatagramPacket(buf, buf.length);
                         try {
                             socket.receive(input);
-                            String originaldata = new String(input.getData());
+                            String originaldata = new String(Arrays.copyOf(input.getData(), input.getLength()));
                             processUpnpResponse(originaldata);
                         } catch (SocketTimeoutException e) {
                         }

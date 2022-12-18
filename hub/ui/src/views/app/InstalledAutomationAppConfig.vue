@@ -3,11 +3,7 @@
     <v-layout>
       <v-row>
         <v-col>
-          <v-skeleton-loader
-            :loading="loading"
-            :transition="transition"
-            type="card"
-          >
+          <v-skeleton-loader :loading="loading" type="card">
             <v-card>
               <v-card-title>
                 {{ page.title }}
@@ -317,12 +313,12 @@ export default {
       if (Object.keys(this.settings).length == 0) {
         this.settings = JSON.parse(JSON.stringify(this.savedSettings));
         this.previousSettings = JSON.parse(JSON.stringify(this.savedSettings));
-      } else {
+      } else if (Object.keys(this.savedSettings).length > 0) {
         for (var ssKey of Object.keys(this.savedSettings)) {
           if (
-            this.savedSettings[ssKey].value !=
-              this.previousSettings[ssKey].value &&
-            this.previousSettings[ssKey].value == this.settings[ssKey].value
+            this.savedSettings[ssKey]?.value !=
+              this.previousSettings[ssKey]?.value &&
+            this.previousSettings[ssKey]?.value == this.settings[ssKey]?.value
           ) {
             // the value changed on the hub and not on the ui.
             this.settings[ssKey] = JSON.parse(

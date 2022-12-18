@@ -155,10 +155,6 @@ public class DeviceScriptDelegateImpl extends EntityScriptDelegateCommon impleme
         return null;
     }
 
-    public static Map parseLanMessage(String stringToParse) {
-        return DeviceScriptDelegateUtils.parseLanMessage(stringToParse);
-    }
-
     public Map getState() {
         return state;
     }
