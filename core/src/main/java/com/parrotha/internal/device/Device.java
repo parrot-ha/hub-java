@@ -90,12 +90,16 @@ public class Device implements Serializable {
     }
 
     public void setZigbeeId(String zigbeeId) {
-        if (integration == null) integration = new Integration();
+        if (integration == null) {
+            integration = new Integration();
+        }
         integration.setOption("zigbeeId", zigbeeId);
     }
 
     public void setEndpointId(Integer endpointId) {
-        if (integration == null) integration = new Integration();
+        if (integration == null) {
+            integration = new Integration();
+        }
         integration.setOption("endpointId", endpointId.toString());
     }
 
@@ -109,9 +113,15 @@ public class Device implements Serializable {
     }
 
     public Map getData() {
-        if (data == null)
+        if (data == null) {
             data = new HashMap();
+        }
         return data;
+    }
+
+    @Transient
+    public Object getDataValue(String key) {
+        return getData().get(key);
     }
 
     public void setData(Map data) {
@@ -136,8 +146,9 @@ public class Device implements Serializable {
 
     @Transient
     public String getDisplayName() {
-        if (getLabel() == null)
+        if (getLabel() == null) {
             return getName();
+        }
         return getLabel();
     }
 
@@ -158,7 +169,9 @@ public class Device implements Serializable {
     }
 
     public Integration getIntegration() {
-        if (integration == null) integration = new Integration();
+        if (integration == null) {
+            integration = new Integration();
+        }
         return integration;
     }
 
@@ -191,14 +204,16 @@ public class Device implements Serializable {
     }
 
     public State currentState(String attributeName) {
-        if (currentStates == null)
+        if (currentStates == null) {
             return null;
+        }
         return currentStates.get(attributeName);
     }
 
     public void setCurrentState(State state) {
-        if (currentStates == null)
+        if (currentStates == null) {
             currentStates = new HashMap<>();
+        }
         currentStates.put(state.getName(), state);
     }
 
