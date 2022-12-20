@@ -18,10 +18,11 @@
  */
 package com.parrotha.app;
 
-import groovy.lang.GroovyObjectSupport;
 import com.parrotha.internal.app.AutomationAppService;
 import com.parrotha.internal.app.InstalledAutomationApp;
+import com.parrotha.internal.app.InstalledAutomationAppSetting;
 import com.parrotha.internal.entity.EntityService;
+import groovy.lang.GroovyObjectSupport;
 
 import java.util.Map;
 
@@ -48,11 +49,12 @@ public class InstalledAutomationAppWrapperImpl extends GroovyObjectSupport imple
 
     public Object propertyMissing(String property) {
         // look for property in settings
-        Map settings = installedAutomationApp.getNameToSettingMap();
+        Map<String, InstalledAutomationAppSetting> settings = installedAutomationApp.getNameToSettingMap();
         if (settings != null) {
-            Object propertyObj = settings.get(property);
-            if (propertyObj != null)
-                return propertyObj;
+            InstalledAutomationAppSetting propertyObj = settings.get(property);
+            if (propertyObj != null) {
+                return propertyObj.getValueAsType();
+            }
         }
         //it appears that ST will return null if property is not found, so do not throw mpe
         return null;

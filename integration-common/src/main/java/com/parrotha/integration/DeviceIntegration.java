@@ -53,8 +53,12 @@ public abstract class DeviceIntegration extends AbstractIntegration {
     }
 
     public void sendDeviceMessage(String deviceNetworkId, String message) {
+        sendDeviceMessage(deviceNetworkId, message, false);
+    }
+
+    public void sendDeviceMessage(String deviceNetworkId, String message, boolean unaffiliated) {
         //invoke parse method on device handler
-        deviceIntegrationService.runDeviceMethodByDNI(getId(), deviceNetworkId, "parse", message);
+        deviceIntegrationService.runDeviceMethodByDNI((unaffiliated ? null : getId()), deviceNetworkId, "parse", message);
     }
 
     public boolean deviceExists(String deviceNetworkId) {

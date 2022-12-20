@@ -1,79 +1,41 @@
 <template>
   <v-container fluid class="fill-height">
-    <v-layout>
-      <v-row>
-        <v-col :cols="12">
+    <v-row>
+      <v-col>
+        <div ref="alertBox">
           <v-alert
             v-model="alert"
             close-text="Close Alert"
             outlined
             type="error"
             dismissible
+            @input="debouncedResizeEditor"
           >
             {{ alertMessage }}
           </v-alert>
-          <v-card height="100%" id="editorCard">
-            <v-card-title>
-              Edit
-              <v-spacer></v-spacer>
-
-              <div>
-                <v-progress-circular
-                  v-show="savePending"
-                  indeterminate
-                  color="primary"
-                ></v-progress-circular>
-                <v-btn
-                  color="primary"
-                  @click="saveCode"
-                  :disabled="savePending"
-                  mx-2
-                >
-                  Save
-                </v-btn>
-                <v-btn
-                  color="primary"
-                  outlined
-                  :to="{ name: 'AutomationAppSettings', params: { id: aaId } }"
-                  mx-2
-                >
-                  App Settings
-                </v-btn>
-              </div>
-            </v-card-title>
-            <v-card-text
-              ><AceEditor
-                v-model="automationApp.sourceCode"
-                @init="editorInit"
-                lang="groovy"
-                theme="monokai"
-                width="100%"
-                :height="editorHeight"
-                :options="{
-                  enableBasicAutocompletion: true,
-                  enableLiveAutocompletion: true,
-                  fontSize: 14,
-                  highlightActiveLine: true,
-                  enableSnippets: true,
-                  showLineNumbers: true,
-                  tabSize: 2,
-                  showPrintMargin: false,
-                  showGutter: true
-                }"
-                :commands="[
-                  {
-                    name: 'save',
-                    bindKey: { win: 'Ctrl-s', mac: 'Command-s' },
-                    exec: saveCode,
-                    readOnly: true
-                  }
-                ]"
-              />
-            </v-card-text>
-          </v-card>
-        </v-col>
-      </v-row>
-    </v-layout>
+        </div>
+      </v-col>
+    </v-row>
+    <v-row>
+      <v-col>
+        <code-editor
+          :source="automationApp.sourceCode"
+          title="Add"
+          :savePending="savePending"
+          :editorHeight="editorHeight"
+          @saveCodeButtonClicked="saveCode"
+        >
+          <v-btn
+            color="primary"
+            outlined
+            :to="{ name: 'AutomationAppSettings', params: { id: aaId } }"
+            mx-2
+          >
+            App Settings
+          </v-btn>
+        </code-editor>
+      </v-col>
+    </v-row>
   </v-container>
 </template>
 <script>
@@ -84,31 +46,35 @@ function handleErrors(response) {
   return response;
 }
 
-import AceEditor from 'vuejs-ace-editor';
+import CodeEditor from '@/components/common/CodeEditor';
 import _debounce from 'lodash/debounce';
 
 export default {
   name: 'AutomationAppCodeEdit',
   components: {
-    AceEditor
+    CodeEditor
   },
   data() {
     return {
       savePending: false,
-      editor: null,
-      editorHeight: '500px',
       alert: false,
       alertMessage: '',
       aaId: '',
-      version: '',
-      automationApp: { sourceCode: '' }
+      automationApp: { sourceCode: '' },
+      editorHeight: '500px'
     };
   },
+  watch: {
+    alert() {
+      this.debouncedResizeEditor();
+    }
+  },
   methods: {
-    saveCode() {
+    saveCode(updatedCode) {
       this.savePending = true;
       this.alert = false;
       this.alertMessage = '';
+      this.automationApp.sourceCode = updatedCode;
 
       fetch(`/api/automation-apps/${this.aaId}/source`, {
         method: 'PUT',
@@ -124,29 +90,19 @@ export default {
             this.alertMessage = data.message;
             this.alert = true;
           }
-          console.log(JSON.stringify(data));
-          //this.$router.push(`/iaas/${data.id}/cfg`);
         })
         .catch(error => {
           this.savePending = false;
           console.log(error);
         });
     },
-    editorInit: function(editor) {
-      this.editor = editor;
-      require('brace/ext/language_tools'); //language extension prerequsite...
-      require('brace/mode/groovy'); //language
-      require('brace/theme/monokai');
-      require('brace/theme/textmate');
-      require('brace/snippets/groovy'); //snippet
-      require('brace/ext/searchbox'); // search box
-    },
-    onResize(e) {
+    onResize() {
       this.debouncedResizeEditor();
     },
     resizeEditor() {
-      this.editorHeight = `${window.innerHeight - 180}px`;
-      this.editor.resize();
+      this.editorHeight = `${window.innerHeight -
+        (this.editorHeightAdjustment =
+          this.$refs.alertBox.clientHeight + 202)}px`;
     }
   },
   created() {
@@ -168,7 +124,7 @@ export default {
       });
 
     this.$nextTick(() => {
-      this.resizeEditor();
+      this.debouncedResizeEditor();
     });
   }
 };

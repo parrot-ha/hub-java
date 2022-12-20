@@ -37,14 +37,14 @@ def updated() {
 }
 
 void parse(String description) {
-    log.debug "description ${description}"
+    //log.debug "description ${description}"
     if (description.startsWith("catchall")) return
     Map descMap = zigbee.parseDescriptionAsMap(description)
-    log.debug "descMap:${descMap}"
+    //log.debug "descMap:${descMap}"
 
     if (descMap.cluster == "0006" && descMap.attrId == "0000") {
         String value = descMap.value == "01" ? "on" : "off"
-        log.warn "switch is ${value}"
+        //log.warn "switch is ${value}"
         sendEvent(name: "switch", value: value);
     }
 }

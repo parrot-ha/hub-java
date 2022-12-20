@@ -42,13 +42,13 @@ value	online
 viewed	false
  */
 
-import groovy.json.JsonBuilder;
 import com.parrotha.app.DeviceWrapper;
 import com.parrotha.internal.app.InstalledAutomationApp;
 import com.parrotha.internal.device.State;
 import com.parrotha.internal.hub.Hub;
 import com.parrotha.internal.hub.Location;
 import com.parrotha.internal.hub.LocationService;
+import groovy.json.JsonBuilder;
 
 import java.util.Date;
 import java.util.Map;
@@ -73,7 +73,8 @@ public class Event {
 
     private LocationService locationService;
 
-    public Event(String id, String name, String value, String descriptionText, boolean displayed, String displayName, boolean isStateChange, String unit, String data, Date date, String source, String sourceId, boolean isDigital) {
+    public Event(String id, String name, String value, String descriptionText, boolean displayed, String displayName, boolean isStateChange,
+                 String unit, String data, Date date, String source, String sourceId, boolean isDigital) {
         this.id = id;
         this.name = name;
         this.value = value;
@@ -94,26 +95,31 @@ public class Event {
         this.id = UUID.randomUUID().toString();
         this.date = new Date();
         if (properties != null) {
-            if (properties.get("name") != null)
+            if (properties.get("name") != null) {
                 this.name = properties.get("name").toString();
-            if (properties.get("value") != null)
+            }
+            if (properties.get("value") != null) {
                 this.value = properties.get("value").toString();
+            }
         }
     }
 
     public Event(Map properties, DeviceWrapper deviceWrapper, LocationService locationService) {
         this.locationService = locationService;
         this.deviceWrapper = deviceWrapper;
-        if (deviceWrapper != null)
+        if (deviceWrapper != null) {
             this.sourceId = deviceWrapper.getId();
+        }
         this.id = UUID.randomUUID().toString();
         this.date = new Date();
         this.displayName = deviceWrapper.getDisplayName();
         if (properties != null) {
-            if (properties.get("name") != null)
+            if (properties.get("name") != null) {
                 this.name = properties.get("name").toString();
-            if (properties.get("value") != null)
+            }
+            if (properties.get("value") != null) {
                 this.value = properties.get("value").toString();
+            }
             if (properties.get("source") != null) {
                 this.source = properties.get("source").toString();
             } else {
@@ -143,15 +149,18 @@ public class Event {
 
     public Event(Map properties, InstalledAutomationApp installedAutomationApp, LocationService locationService) {
         this.locationService = locationService;
-        if (installedAutomationApp != null)
+        if (installedAutomationApp != null) {
             this.sourceId = installedAutomationApp.getId();
+        }
         this.id = UUID.randomUUID().toString();
         this.date = new Date();
         if (properties != null) {
-            if (properties.get("name") != null)
+            if (properties.get("name") != null) {
                 this.name = properties.get("name").toString();
-            if (properties.get("value") != null)
+            }
+            if (properties.get("value") != null) {
                 this.value = properties.get("value").toString();
+            }
             if (properties.get("source") != null) {
                 this.source = properties.get("source").toString();
             } else {
@@ -185,10 +194,12 @@ public class Event {
         this.id = UUID.randomUUID().toString();
         this.date = new Date();
         if (properties != null) {
-            if (properties.get("name") != null)
+            if (properties.get("name") != null) {
                 this.name = properties.get("name").toString();
-            if (properties.get("value") != null)
+            }
+            if (properties.get("value") != null) {
                 this.value = properties.get("value").toString();
+            }
             if (properties.get("source") != null) {
                 this.source = properties.get("source").toString();
             } else {
@@ -204,7 +215,7 @@ public class Event {
             }
 
             if (!properties.containsKey("isStateChange")) {
-                isStateChange = false;
+                isStateChange = true;
             } else {
                 isStateChange = (boolean) properties.get("isStateChange");
             }

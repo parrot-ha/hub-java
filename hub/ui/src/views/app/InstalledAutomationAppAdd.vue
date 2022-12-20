@@ -39,7 +39,7 @@ function handleErrors(response) {
 }
 
 export default {
-  name: 'Installed Automation App Add',
+  name: 'InstalledAutomationAppAdd',
   data() {
     return {
       automationApps: []

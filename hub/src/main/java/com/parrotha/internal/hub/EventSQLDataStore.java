@@ -47,13 +47,14 @@ public class EventSQLDataStore implements EventDataStore {
     @Override
     public void saveEvent(Event event) {
         jdbi.useHandle(handle -> {
+            // truncate value and description for now, maybe up the value size in the database in the future?
             handle.execute("insert into EVENT_HISTORY (ID, NAME, VALUE, DESCRIPTION_TEXT, DISPLAYED, DISPLAY_NAME," +
                             "IS_STATE_CHANGE, UNIT, DATA, DATE, SOURCE, SOURCE_ID, IS_DIGITAL) " +
                             "values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                     UUID.randomUUID().toString(),
                     event.getName(),
-                    event.getValue(),
-                    event.getDescriptionText(),
+                    getTruncatedString(event.getValue(), 255),
+                    getTruncatedString(event.getDescriptionText(), 255),
                     event.isDisplayed(),
                     event.getDisplayName(),
                     event.isStateChange(),
@@ -64,6 +65,13 @@ public class EventSQLDataStore implements EventDataStore {
                     event.getSourceId(),
                     event.isDigital());
         });
+    }
+
+    private String getTruncatedString(String value, int length) {
+        if (value != null && value.length() > length) {
+            value = value.substring(0, length - 3) + "...";
+        }
+        return value;
     }
 
     @Override

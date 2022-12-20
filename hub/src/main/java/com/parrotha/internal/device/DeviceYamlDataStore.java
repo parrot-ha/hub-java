@@ -38,7 +38,17 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 
 public class DeviceYamlDataStore implements DeviceDataStore {
     private static final Logger logger = LoggerFactory.getLogger(DeviceYamlDataStore.class);
@@ -157,6 +167,8 @@ public class DeviceYamlDataStore implements DeviceDataStore {
         } else if (StringUtils.isNotEmpty(device.getParentInstalledAutomationAppId())) {
             addChildDevice(getAppChildDeviceMap(), device.getParentInstalledAutomationAppId(), device.getId());
         }
+        getDeviceDNItoIDMap().put((device.getIntegration() != null ? device.getIntegration().getId() : "null") + ":" + device.getDeviceNetworkId(),
+                deviceId);
         saveDevice(deviceId);
 
         return deviceId;

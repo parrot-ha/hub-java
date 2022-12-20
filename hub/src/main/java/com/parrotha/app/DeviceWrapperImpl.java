@@ -208,7 +208,7 @@ public class DeviceWrapperImpl extends GroovyObjectSupport implements DeviceWrap
 
     @Override
     public Object getDataValue(String key) {
-        return device.getData().get(key);
+        return device.getDataValue(key);
     }
 
     @Override

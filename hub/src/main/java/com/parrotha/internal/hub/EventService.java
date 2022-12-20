@@ -137,7 +137,9 @@ public class EventService {
         properties.put("source", "DEVICE");
         Event event = new Event(properties, deviceWrapper, locationService);
 
-        logger.info("Event! " + event.toString() + deviceWrapper.getId());
+        if (logger.isDebugEnabled()) {
+            logger.debug("Event! " + event.toString() + deviceWrapper.getId());
+        }
         return event;
     }
 
@@ -146,7 +148,9 @@ public class EventService {
         properties.put("source", "IAA");
         Event event = new Event(properties, installedAutomationApp, locationService);
 
-        logger.info("Event! " + event.toString() + installedAutomationApp.getId());
+        if (logger.isDebugEnabled()) {
+            logger.debug("Event! " + event.toString() + installedAutomationApp.getId());
+        }
         return event;
     }
 
@@ -155,7 +159,9 @@ public class EventService {
         properties.put("source", "HUB");
         Event event = new Event(properties, hub, locationService);
 
-        logger.info("Event! " + event.toString() + hub.getId());
+        if (logger.isDebugEnabled()) {
+            logger.debug("Event! " + event.toString() + hub.getId());
+        }
         return event;
     }
 
@@ -164,7 +170,9 @@ public class EventService {
         properties.put("source", "LOCATION");
         Event event = new Event(properties, location, locationService);
 
-        logger.info("Event! " + event.toString() + location.getId());
+        if (logger.isDebugEnabled()) {
+            logger.debug("Event! " + event.toString() + location.getId());
+        }
         return event;
     }
 
@@ -215,8 +223,8 @@ public class EventService {
                     Subscription subscriptionInfo = getSubscriptionInfo(subscriptionId);
                     if (subscriptionInfo != null) {
                         String attributeNameAndValue = subscriptionInfo.getAttributeNameAndValue();
-                        if (event.getName() != null && (event.getName().equals(attributeNameAndValue) ||
-                                (event.getValue() != null && (event.getName() + "." + event.getValue()).equals(attributeNameAndValue)))) {
+                        if (attributeNameAndValue == null || (event.getName() != null && (event.getName().equals(attributeNameAndValue) ||
+                                (event.getValue() != null && (event.getName() + "." + event.getValue()).equals(attributeNameAndValue))))) {
                             String handlerMethod = subscriptionInfo.getHandlerMethod();
                             String installedAutomationAppId = subscriptionInfo.getSubscribedAppId();
                             if ((!subscriptionInfo.isFilterEvents() || event.isStateChange()) && handlerMethod != null &&
@@ -272,7 +280,7 @@ public class EventService {
         subscription.setAttributeNameAndValue(attributeNameAndValue);
         subscription.setSubscribedAppId(subscribedAppId);
         subscription.setHandlerMethod(handlerMethod);
-        if (options.containsKey("filterEvents")) {
+        if (options != null && options.containsKey("filterEvents")) {
             subscription.setFilterEvents((Boolean) options.get("filterEvents"));
         }
 
@@ -298,7 +306,7 @@ public class EventService {
         subscription.setAttributeNameAndValue(attributeNameAndValue);
         subscription.setSubscribedAppId(subscribedAppId);
         subscription.setHandlerMethod(handlerMethod);
-        if (options.containsKey("filterEvents")) {
+        if (options != null && options.containsKey("filterEvents")) {
             subscription.setFilterEvents((Boolean) options.get("filterEvents"));
         }
 

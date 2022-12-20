@@ -51,6 +51,10 @@ public class HubAction {
         this.protocol = protocol;
     }
 
+    public HubAction(String action, Protocol protocol, String dni) {
+        this(action, protocol, dni, null);
+    }
+
     public HubAction(String action, Protocol protocol, String dni, Map options) {
         this.action = action;
         this.protocol = protocol;
@@ -119,9 +123,9 @@ public class HubAction {
     }
 
     public String getCallback() {
-        if(options != null && options.containsKey("callback")) {
+        if (options != null && options.containsKey("callback")) {
             Object callbackObject = options.get("callback");
-            if(callbackObject instanceof MetaMethod) {
+            if (callbackObject instanceof MetaMethod) {
                 return ((MetaMethod) callbackObject).getName();
             } else {
                 return callbackObject.toString();

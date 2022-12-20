@@ -37,6 +37,10 @@ public class EntityScriptDelegateCommon {
         return new JsonSlurper().parseText(stringToParse);
     }
 
+    public static Map parseLanMessage(String stringToParse) {
+        return EntityScriptDelegateUtils.parseLanMessage(stringToParse);
+    }
+
     public Object httpGet(String uri, Closure closure) throws IOException, URISyntaxException {
         Map params = new HashMap();
         params.put("uri", uri);

@@ -330,7 +330,16 @@ public class AutomationAppScriptDelegateImpl extends EntityScriptDelegateCommon 
         }
     }
 
+    List<ChildDeviceWrapper> getAllChildDevices() {
+        return getChildDevices(true);
+    }
+
     List<ChildDeviceWrapper> getChildDevices() {
+        return getChildDevices(false);
+    }
+
+    List<ChildDeviceWrapper> getChildDevices(boolean includeVirtualDevices) {
+        //TODO: how to handle includeVirtualDevices?
         List<ChildDeviceWrapper> childDeviceWrappers = new ArrayList<>();
         for (Device childDevice : deviceService.getInstalledAutomationAppChildDevices(this.installedAutomationApp.getId())) {
             childDeviceWrappers.add(new ChildDeviceWrapperImpl(childDevice, deviceService, entityService, locationService));
@@ -366,6 +375,7 @@ public class AutomationAppScriptDelegateImpl extends EntityScriptDelegateCommon 
         return automationAppService.getChildInstalledAutomationApps(this.installedAutomationApp.getId(), null, null).stream()
                 .map(ca -> new InstalledAutomationAppWrapperImpl(ca, entityService, automationAppService)).collect(Collectors.toList());
     }
+
 
     public void unsubscribe() {
         eventService.removeSubscriptionsOfAutomationApp(installedAutomationApp.getId());

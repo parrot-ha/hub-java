@@ -16,7 +16,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.parrotha.internal.device;
+package com.parrotha.internal.entity;
 
 import org.apache.commons.lang.StringUtils;
 
@@ -24,14 +24,18 @@ import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 
-public class DeviceScriptDelegateUtils {
-
+public class EntityScriptDelegateUtils {
     public static Map parseLanMessage(String stringToParse) {
-        if (stringToParse == null) return null;
-        if (StringUtils.isBlank(stringToParse)) return new HashMap();
+        if (stringToParse == null) {
+            return null;
+        }
+        if (StringUtils.isBlank(stringToParse)) {
+            return new HashMap();
+        }
         Map<String, Object> lanMessageMap = new HashMap<>();
 
-        Map<String, String> lanMessageInterim = stringToMap(stringToParse, ",", ":"); //Splitter.on(',').trimResults().withKeyValueSeparator(':').split(stringToParse);
+        Map<String, String> lanMessageInterim = stringToMap(stringToParse, ",",
+                ":"); //Splitter.on(',').trimResults().withKeyValueSeparator(':').split(stringToParse);
 
         for (String key : lanMessageInterim.keySet()) {
             if (StringUtils.isEmpty(lanMessageInterim.get(key))) {

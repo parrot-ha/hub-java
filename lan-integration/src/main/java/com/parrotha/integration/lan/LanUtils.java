@@ -18,8 +18,8 @@
  */
 package com.parrotha.integration.lan;
 
-import org.apache.commons.io.IOUtils;
 import com.parrotha.integration.DeviceIntegration;
+import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,7 +27,9 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
@@ -107,25 +109,31 @@ public class LanUtils {
         // look for device based on ip address
         if (integration.deviceExists(ipAddressHexString)) {
             integration.sendDeviceMessage(ipAddressHexString, deviceDescription);
+            return;
         }
 
         // look for device without integration id
 
         // look for device based on mac address first
         if (integration.deviceExists(macAddress, true)) {
-            integration.sendDeviceMessage(macAddress, deviceDescription);
+            integration.sendDeviceMessage(macAddress, deviceDescription, true);
             return;
         }
 
         // next look for device based on ip address : port
         if (integration.deviceExists(ipAddressAndPortHexString, true)) {
-            integration.sendDeviceMessage(ipAddressAndPortHexString, deviceDescription);
+            integration.sendDeviceMessage(ipAddressAndPortHexString, deviceDescription, true);
             return;
         }
 
         // look for device based on ip address
         if (integration.deviceExists(ipAddressHexString, true)) {
-            integration.sendDeviceMessage(ipAddressHexString, deviceDescription);
+            integration.sendDeviceMessage(ipAddressHexString, deviceDescription, true);
+            return;
         }
+
+        // Finally, send message as hub event if no match above, it appears that Smartthings used to do this.
+        // TODO: is lanMessage the right name of the event?  Can't find documentation about it.
+        integration.sendHubEvent(new HashMap<>(Map.of("name", "lanMessage", "value", macAddress, "description", deviceDescription)));
     }
 }
