@@ -7,9 +7,9 @@
             {{ command.name }}
           </v-btn>
         </div>
-        <span v-for="(arg, i) in command.values" :key="i">
+        <span v-for="(arg, i) in command.arguments" :key="i">
           <input
-            v-if="arg.name.toUpperCase() == 'TIME'"
+            v-if="arg.dataType.toUpperCase() == 'TIME'"
             type="time"
             class="form-control"
             v-model="arg.value"
@@ -51,11 +51,15 @@ export default {
     commandClick: function(deviceId, command) {
       var url = `/api/devices/${deviceId}/commands/${command}`;
       var setArgs = [];
-      if (typeof this.command.values !== 'undefined') {
-        console.log(this.command.values);
-        for (var arg of this.command.values) {
+      if (typeof this.command.arguments !== 'undefined') {
+        console.log(this.command.arguments);
+        for (var arg of this.command.arguments) {
           if (arg.value) {
-            setArgs.push({ value: arg.value, type: arg.name });
+            setArgs.push({
+              name: arg.name,
+              value: arg.value,
+              dataType: arg.dataType
+            });
           } else {
             // break out after first null
             break;

@@ -18,8 +18,8 @@
  */
 package com.parrotha.internal.device;
 
-import groovy.lang.Closure;
 import com.parrotha.internal.entity.LiveLogger;
+import groovy.lang.Closure;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -30,8 +30,9 @@ public class DeviceDefinitionDelegate {
     private LiveLogger log = null;
 
     public LiveLogger getLog() {
-        if (log == null)
+        if (log == null) {
             log = new LiveLogger("parrothub.live.dev.temporary");
+        }
         return log;
     }
 
@@ -78,18 +79,9 @@ public class DeviceDefinitionDelegate {
         command(name, null);
     }
 
-    void command(String name, List<String> arguments) {
+    void command(String name, List<Object> arguments) {
         Map definitionSection = (Map) metadataValue.get("definition");
-        if (definitionSection != null) {
-            List<Command> commandList;
-            if (definitionSection.get("commandList") == null) {
-                commandList = new ArrayList<>();
-                definitionSection.put("commandList", commandList);
-            } else {
-                commandList = (List<Command>) definitionSection.get("commandList");
-            }
-            commandList.add(new Command(name, arguments));
-        }
+        DeviceDelegateHelper.command(definitionSection, name, arguments);
     }
 
     void attribute(String attributeName, String attributeType) {

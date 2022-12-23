@@ -502,7 +502,7 @@ public class DeviceApiHandler extends BaseApiHandler {
         Object[] retArgs = new Object[args.size()];
         for (int i = 0; i < args.size(); i++) {
             Map arg = (Map) args.get(i);
-            String argType = ((String) arg.get("type")).toUpperCase();
+            String argType = ((String) arg.get("dataType")).toUpperCase();
             if ("NUMBER".equals(argType)) {
                 retArgs[i] = NumberUtils.createNumber(arg.get("value").toString());
             } else {

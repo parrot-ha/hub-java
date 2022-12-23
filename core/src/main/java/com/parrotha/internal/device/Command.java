@@ -18,13 +18,14 @@
  */
 package com.parrotha.internal.device;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
 public class Command {
     private String name;
-    private List<String> arguments;
+    private List<CommandArgument> arguments;
 
     public Command() {
     }
@@ -34,12 +35,12 @@ public class Command {
         this.arguments = null;
     }
 
-    public Command(String name, List<String> arguments) {
+    public Command(String name, List<Object> arguments) {
         this.name = name;
-        this.arguments = arguments;
+        this.setArguments(arguments);
     }
 
-    public Command(String name, String... args) {
+    public Command(String name, CommandArgument... args) {
         this.name = name;
         this.arguments = Arrays.asList(args);
     }
@@ -52,18 +53,32 @@ public class Command {
         this.name = name;
     }
 
-    public List<String> getArguments() {
+    public List<CommandArgument> getArguments() {
         return arguments;
     }
 
-    public void setArguments(List<String> arguments) {
-        this.arguments = arguments;
+    public void setArguments(List<Object> arguments) {
+        if (arguments != null) {
+            List<CommandArgument> commandArgumentsList = new ArrayList<>();
+            for (Object argument : arguments) {
+                if (argument instanceof CommandArgument) {
+                    commandArgumentsList.add((CommandArgument) argument);
+                } else if (argument instanceof String) {
+                    commandArgumentsList.add(new CommandArgument((String) argument, "STRING"));
+                }
+            }
+            this.arguments = commandArgumentsList;
+        }
     }
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
         Command command = (Command) o;
         return Objects.equals(name, command.name) &&
                 Objects.equals(arguments, command.arguments);
