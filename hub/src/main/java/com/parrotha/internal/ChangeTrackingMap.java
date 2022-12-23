@@ -41,7 +41,7 @@ public class ChangeTrackingMap implements Map {
 
     public ChangeTrackingMap(Map map) {
         if (map != null) {
-            this.map = new HashMap(map);
+            this.map = (Map) new JsonSlurperClassic().parseText(new JsonBuilder(map).toString());
         } else {
             this.map = new HashMap();
         }
