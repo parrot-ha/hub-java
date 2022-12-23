@@ -333,7 +333,11 @@ export default {
             //TODO: is empty string ok, or should it be null?
             this.settings[input.name] = {
               name: input.name,
-              value: input.multiple ? [] : null,
+              value: input.defaultValue
+                ? input.defaultValue
+                : input.multiple
+                ? []
+                : null,
               type: input.type,
               multiple: input.multiple
             };
