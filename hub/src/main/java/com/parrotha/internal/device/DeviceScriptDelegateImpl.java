@@ -579,18 +579,9 @@ public class DeviceScriptDelegateImpl extends EntityScriptDelegateCommon impleme
         command(name, null);
     }
 
-    void command(String name, List<String> arguments) {
+    void command(String name, List<Object> arguments) {
         Map definitionSection = (Map) metadataValue.get("definition");
-        if (definitionSection != null) {
-            List<Command> commandList;
-            if (definitionSection.get("commandList") == null) {
-                commandList = new ArrayList<>();
-                definitionSection.put("commandList", commandList);
-            } else {
-                commandList = (List<Command>) definitionSection.get("commandList");
-            }
-            commandList.add(new Command(name, arguments));
-        }
+        DeviceDelegateHelper.command(definitionSection, name, arguments);
     }
 
     void simulator(Closure closure) {

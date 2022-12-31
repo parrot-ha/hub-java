@@ -383,9 +383,8 @@ export default {
         if (typeof data !== 'undefined' && data != null) {
           for (var cmd of data) {
             if (cmd.arguments) {
-              cmd.values = [];
               for (var arg of cmd.arguments) {
-                cmd.values.push({ name: arg, value: null });
+                arg.value = null;
               }
             }
           }
