@@ -93,7 +93,7 @@ export default {
     fetch(`/api/devices/${deviceId}`)
       .then(response => response.json())
       .then(data => {
-        if (typeof data !== 'undefined' && data != null) {
+        if (data != null) {
           this.device = data;
         }
       });
@@ -101,7 +101,7 @@ export default {
     fetch(`/api/devices/${deviceId}/commands`)
       .then(response => response.json())
       .then(data => {
-        if (typeof data !== 'undefined' && data != null) {
+        if (data != null) {
           for (var cmd of data) {
             if (cmd.arguments) {
               cmd.values = [];
@@ -117,7 +117,7 @@ export default {
     fetch(`/api/device-handlers?field=id&field=name&field=namespace`)
       .then(response => response.json())
       .then(data => {
-        if (typeof data !== 'undefined' && data != null) {
+        if (data != null) {
           this.deviceHandlers = data;
         }
       });

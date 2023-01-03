@@ -44,7 +44,7 @@ export default {
     )
       .then(response => response.json())
       .then(data => {
-        if (typeof data !== 'undefined' && data != null) {
+        if (data != null) {
           this.childApps = data;
         }
       });

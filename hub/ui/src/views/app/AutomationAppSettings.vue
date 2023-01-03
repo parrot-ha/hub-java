@@ -113,7 +113,7 @@ export default {
     fetch(`/api/automation-apps/${this.aaId}`)
       .then(response => response.json())
       .then(data => {
-        if (typeof data !== 'undefined' && data != null) {
+        if (data != null) {
           this.automationApp = data;
         }
       });

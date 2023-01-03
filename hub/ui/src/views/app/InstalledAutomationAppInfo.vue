@@ -172,7 +172,7 @@ export default {
     fetch(`/api/iaas/${this.iaaId}`)
       .then(response => response.json())
       .then(data => {
-        if (typeof data !== 'undefined' && data != null) {
+        if (data != null) {
           this.installedAutomationApp = data;
         }
       });
@@ -180,7 +180,7 @@ export default {
     fetch(`/api/iaas/${this.iaaId}/schedules`)
       .then(response => response.json())
       .then(data => {
-        if (typeof data !== 'undefined' && data != null) {
+        if (data != null) {
           this.schedules = data;
         }
       });

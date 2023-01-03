@@ -18,7 +18,7 @@ export default {
   },
   methods: {
     dateTimeToTime: function(dateTime) {
-      if (typeof dateTime === 'undefined' || dateTime == null) {
+      if (dateTime == null) {
         return null;
       }
 
@@ -29,7 +29,7 @@ export default {
       }
     },
     timeToDateTime: function(time) {
-      if (typeof time === 'undefined' || time == null) {
+      if (time == null) {
         return time;
       } else if (time.length == 0) {
         return time;

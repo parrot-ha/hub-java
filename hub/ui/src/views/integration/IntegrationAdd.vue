@@ -62,7 +62,7 @@ export default {
     fetch('/api/integration_types')
       .then(response => response.json())
       .then(data => {
-        if (typeof data !== 'undefined' && data != null) {
+        if (data != null) {
           this.integrationTypes = data;
         }
       });

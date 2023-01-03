@@ -109,7 +109,7 @@ export default {
     fetch(`/api/device-handlers/${this.dhId}/source`)
       .then(response => response.json())
       .then(data => {
-        if (typeof data !== 'undefined' && data != null) {
+        if (data != null) {
           this.deviceHandler = data;
         }
       });

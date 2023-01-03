@@ -220,7 +220,7 @@ export default {
     fetch('/api/integrations?field=id&field=name&field=label')
       .then(response => response.json())
       .then(data => {
-        if (typeof data !== 'undefined' && data != null) {
+        if (data != null) {
           this.integrations = data;
           // add blank option
           this.integrations.push({ id: null, name: 'None', label: 'None' });
@@ -230,7 +230,7 @@ export default {
     fetch(`/api/device-handlers?field=id&field=name&field=namespace`)
       .then(response => response.json())
       .then(data => {
-        if (typeof data !== 'undefined' && data != null) {
+        if (data != null) {
           this.deviceHandlers = data;
         }
       });

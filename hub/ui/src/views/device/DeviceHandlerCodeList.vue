@@ -51,7 +51,7 @@ export default {
     fetch('/api/device-handlers?filter=user')
       .then(response => response.json())
       .then(data => {
-        if (typeof data !== 'undefined' && data != null) {
+        if (data != null) {
           this.deviceHandlerCodeList = data;
         }
       });

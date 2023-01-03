@@ -62,7 +62,7 @@ export default {
     fetch('/api/devices')
       .then(response => response.json())
       .then(data => {
-        if (typeof data !== 'undefined' && data != null) {
+        if (data != null) {
           this.devices = data;
         }
       });
