@@ -1,0 +1,447 @@
+<template>
+  <div class="container-fluid">
+    <div class="row">
+      <div class="col">
+        <v-skeleton-loader :loading="loading" type="card">
+          <div class="card">
+            <v-card-title>
+              {{ page.title }}
+              <v-spacer></v-spacer>
+              <v-dialog
+                v-if="page.defaults || page.uninstall == true"
+                v-model="iaaUninstallDialog"
+                persistent
+                max-width="290"
+              >
+                <template v-slot:activator="{ on, attrs }">
+                  <v-btn color="error" v-bind="attrs" v-on="on"
+                    >Uninstall</v-btn
+                  >
+                </template>
+                <div class="card">
+                  <v-card-title class="headline"> Are you sure? </v-card-title>
+                  <v-card-text
+                    >Are you sure you want to uninstall this Automation
+                    App?</v-card-text
+                  >
+                  <v-card-actions>
+                    <v-spacer></v-spacer>
+                    <v-btn
+                      color="primary"
+                      text
+                      @click="iaaUninstallDialog = false"
+                    >
+                      Cancel
+                    </v-btn>
+                    <v-btn color="error" text @click="uninstallClick">
+                      Delete
+                    </v-btn>
+                  </v-card-actions>
+                </div>
+              </v-dialog>
+            </v-card-title>
+
+            <div class="card-text">
+              <div v-for="(section, i) in page.sections" :key="i">
+                <br />
+                <h3>{{ section.title }}</h3>
+                <div class="card">
+                  <div class="card-text">
+                    <div v-for="(body, j) in section.body" :key="j">
+                      <div
+                        v-if="
+                          body.element === 'input' &&
+                          body.type.startsWith('capability')
+                        "
+                      >
+                        <!-- display a device input -->
+                        <device-select
+                          v-if="settings[body.name]"
+                          v-model="settings[body.name].value"
+                          v-bind:body="body"
+                          v-bind:devices="devices"
+                        ></device-select>
+                      </div>
+                      <div v-if="body.type === 'app'">
+                        <child-app v-bind:body="body"></child-app>
+                      </div>
+                      <div v-if="body.type === 'enum'">
+                        <enum-input
+                          v-if="settings[body.name]"
+                          v-bind:options="body.options"
+                          v-bind:body="body"
+                          v-model="settings[body.name].value"
+                        ></enum-input>
+                      </div>
+                      <div v-if="body.type === 'bool'">
+                        <bool-input
+                          v-if="settings[body.name]"
+                          v-bind:body="body"
+                          v-model="settings[body.name].value"
+                        ></bool-input>
+                      </div>
+                      <div v-if="body.type === 'email'">
+                        <email-input
+                          v-if="settings[body.name]"
+                          v-bind:body="body"
+                          v-model="settings[body.name].value"
+                        ></email-input>
+                      </div>
+                      <div v-if="body.type === 'number'">
+                        <number-input
+                          v-if="settings[body.name]"
+                          v-bind:body="body"
+                          v-model="settings[body.name].value"
+                        ></number-input>
+                      </div>
+                      <div
+                        v-if="body.type === 'text' && body.element === 'input'"
+                      >
+                        <text-input
+                          v-if="settings[body.name]"
+                          v-bind:body="body"
+                          v-model="settings[body.name].value"
+                        ></text-input>
+                      </div>
+                      <div v-if="body.type === 'password'">
+                        <password-input
+                          v-if="settings[body.name]"
+                          v-bind:body="body"
+                          v-model="settings[body.name].value"
+                        ></password-input>
+                      </div>
+                      <div v-if="body.type === 'time'">
+                        <time-input
+                          v-if="settings[body.name]"
+                          v-bind:body="body"
+                          v-model="settings[body.name].value"
+                        ></time-input>
+                      </div>
+                      <div v-if="body.type === 'paragraph'">
+                        <paragraph-element
+                          v-bind:body="body"
+                        ></paragraph-element>
+                      </div>
+                      <div v-if="body.element === 'href'">
+                        <href-element
+                          v-bind:body="body"
+                          v-on:hrefPage="hrefClick"
+                        ></href-element>
+                      </div>
+                      <div
+                        v-if="body.type === 'text' && body.element === 'label'"
+                      >
+                        ADD LABEL INPUT
+                      </div>
+
+                      <v-divider
+                        v-if="j != Object.keys(section.body).length - 1"
+                      ></v-divider>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <br />
+              <div v-if="page.defaults">DEFAULTS GO HERE (MODE AND NAME)</div>
+            </div>
+            <v-card-actions>
+              <v-spacer></v-spacer>
+              <v-btn
+                v-if="doneButtonVisible"
+                color="primary"
+                @click="doneClick"
+              >
+                Done
+              </v-btn>
+              <v-btn
+                v-if="page.nextPage && page.install == false"
+                color="primary"
+                @click="nextClick"
+              >
+                Next
+              </v-btn>
+            </v-card-actions>
+          </div>
+        </v-skeleton-loader>
+      </div>
+    </div>
+  </div>
+</template>
+<script>
+var pathToRegexp = require("path-to-regexp");
+
+import BoolInput from "@/components/app/AppBoolInput";
+import ChildApp from "@/components/app/AppChildApp";
+import DeviceSelect from "@/components/app/AppDeviceSelect";
+import EmailInput from "@/components/app/AppEmailInput";
+import EnumInput from "@/components/app/AppEnumInput";
+import HrefElement from "@/components/app/AppHrefElement";
+import NumberInput from "@/components/app/AppNumberInput";
+import PasswordInput from "@/components/app/AppPasswordInput";
+import TimeInput from "@/components/app/AppTimeInput";
+import TextInput from "@/components/app/AppTextInput";
+import ParagraphElement from "@/components/app/AppParagraphElement";
+
+export default {
+  name: "InstalledAutomationAppConfig",
+  components: {
+    BoolInput,
+    ChildApp,
+    DeviceSelect,
+    EmailInput,
+    EnumInput,
+    HrefElement,
+    NumberInput,
+    ParagraphElement,
+    PasswordInput,
+    TextInput,
+    TimeInput,
+  },
+  data() {
+    return {
+      loading: true,
+      iaaId: "",
+      page: {},
+      settings: {},
+      savedSettings: {},
+      previousSettings: {},
+      devices: {},
+      breadcrumb: [],
+      iaaUninstallDialog: false,
+      refreshFunction: null,
+    };
+  },
+  computed: {
+    doneButtonVisible: function () {
+      return (
+        this.page.defaults ||
+        this.page.install == true ||
+        (this.page.install == false && this.page.nextPage == null)
+      );
+    },
+  },
+  watch: {
+    $route(to, from) {
+      // react to route changes...
+      this.processRoute();
+    },
+  },
+  methods: {
+    hrefClick: function (pageName) {
+      this.nextPageNavigate(pageName);
+    },
+    nextPageNavigate: function (pageName) {
+      fetch(`/api/iaas/${this.iaaId}/cfg/settings`, {
+        method: "PATCH",
+        body: JSON.stringify(this.settings),
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          if (data.success) {
+            // get next page
+            this.breadcrumb.push(pageName);
+
+            var newPath = this.breadcrumb.join("/");
+            this.$router.push(`/iaas/${this.iaaId}/cfg/${newPath}`);
+            this.loadInformation();
+          } else {
+            console.log("problem saving automation app");
+          }
+        });
+    },
+    nextClick: function (event) {
+      this.nextPageNavigate(this.page.nextPage);
+    },
+    doneClick: function (event) {
+      if (this.page.install == false) {
+        fetch(`/api/iaas/${this.iaaId}/cfg/settings`, {
+          method: "PATCH",
+          body: JSON.stringify(this.settings),
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            if (data.success) {
+              // need to go back a page.
+              this.breadcrumb.pop();
+              var newPath = this.breadcrumb.join("/");
+              this.$router.push(`/iaas/${this.iaaId}/cfg/${newPath}`);
+              this.loadInformation();
+            } else {
+              //TODO: popup for user
+              console.log("problem saving automation app");
+            }
+          });
+      } else {
+        fetch(`/api/iaas/${this.iaaId}/cfg/settings`, {
+          method: "POST",
+          body: JSON.stringify(this.settings),
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            if (data.success) {
+              this.$router.push("/iaas");
+            } else {
+              console.log("problem saving automation app");
+            }
+          });
+      }
+    },
+    uninstallClick: function (event) {
+      fetch(`/api/iaas/${this.iaaId}`, {
+        method: "DELETE",
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          if (data.success) {
+            this.$router.push("/iaas");
+          } else {
+            console.log("problem deleting automation app");
+          }
+        });
+    },
+    populateSettingsFromInputs: function () {
+      if (Object.keys(this.settings).length == 0) {
+        this.settings = JSON.parse(JSON.stringify(this.savedSettings));
+        this.previousSettings = JSON.parse(JSON.stringify(this.savedSettings));
+      } else if (Object.keys(this.savedSettings).length > 0) {
+        for (var ssKey of Object.keys(this.savedSettings)) {
+          if (
+            this.savedSettings[ssKey]?.value !=
+              this.previousSettings[ssKey]?.value &&
+            this.previousSettings[ssKey]?.value == this.settings[ssKey]?.value
+          ) {
+            // the value changed on the hub and not on the ui.
+            this.settings[ssKey] = JSON.parse(
+              JSON.stringify(this.savedSettings[ssKey])
+            );
+          }
+        }
+      }
+      for (var section of this.page.sections) {
+        for (var input of section.input) {
+          if (typeof this.settings[input.name] === "undefined") {
+            //TODO: is empty string ok, or should it be null?
+            this.settings[input.name] = {
+              name: input.name,
+              value: input.defaultValue
+                ? input.defaultValue
+                : input.multiple
+                ? []
+                : null,
+              type: input.type,
+              multiple: input.multiple,
+            };
+          } else {
+            // check if multiple changed
+            if (this.settings[input.name].multiple != input.multiple) {
+              // update setting
+              this.settings[input.name].multiple = input.multiple;
+              // we are changing to true, check value
+              if (input.multiple) {
+                if (
+                  this.settings[input.name].value === null ||
+                  this.settings[input.name].value === ""
+                ) {
+                  this.settings[input.name].value = [];
+                } else if (!Array.isArray(this.settings[input.name].value)) {
+                  this.settings[input.name].value = Array.from(
+                    this.settings[input.name].value
+                  );
+                }
+              }
+              //TODO: handle multiple going from true to false
+            }
+          }
+        }
+      }
+    },
+    loadInformation: function () {
+      fetch("/api/device-id-map")
+        .then((response) => response.json())
+        .then((data) => {
+          if (typeof data !== "undefined" && data != null) {
+            this.devices = data;
+          }
+        });
+
+      fetch(`/api/iaas/${this.iaaId}/cfg/settings`)
+        .then((response) => response.json())
+        .then((data) => {
+          if (typeof data !== "undefined" && data != null) {
+            this.savedSettings = data;
+            this.loadPage();
+          }
+        });
+    },
+    loadPage: function () {
+      var vm = this;
+      var path = `/api/iaas/${this.iaaId}/cfg/page`;
+      if (this.breadcrumb.length > 0)
+        path = path
+          .concat("/")
+          .concat(this.breadcrumb[this.breadcrumb.length - 1]);
+
+      //if (page != null) path = path.concat('/').concat(page);
+      fetch(path)
+        .then((response) => response.json())
+        .then((data) => {
+          if (typeof data !== "undefined" && data != null) {
+            if (typeof data.defaults === "undefined") {
+              this.page = data;
+              this.populateSettingsFromInputs();
+            } else {
+              this.page = data;
+              this.populateSettingsFromInputs();
+              // TODO: if defaults is set to true, then add mode and name to settings
+            }
+            if (
+              typeof this.page.name !== "undefined" &&
+              this.page.name != null &&
+              this.page.name !== "" &&
+              this.breadcrumb.length == 0
+            ) {
+              // we have a page, push to router and breadcrumb
+              this.breadcrumb.push(this.page.name);
+              var newPath = this.breadcrumb.join("/");
+              this.$router.push(`/iaas/${this.iaaId}/cfg/${newPath}`);
+            }
+            if (
+              this.refreshFunction == null &&
+              typeof this.page.refreshInterval !== "undefined" &&
+              this.page.refreshInterval != null &&
+              this.page.refreshInterval != "" &&
+              this.page.refreshInterval > 0
+            ) {
+              this.refreshFunction = setInterval(function () {
+                this.refreshFunction = null;
+                vm.loadInformation();
+              }, vm.page.refreshInterval * 1000);
+            }
+            this.loading = false;
+          }
+        });
+    },
+    processRoute: function () {
+      this.iaaId = this.$route.params.id;
+
+      var keys = [];
+      var re = pathToRegexp("/iaas/:id/cfg/*", keys);
+      var existingPath = re.exec(this.$route.path);
+      if (existingPath != null) {
+        this.breadcrumb = existingPath[existingPath.length - 1].split("/");
+      }
+
+      this.loadInformation();
+    },
+  },
+  mounted: function () {
+    this.processRoute();
+  },
+  beforeUnmount: function () {
+    if (this.refreshFunction != null) {
+      clearTimeout(this.refreshFunction);
+    }
+  },
+};
+</script>
+<style scoped></style>

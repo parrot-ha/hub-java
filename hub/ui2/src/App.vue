@@ -1,0 +1,39 @@
+<template>
+  <div>
+    <app-header></app-header>
+    <div class="container-fluid">
+      <div class="row">
+        <app-navigation></app-navigation>
+        <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+          <div
+            class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3"
+          >
+            <RouterView />
+          </div>
+        </main>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script setup>
+import { RouterLink, RouterView } from "vue-router";
+import AppNavigation from "./components/AppNavigation.vue";
+import AppHeader from "./components/AppHeader.vue";
+</script>
+
+<style scoped>
+.bd-placeholder-img {
+  font-size: 1.125rem;
+  text-anchor: middle;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  user-select: none;
+}
+
+@media (min-width: 768px) {
+  .bd-placeholder-img-lg {
+    font-size: 3.5rem;
+  }
+}
+</style>

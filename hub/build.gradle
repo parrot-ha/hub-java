@@ -84,7 +84,7 @@ dependencies {
 }
 
 node {
-    version = '14.15.3'
+    version = '16.19.0'
     download = true
     workDir = file("${project.projectDir}/.gradle/nodejs")
     npmWorkDir = file("${project.projectDir}/.gradle/npm")

@@ -1,0 +1,75 @@
+<template>
+  <div class="container-fluid">
+    <div class="row">
+      <div class="col">
+        <div class="card">
+          <v-card-title>Installed Automation Apps</v-card-title>
+          <div class="card-text">
+            <router-link :to="{ name: 'InstalledAutomationAppAdd' }"
+              >Add Automation App</router-link
+            >
+            <v-data-table
+              :headers="headers"
+              :items="installedAutomationApps"
+              sort-by="label"
+              disable-pagination
+              hide-default-footer
+              class="elevation-1"
+            >
+              <template v-slot:item.label="{ item }">
+                <router-link
+                  :to="{
+                    name: 'InstalledAutomationAppConfig',
+                    params: { id: item.id },
+                  }"
+                  >{{ item.label }}</router-link
+                >
+              </template>
+              <template v-slot:item.id="{ item }">
+                <router-link
+                  :to="{
+                    name: 'InstalledAutomationAppInfo',
+                    params: { id: item.id },
+                  }"
+                  ><v-icon>mdi-alert-circle-outline</v-icon></router-link
+                >
+              </template>
+            </v-data-table>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+<script>
+export default {
+  name: "InstalledAutomationAppList",
+  data() {
+    return {
+      installedAutomationApps: [],
+      headers: [
+        {
+          text: "",
+          align: "start",
+          sortable: false,
+          value: "id",
+          width: "5%",
+        },
+        { text: "Label", value: "label" },
+        { text: "Type", value: "type" },
+      ],
+    };
+  },
+  mounted: function () {
+    fetch("/api/iaas?includeChildren=false")
+      .then((response) => response.json())
+      .then((data) => {
+        if (typeof data !== "undefined" && data != null) {
+          this.installedAutomationApps = data;
+        }
+      });
+  },
+};
+</script>
+<style scoped></style>
