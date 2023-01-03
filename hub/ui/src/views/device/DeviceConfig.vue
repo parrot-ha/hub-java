@@ -295,8 +295,7 @@ export default {
                   };
                 } else if (
                   this.settings[input.name].value == null &&
-                  input.defaultValue != null &&
-                  typeof input.defaultValue !== 'undefined'
+                  input.defaultValue != null
                 ) {
                   this.settings[input.name].value = input.defaultValue;
                 }
@@ -346,7 +345,7 @@ export default {
     )
       .then(response => response.json())
       .then(data => {
-        if (typeof data !== 'undefined' && data != null) {
+        if (data != null) {
           this.integrations = data;
           // add blank option
           this.integrations.push({ id: null, name: 'None', label: 'None' });
@@ -356,7 +355,7 @@ export default {
     fetch(`/api/devices/${this.deviceId}`)
       .then(response => response.json())
       .then(data => {
-        if (typeof data !== 'undefined' && data != null) {
+        if (data != null) {
           this.device = data;
         }
       });
@@ -364,7 +363,7 @@ export default {
     fetch(`/api/devices/${this.deviceId}/states`)
       .then(response => response.json())
       .then(data => {
-        if (typeof data !== 'undefined' && data != null) {
+        if (data != null) {
           this.currentStates = data;
         }
       });
@@ -372,7 +371,7 @@ export default {
     fetch(`/api/devices/${this.deviceId}/information`)
       .then(response => response.json())
       .then(data => {
-        if (typeof data !== 'undefined' && data != null) {
+        if (data != null) {
           this.information = data;
         }
       });
@@ -380,7 +379,7 @@ export default {
     fetch(`/api/device-handlers?field=id&field=name&field=namespace&field=tags`)
       .then(response => response.json())
       .then(data => {
-        if (typeof data !== 'undefined' && data != null) {
+        if (data != null) {
           this.deviceHandlers = data;
         }
       });
@@ -388,7 +387,7 @@ export default {
     fetch(`/api/devices/${this.deviceId}/settings`)
       .then(response => response.json())
       .then(data => {
-        if (typeof data !== 'undefined' && data != null) {
+        if (data != null) {
           this.settings = data;
         }
       })

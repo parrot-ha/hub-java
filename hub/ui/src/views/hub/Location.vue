@@ -86,7 +86,7 @@ export default {
       fetch('/api/location')
         .then(response => response.json())
         .then(data => {
-          if (typeof data !== 'undefined' && data != null) {
+          if (data != null) {
             this.location = data;
           }
         });
@@ -151,7 +151,7 @@ export default {
     //fetch('/api/location')
     //  .then(response => response.json())
     //  .then(data => {
-    //    if (typeof data !== 'undefined' && data != null) {
+    //    if (data != null) {
     //      this.location = data;
     //    }
     //  });

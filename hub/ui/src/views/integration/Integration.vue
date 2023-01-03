@@ -276,7 +276,7 @@ export default {
       })
         .then(response => response.json())
         .then(data => {
-          if (typeof data !== 'undefined' && data != null) {
+          if (data != null) {
             this.pageData[responseIndex] = data.responseData;
           }
         });
@@ -521,7 +521,7 @@ export default {
     fetch(`/api/integrations/${this.integrationId}`)
       .then(response => response.json())
       .then(data => {
-        if (typeof data !== 'undefined' && data != null) {
+        if (data != null) {
           this.integration = data;
           if (this.settings == null) {
             this.settings = {};
@@ -532,7 +532,7 @@ export default {
     fetch(`/api/integrations/${this.integrationId}/settings`)
       .then(response => response.json())
       .then(data => {
-        if (typeof data !== 'undefined' && data != null) {
+        if (data != null) {
           this.settings = data;
         }
       })
@@ -541,7 +541,7 @@ export default {
     fetch(`/api/integrations/${this.integrationId}/page-data`)
       .then(response => response.json())
       .then(data => {
-        if (typeof data !== 'undefined' && data != null) {
+        if (data != null) {
           this.pageData = data;
         }
       })

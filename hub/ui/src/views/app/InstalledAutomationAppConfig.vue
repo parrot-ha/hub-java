@@ -369,7 +369,7 @@ export default {
       fetch('/api/device-id-map')
         .then(response => response.json())
         .then(data => {
-          if (typeof data !== 'undefined' && data != null) {
+          if (data != null) {
             this.devices = data;
           }
         });
@@ -377,7 +377,7 @@ export default {
       fetch(`/api/iaas/${this.iaaId}/cfg/settings`)
         .then(response => response.json())
         .then(data => {
-          if (typeof data !== 'undefined' && data != null) {
+          if (data != null) {
             this.savedSettings = data;
             this.loadPage();
           }
@@ -395,7 +395,7 @@ export default {
       fetch(path)
         .then(response => response.json())
         .then(data => {
-          if (typeof data !== 'undefined' && data != null) {
+          if (data != null) {
             if (typeof data.defaults === 'undefined') {
               this.page = data;
               this.populateSettingsFromInputs();
@@ -405,7 +405,6 @@ export default {
               // TODO: if defaults is set to true, then add mode and name to settings
             }
             if (
-              typeof this.page.name !== 'undefined' &&
               this.page.name != null &&
               this.page.name !== '' &&
               this.breadcrumb.length == 0
@@ -417,7 +416,6 @@ export default {
             }
             if (
               this.refreshFunction == null &&
-              typeof this.page.refreshInterval !== 'undefined' &&
               this.page.refreshInterval != null &&
               this.page.refreshInterval != '' &&
               this.page.refreshInterval > 0

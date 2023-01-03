@@ -380,7 +380,7 @@ export default {
       fetch(`/api/extensions?refresh=${doRefresh}`)
         .then(response => response.json())
         .then(data => {
-          if (typeof data !== 'undefined' && data != null) {
+          if (data != null) {
             this.extensions = data;
           }
         });
@@ -390,7 +390,7 @@ export default {
       fetch('/api/extension_locations')
         .then(response => response.json())
         .then(data => {
-          if (typeof data !== 'undefined' && data != null) {
+          if (data != null) {
             this.locations = data;
           }
         });

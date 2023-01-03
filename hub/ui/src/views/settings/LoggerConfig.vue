@@ -208,7 +208,7 @@ export default {
       fetch('/api/settings/logging-config')
         .then(response => response.json())
         .then(data => {
-          if (typeof data !== 'undefined' && data != null) {
+          if (data != null) {
             this.loggers = data.loggers;
           }
         });

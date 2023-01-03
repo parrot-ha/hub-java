@@ -52,7 +52,7 @@ export default {
     fetch(`/api/devices/${this.deviceId}/events`)
       .then(response => response.json())
       .then(data => {
-        if (typeof data !== 'undefined' && data != null) {
+        if (data != null) {
           this.events = data;
         }
       });

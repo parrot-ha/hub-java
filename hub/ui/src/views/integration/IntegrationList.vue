@@ -53,7 +53,7 @@ export default {
     fetch('/api/integrations')
       .then(response => response.json())
       .then(data => {
-        if (typeof data !== 'undefined' && data != null) {
+        if (data != null) {
           this.integrations = data;
         }
       });

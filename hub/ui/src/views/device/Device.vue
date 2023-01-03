@@ -297,24 +297,25 @@ export default {
           this.preferences = data;
           if (data.sections) {
             for (var section of data.sections) {
-              for (var input of section.input) {
-                if (typeof this.settings[input.name] === 'undefined') {
-                  this.settings[input.name] = {
-                    name: input.name,
-                    valueAsType:
-                      input.defaultValue == null ||
-                      typeof input.defaultValue === 'undefined'
-                        ? null
-                        : input.defaultValue,
-                    type: input.type,
-                    multiple: input.multiple ? true : false
-                  };
-                } else if (
-                  this.settings[input.name].valueAsType == null &&
-                  input.defaultValue != null &&
-                  typeof input.defaultValue !== 'undefined'
-                ) {
-                  this.settings[input.name].valueAsType = input.defaultValue;
+              if (section.input != null) {
+                for (var input of section.input) {
+                  if (typeof this.settings[input.name] === 'undefined') {
+                    this.settings[input.name] = {
+                      name: input.name,
+                      valueAsType:
+                        input.defaultValue == null ||
+                        typeof input.defaultValue === 'undefined'
+                          ? null
+                          : input.defaultValue,
+                      type: input.type,
+                      multiple: input.multiple ? true : false
+                    };
+                  } else if (
+                    this.settings[input.name].valueAsType == null &&
+                    input.defaultValue != null
+                  ) {
+                    this.settings[input.name].valueAsType = input.defaultValue;
+                  }
                 }
               }
             }
@@ -362,7 +363,7 @@ export default {
     )
       .then(response => response.json())
       .then(data => {
-        if (typeof data !== 'undefined' && data != null) {
+        if (data != null) {
           this.integrations = data;
           // add blank option
           this.integrations.push({ id: null, name: 'None', label: 'None' });
@@ -372,7 +373,7 @@ export default {
     fetch(`/api/devices/${this.deviceId}`)
       .then(response => response.json())
       .then(data => {
-        if (typeof data !== 'undefined' && data != null) {
+        if (data != null) {
           this.device = data;
         }
       });
@@ -380,7 +381,7 @@ export default {
     fetch(`/api/devices/${this.deviceId}/commands`)
       .then(response => response.json())
       .then(data => {
-        if (typeof data !== 'undefined' && data != null) {
+        if (data != null) {
           for (var cmd of data) {
             if (cmd.arguments) {
               for (var arg of cmd.arguments) {
@@ -395,7 +396,7 @@ export default {
     fetch(`/api/devices/${this.deviceId}/states`)
       .then(response => response.json())
       .then(data => {
-        if (typeof data !== 'undefined' && data != null) {
+        if (data != null) {
           this.currentStates = data;
         }
       });
@@ -403,7 +404,7 @@ export default {
     fetch(`/api/devices/${this.deviceId}/information`)
       .then(response => response.json())
       .then(data => {
-        if (typeof data !== 'undefined' && data != null) {
+        if (data != null) {
           this.information = data;
         }
       });
@@ -411,7 +412,7 @@ export default {
     fetch(`/api/device-handlers?field=id&field=name&field=namespace&field=tags`)
       .then(response => response.json())
       .then(data => {
-        if (typeof data !== 'undefined' && data != null) {
+        if (data != null) {
           this.deviceHandlers = data;
         }
       });
@@ -419,7 +420,7 @@ export default {
     fetch(`/api/devices/${this.deviceId}/settings`)
       .then(response => response.json())
       .then(data => {
-        if (typeof data !== 'undefined' && data != null) {
+        if (data != null) {
           this.settings = data;
         }
       })

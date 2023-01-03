@@ -51,7 +51,7 @@ export default {
     commandClick: function(deviceId, command) {
       var url = `/api/devices/${deviceId}/commands/${command}`;
       var setArgs = [];
-      if (typeof this.command.arguments !== 'undefined') {
+      if (this.command.arguments != null) {
         console.log(this.command.arguments);
         for (var arg of this.command.arguments) {
           if (arg.value) {

@@ -84,7 +84,7 @@ export default {
       fetch(`/api/devices?filter=${this.body.type}`)
         .then(response => response.json())
         .then(data => {
-          if (typeof data !== 'undefined' && data != null) {
+          if (data != null) {
             this.deviceList = data;
           }
         });
