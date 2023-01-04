@@ -3,7 +3,7 @@
     <div class="row">
       <div class="col">
         <div class="card">
-          <v-card-title></v-card-title>
+          <h5 class="card-title"></h5>
           <div class="card-text">
             <div>
               <v-data-table :headers="headers" :items="loggers">
@@ -25,9 +25,9 @@
                         </v-btn>
                       </template>
                       <div class="card">
-                        <v-card-title>
+                        <h5 class="card-title">
                           <span class="headline">{{ formTitle }}</span>
-                        </v-card-title>
+                        </h5>
 
                         <div class="card-text">
                           <div>

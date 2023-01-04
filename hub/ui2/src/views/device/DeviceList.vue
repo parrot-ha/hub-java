@@ -61,18 +61,6 @@ export default {
   data() {
     return {
       devices: [],
-      headers: [
-        {
-          text: "",
-          align: "start",
-          sortable: false,
-          value: "id",
-        },
-        { text: "Display Name", value: "displayName" },
-        { text: "Type", value: "type" },
-        { text: "Device Network Id", value: "deviceNetworkId" },
-        { text: "", value: "" },
-      ],
     };
   },
   computed: {

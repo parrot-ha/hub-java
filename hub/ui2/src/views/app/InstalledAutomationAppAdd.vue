@@ -1,12 +1,13 @@
 <template>
   <div class="container-fluid">
-
-      <div class="row">
-        <div class="col-12"
-          v-for="automationApp in automationApps"
-          :key="automationApp.id"
-        >
-          <div class="card">
+    <div class="row">
+      <div
+        class="col-12"
+        v-for="automationApp in automationApps"
+        :key="automationApp.id"
+      >
+        <div class="card">
+          <div class="card-body">
             <v-card-title
               >{{ automationApp.name }} ({{
                 automationApp.namespace
@@ -26,7 +27,7 @@
           </div>
         </div>
       </div>
-
+    </div>
   </div>
 </template>
 <script>

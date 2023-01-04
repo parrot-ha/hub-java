@@ -1,6 +1,6 @@
 <template>
   <v-card height="100%" id="editorCard">
-    <v-card-title>
+    <h5 class="card-title">
       {{ title }}
       <v-spacer></v-spacer>
       <v-progress-circular
@@ -12,7 +12,7 @@
         Save
       </v-btn>
       <slot></slot>
-    </v-card-title>
+    </h5>
 
     <div class="card-text">
       <div class="editor-wrapper" :style="{ height: editorHeight }">

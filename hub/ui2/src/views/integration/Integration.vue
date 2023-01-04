@@ -6,7 +6,7 @@
           <h2>{{ integration.label }} ({{ integration.name }})</h2>
 
           <div class="card">
-            <v-card-title>Information</v-card-title>
+            <h5 class="card-title">Information</h5>
             <div class="card-text">
               <v-simple-table>
                 <tbody>
@@ -25,7 +25,7 @@
 
         <div class="col-12">
           <div class="card">
-            <v-card-title>Settings</v-card-title>
+            <h5 class="card-title">Settings</h5>
             <div class="card-text">
               <v-form>
                 <v-text-field
@@ -96,7 +96,7 @@
 
         <div class="col-12" v-for="(section, i) in pageLayout" :key="i">
           <div class="card">
-            <v-card-title>{{ section.title }} </v-card-title>
+            <h5 class="card-title">{{ section.title }} </h5>
             <div class="card-text">
               <div v-for="(bodyItem, j) in section.body" :key="j">
                 <div v-if="bodyItem.type === 'table'">
@@ -211,7 +211,7 @@
 
           <div class="col-12" v-if="featureExists('reset')">
           <div class="card">
-            <v-card-title>Reset</v-card-title>
+            <h5 class="card-title">Reset</h5>
             <div class="card-text">
               <h5 style="color: red">
                 {{ getFeatureOption("reset", "resetWarning") }}

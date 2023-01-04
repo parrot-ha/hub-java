@@ -4,7 +4,7 @@
       <div class="row">
         <div class="col-12">
           <div class="card">
-            <v-card-title>Settings</v-card-title>
+            <h5 class="card-title">Settings</h5>
             <div class="card-text">
               <v-form>
                 <v-text-field label="Name" v-model="device.name"></v-text-field>
@@ -33,7 +33,7 @@
         </div>
         <div class="col-12">
           <div class="card">
-            <v-card-title>Information</v-card-title>
+            <h5 class="card-title">Information</h5>
             <div class="card-text">
               <v-simple-table>
                 <tbody>

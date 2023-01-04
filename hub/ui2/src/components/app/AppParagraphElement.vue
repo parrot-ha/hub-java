@@ -1,11 +1,9 @@
 <template>
-  <div class="d-flex flex-no-wrap my-3">
-    <v-avatar v-if="body.image" size="75" tile>
-      <v-img :src="body.image"></v-img>
-    </v-avatar>
-    <v-card class="app-paragraph-element" outlined>
-      <v-card-title>{{ body.title }}</v-card-title>
-      <v-card-text style="white-space: pre-wrap">
+  <div class="card">
+    <img v-if="body.image" class="card-img-top" :src="body.image" alt="image" />
+    <div class="card-body">
+      <h5 class="card-title">{{ body.title }}</h5>
+      <div class="card-text" style="white-space: pre-wrap">
         {{ body.description }}
       </div>
     </div>

@@ -3,7 +3,7 @@
     <div class="row">
       <div class="col">
         <div class="card">
-          <v-card-title>Integrations</v-card-title>
+          <h5 class="card-title">Integrations</h5>
           <div class="card-text">
             <router-link :to="{ name: 'IntegrationAdd' }"
               >Add Integration</router-link

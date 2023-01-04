@@ -4,8 +4,11 @@
       <div class="row">
         <div class="col">
           <div class="card">
-            <v-card-title
-              >Extensions
+            <div
+              class="card-title d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3"
+            >
+            <h5>Extensions</h5>
+            
               <v-tooltip bottom
                 ><template v-slot:activator="{ on }">
                   <v-btn
@@ -21,7 +24,7 @@
                 </template>
                 <span>Refresh Extension List</span>
               </v-tooltip>
-            </v-card-title>
+            </div>
             <div class="card-text">
               <v-tabs v-model="tab">
                 <v-tab>Installed</v-tab>
@@ -31,8 +34,8 @@
               <v-tabs-items v-model="tab">
                 <v-tab-item>
                   <div class="card">
-                    <v-card-text
-                      >Installed Extensions
+                    <div class="card-text">
+                      Installed Extensions
                       <v-simple-table>
                         <thead>
                           <tr>
@@ -198,11 +201,11 @@
                                 </v-btn>
                               </template>
                               <div class="card">
-                                <v-card-title>
+                                <h5 class="card-title">
                                   <span class="text-h5">{{
                                     locationsFormTitle
                                   }}</span>
-                                </v-card-title>
+                                </h5>
 
                                 <div class="card-text">
                                   <v-container>

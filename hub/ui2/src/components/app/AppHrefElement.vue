@@ -1,6 +1,6 @@
 <template>
-  <v-card class="app-href-element my-3" outlined @click="hrefClicked">
-    <v-card-title>{{ body.title }}</v-card-title>
+  <div class="card" @click="hrefClicked">
+    <h5 class="card-title">{{ body.title }}</h5>
     <div class="card-text">{{ body.description }}</div>
   </div>
 </template>

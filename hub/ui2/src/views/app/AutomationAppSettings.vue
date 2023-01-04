@@ -1,10 +1,10 @@
 <template>
   <div class="container-fluid">
-
-      <div class="row">
-        <div class="col" cols="12
-          <div class="card">
-            <v-card-title>Definition</v-card-title>
+    <div class="row">
+      <div class="col">
+        <div class="card">
+          <div class="card-body">
+            <h5 class="card-title">Definition</h5>
             <div class="card-text">
               <v-form>
                 <v-text-field
@@ -21,9 +21,11 @@
             </div>
           </div>
         </div>
-        <div class="col-12">
-          <div class="card">
-            <v-card-title>Settings</v-card-title>
+      </div>
+      <div class="col-12">
+        <div class="card">
+          <div class="card-body">
+            <h5 class="card-title">Settings</h5>
             <div class="card-text">
               Add setting definitions in the source code and then set the values
               here
@@ -31,9 +33,11 @@
             <v-card-actions></v-card-actions>
           </div>
         </div>
-        <div class="col-12">
-          <div class="card">
-            <v-card-title>OAuth</v-card-title>
+      </div>
+      <div class="col-12">
+        <div class="card">
+          <div class="card-body">
+            <h5 class="card-title">OAuth</h5>
             <div class="card-text">
               <div v-if="!automationApp.oAuthEnabled">
                 <v-btn
@@ -64,11 +68,11 @@
             <v-card-actions></v-card-actions>
           </div>
         </div>
-        <div class="col-12">
-          <v-btn color="primary" @click="updateAutomationApp"> Update </v-btn>
-        </div>
       </div>
-
+      <div class="col-12">
+        <v-btn color="primary" @click="updateAutomationApp"> Update </v-btn>
+      </div>
+    </div>
   </div>
 </template>
 <script>

@@ -7,7 +7,7 @@
           :key="integrationType.id"
         >
           <div class="card">
-            <v-card-title>{{ integrationType.name }}</v-card-title>
+            <h5 class="card-title">{{ integrationType.name }}</h5>
             <div class="card-text">
               {{ integrationType.description }}
             </div>

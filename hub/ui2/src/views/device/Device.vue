@@ -321,7 +321,7 @@
   </div>
 </template>
 <script>
-import DeviceCommand from "@/components/DeviceCommand.vue";
+import DeviceCommand from "@/components/device/DeviceCommand.vue";
 import EnumInput from "@/components/device/DeviceEnumInput.vue";
 
 export default {
@@ -513,6 +513,7 @@ export default {
       `ws://${window.location.host}/api/devices/${this.deviceId}/events`
     );
     connection.onmessage = (event) => {
+      console.log("got message")
       var eventMap = JSON.parse(event.data);
 
       var matched = false;

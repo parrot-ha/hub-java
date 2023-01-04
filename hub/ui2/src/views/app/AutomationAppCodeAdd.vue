@@ -1,5 +1,5 @@
 <template>
-  <v-container fluid class="fill-height">
+  <div class="container-fluid">
     <div class="row">
       <div class="col">
         <div ref="alertBox">

@@ -55,8 +55,13 @@ const router = createRouter({
       component: () => import("../views/app/InstalledAutomationAppConfig.vue"),
     },
     {
-      path: "/iaas/:id/cfg/*",
+      path: "/iaas/:id/cfg",
       name: "InstalledAutomationAppConfig",
+      component: () => import("../views/app/InstalledAutomationAppConfig.vue"),
+    },
+    {
+      path: "/iaas/:id/cfg/:approute(.*)",
+      name: "InstalledAutomationAppConfigSubRoute",
       component: () => import("../views/app/InstalledAutomationAppConfig.vue"),
     },
     {

@@ -1,35 +1,50 @@
 <template>
   <div class="container-fluid">
-
-      <div class="row">
-        <div class="col-12">
-          <div class="card">
-            <v-card-title>Information</v-card-title>
+    <div class="row gy-3">
+      <div class="col-12">
+        <div class="card">
+          <div class="card-body">
+            <h5 class="card-title">Information</h5>
             <div class="card-text">
-              <v-form>
-                <v-text-field
-                  label="ID"
-                  v-model="installedAutomationApp.id"
-                  readonly
-                ></v-text-field>
-                <v-text-field
-                  label="Label"
-                  v-model="installedAutomationApp.label"
-                ></v-text-field>
-              </v-form>
+              <form>
+                <div class="mb-3">
+                  <label for="idInput" class="form-label">ID</label>
+                  <input
+                    type="text"
+                    id="idInput"
+                    class="form-control"
+                    v-model="installedAutomationApp.id"
+                    readonly
+                  />
+                </div>
+                <div class="mb-3">
+                  <label for="labelInput" class="form-label">Label</label>
+                  <input
+                    type="text"
+                    id="labelInput"
+                    class="form-control"
+                    v-model="installedAutomationApp.label"
+                  />
+                </div>
+              </form>
             </div>
-            <v-card-actions
-              ><v-btn color="primary" @click="saveInstalledAutomationApp">
-                Save
-              </v-btn>
-            </v-card-actions>
+
+            <button
+              type="button"
+              class="btn btn-primary"
+              @click="saveInstalledAutomationApp"
+            >
+              Save
+            </button>
           </div>
         </div>
-        <div class="col-12">
-          <div class="card">
-            <v-card-title>Settings</v-card-title>
+      </div>
+      <div class="col-12">
+        <div class="card">
+          <div class="card-body">
+            <h5 class="card-title">Settings</h5>
             <div class="card-text">
-              <v-simple-table>
+              <table class="table">
                 <thead>
                   <tr>
                     <th>Name</th>
@@ -49,16 +64,18 @@
                     <td>{{ setting.multiple }}</td>
                   </tr>
                 </tbody>
-              </v-simple-table>
+              </table>
             </div>
             <v-card-actions></v-card-actions>
           </div>
         </div>
-        <div class="col-12">
-          <div class="card">
-            <v-card-title>Scheduled Jobs</v-card-title>
+      </div>
+      <div class="col-12">
+        <div class="card">
+          <div class="card-body">
+            <h5 class="card-title">Scheduled Jobs</h5>
             <div class="card-text">
-              <v-simple-table>
+              <table class="table">
                 <thead>
                   <tr>
                     <th>Handler Method</th>
@@ -71,39 +88,78 @@
                     <td>{{ schedule.schedule }}</td>
                   </tr>
                 </tbody>
-              </v-simple-table>
+              </table>
             </div>
             <v-card-actions></v-card-actions>
           </div>
         </div>
-        <div class="col-12">
-          <v-btn color="primary" @click="runUpdatedMethod">
-            Run Updated Method
-          </v-btn>
-          <v-dialog v-model="iaaUninstallDialog" persistent max-width="290">
-            <template v-slot:activator="{ on, attrs }">
-              <v-btn color="error" v-bind="attrs" v-on="on">Uninstall</v-btn>
-            </template>
-            <div class="card">
-              <v-card-title class="headline"> Are you sure? </v-card-title>
-              <v-card-text
-                >Are you sure you want to uninstall this Automation
-                App?</v-card-text
-              >
-              <v-card-actions>
-                <v-spacer></v-spacer>
-                <v-btn color="primary" text @click="iaaUninstallDialog = false">
+      </div>
+      <div class="col-12">
+        <div class="row g-3">
+          <div class="col-auto me-auto">
+            <button
+              type="button"
+              class="btn btn-primary"
+              @click="runUpdatedMethod"
+            >
+              Run Updated Method
+            </button>
+          </div>
+          <div class="col-auto">
+            <button
+              type="button"
+              class="btn btn-danger"
+              data-bs-toggle="modal"
+              data-bs-target="#uninstallModal"
+            >
+              Uninstall
+            </button>
+          </div>
+        </div>
+        <div
+          class="modal fade"
+          id="uninstallModal"
+          tabindex="-1"
+          aria-labelledby="uninstallModalLabel"
+          aria-hidden="true"
+        >
+          <div class="modal-dialog">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h1 class="modal-title fs-5" id="uninstallModalLabel">
+                  Are you sure?
+                </h1>
+                <button
+                  type="button"
+                  class="btn-close"
+                  data-bs-dismiss="modal"
+                  aria-label="Close"
+                ></button>
+              </div>
+              <div class="modal-body">
+                Are you sure you want to uninstall this Automation App?
+              </div>
+              <div class="modal-footer">
+                <button
+                  type="button"
+                  class="btn btn-secondary"
+                  data-bs-dismiss="modal"
+                >
                   Cancel
-                </v-btn>
-                <v-btn color="error" text @click="uninstallClick">
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-danger"
+                  @click="iaaUninstallDialog"
+                >
                   Delete
-                </v-btn>
-              </v-card-actions>
+                </button>
+              </div>
             </div>
-          </v-dialog>
+          </div>
         </div>
       </div>
-
+    </div>
   </div>
 </template>
 <script>
@@ -142,7 +198,6 @@ export default {
     },
     runUpdatedMethod: function () {
       var url = `/api/iaas/${this.iaaId}/methods/updated`;
-      var setArgs = [];
       fetch(url, {
         method: "POST",
         body: null,
@@ -150,7 +205,7 @@ export default {
         .then(handleErrors)
         .then((response) => {});
     },
-    uninstallClick: function (event) {
+    uninstallClick: function () {
       fetch(`/api/iaas/${this.iaaId}`, {
         method: "DELETE",
       })

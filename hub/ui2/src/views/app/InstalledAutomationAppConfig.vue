@@ -2,11 +2,11 @@
   <div class="container-fluid">
     <div class="row">
       <div class="col">
-        <v-skeleton-loader :loading="loading" type="card">
-          <div class="card">
-            <v-card-title>
+        <div class="card">
+          <div class="card-body">
+            <h5 class="card-title">
               {{ page.title }}
-              <v-spacer></v-spacer>
+
               <v-dialog
                 v-if="page.defaults || page.uninstall == true"
                 v-model="iaaUninstallDialog"
@@ -25,7 +25,7 @@
                     App?</v-card-text
                   >
                   <v-card-actions>
-                    <v-spacer></v-spacer>
+
                     <v-btn
                       color="primary"
                       text
@@ -39,7 +39,7 @@
                   </v-card-actions>
                 </div>
               </v-dialog>
-            </v-card-title>
+            </h5>
 
             <div class="card-text">
               <div v-for="(section, i) in page.sections" :key="i">
@@ -134,9 +134,6 @@
                         ADD LABEL INPUT
                       </div>
 
-                      <v-divider
-                        v-if="j != Object.keys(section.body).length - 1"
-                      ></v-divider>
                     </div>
                   </div>
                 </div>
@@ -145,7 +142,7 @@
               <div v-if="page.defaults">DEFAULTS GO HERE (MODE AND NAME)</div>
             </div>
             <v-card-actions>
-              <v-spacer></v-spacer>
+
               <v-btn
                 v-if="doneButtonVisible"
                 color="primary"
@@ -162,25 +159,25 @@
               </v-btn>
             </v-card-actions>
           </div>
-        </v-skeleton-loader>
+        </div>
       </div>
     </div>
   </div>
 </template>
 <script>
-var pathToRegexp = require("path-to-regexp");
+import { pathToRegexp } from "path-to-regexp";
 
-import BoolInput from "@/components/app/AppBoolInput";
-import ChildApp from "@/components/app/AppChildApp";
-import DeviceSelect from "@/components/app/AppDeviceSelect";
-import EmailInput from "@/components/app/AppEmailInput";
-import EnumInput from "@/components/app/AppEnumInput";
-import HrefElement from "@/components/app/AppHrefElement";
-import NumberInput from "@/components/app/AppNumberInput";
-import PasswordInput from "@/components/app/AppPasswordInput";
-import TimeInput from "@/components/app/AppTimeInput";
-import TextInput from "@/components/app/AppTextInput";
-import ParagraphElement from "@/components/app/AppParagraphElement";
+import BoolInput from "@/components/app/AppBoolInput.vue";
+import ChildApp from "@/components/app/AppChildApp.vue";
+import DeviceSelect from "@/components/app/AppDeviceSelect.vue";
+import EmailInput from "@/components/app/AppEmailInput.vue";
+import EnumInput from "@/components/app/AppEnumInput.vue";
+import HrefElement from "@/components/app/AppHrefElement.vue";
+import NumberInput from "@/components/app/AppNumberInput.vue";
+import PasswordInput from "@/components/app/AppPasswordInput.vue";
+import TimeInput from "@/components/app/AppTimeInput.vue";
+import TextInput from "@/components/app/AppTextInput.vue";
+import ParagraphElement from "@/components/app/AppParagraphElement.vue";
 
 export default {
   name: "InstalledAutomationAppConfig",
@@ -423,9 +420,8 @@ export default {
     },
     processRoute: function () {
       this.iaaId = this.$route.params.id;
-
       var keys = [];
-      var re = pathToRegexp("/iaas/:id/cfg/*", keys);
+      var re = pathToRegexp("/iaas/:id/cfg/(.*)", keys);
       var existingPath = re.exec(this.$route.path);
       if (existingPath != null) {
         this.breadcrumb = existingPath[existingPath.length - 1].split("/");

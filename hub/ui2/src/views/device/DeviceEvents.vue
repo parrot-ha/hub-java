@@ -3,23 +3,37 @@
     <div class="row">
       <div class="col">
         <div class="card">
-          <v-card-title>Device Events</v-card-title>
-          <div class="card-text">
-            <br /><br />
-            Events:<br />
-            <v-data-table
-              :headers="headers"
-              :items="events"
-              sort-by="date"
-              sort-desc
-              class="elevation-1"
-            >
-              <template v-slot:item.date="{ item }">
-                <span>{{ new Date(item.date).toLocaleString() }}</span>
-              </template>
-            </v-data-table>
+          <div class="card-body">
+            <h5 class="card-title">Device Events</h5>
+            <div class="card-text">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Source</th>
+                    <th>Type</th>
+                    <th>Name</th>
+                    <th>Value</th>
+                    <th>User</th>
+                    <th>Displayed Text</th>
+                    <th>Changed</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="event in events" :key="event.id">
+                    <td>{{ new Date(event.date).toLocaleString() }}</td>
+                    <td>{{ event.source }}</td>
+                    <td>{{ event.type }}</td>
+                    <td>{{ event.name }}</td>
+                    <td>{{ event.value }}</td>
+                    <td>{{ event.user }}</td>
+                    <td>{{ event.displayedText }}</td>
+                    <td>{{ event.stateChange }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
           </div>
-
         </div>
       </div>
     </div>
@@ -32,16 +46,6 @@ export default {
     return {
       deviceId: "",
       events: [],
-      headers: [
-        { text: "Date", value: "date" },
-        { text: "Source", value: "source" },
-        { text: "Type", value: "type" },
-        { text: "Name", value: "name" },
-        { text: "Value", value: "value" },
-        { text: "User", value: "user" },
-        { text: "Displayed Text", value: "displayedText" },
-        { text: "Changed", value: "stateChange" },
-      ],
     };
   },
   mounted: function () {
@@ -50,7 +54,7 @@ export default {
     fetch(`/api/devices/${this.deviceId}/events`)
       .then((response) => response.json())
       .then((data) => {
-        if (typeof data !== "undefined" && data != null) {
+        if (data != null) {
           this.events = data;
         }
       });

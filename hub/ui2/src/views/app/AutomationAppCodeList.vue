@@ -3,31 +3,32 @@
     <div class="row">
       <div class="col">
         <div class="card">
-          <v-card-title>Automation App Code</v-card-title>
-          <div class="card-text">
-            <router-link :to="{ name: 'AutomationAppCodeAdd' }"
-              >Add Automation App Code</router-link
-            >
-            <v-data-table
-              :headers="headers"
-              :items="codeList"
-              sort-by="name"
-              disable-pagination
-              hide-default-footer
-              class="elevation-1"
-            >
-              <template v-slot:item.name="{ item }">
-                <router-link
-                  :to="{
-                    name: 'AutomationAppCodeEdit',
-                    params: { id: item.id },
-                  }"
-                  >{{ item.name }}</router-link
-                >
-              </template>
-            </v-data-table>
+          <div class="card-body">
+            <h5 class="card-title">Automation App Code</h5>
+            <div class="card-text">
+              <router-link :to="{ name: 'AutomationAppCodeAdd' }"
+                >Add Automation App Code</router-link
+              >
+              <v-data-table
+                :headers="headers"
+                :items="codeList"
+                sort-by="name"
+                disable-pagination
+                hide-default-footer
+                class="elevation-1"
+              >
+                <template v-slot:item.name="{ item }">
+                  <router-link
+                    :to="{
+                      name: 'AutomationAppCodeEdit',
+                      params: { id: item.id },
+                    }"
+                    >{{ item.name }}</router-link
+                  >
+                </template>
+              </v-data-table>
+            </div>
           </div>
-
         </div>
       </div>
     </div>

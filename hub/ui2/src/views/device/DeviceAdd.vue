@@ -1,153 +1,205 @@
 <template>
   <div class="container-fluid">
-
-      <div class="row">
-        <div class="col-12">
-          <div class="card">
-            <v-card-title>Settings</v-card-title>
+    <div class="row gy-3">
+      <div class="col-12">
+        <div class="card">
+          <div class="card-body">
+            <h5 class="card-title">Settings</h5>
             <div class="card-text">
-              <v-form>
-                <v-text-field
-                  label="Name"
-                  v-model="device.name"
-                  required
-                ></v-text-field>
-                <v-text-field
-                  label="Label"
-                  v-model="device.label"
-                ></v-text-field>
-                <v-text-field
-                  label="Device Network ID"
-                  v-model="device.deviceNetworkId"
-                ></v-text-field>
-                <v-select
-                  :items="integrations"
-                  :item-text="(item) => item.label"
-                  item-value="id"
-                  label="Integration"
-                  v-model="device.integrationId"
-                ></v-select>
-                <v-select
-                  :items="deviceHandlers"
-                  :item-text="(item) => item.name + ' (' + item.namespace + ')'"
-                  item-value="id"
-                  label="Type"
-                  v-model="device.deviceHandlerId"
-                ></v-select>
-              </v-form>
-            </div>
+              <form>
+                <div class="mb-3">
+                  <label for="nameInput" class="form-label">Name</label>
+                  <input
+                    type="text"
+                    id="nameInput"
+                    class="form-control"
+                    v-model="device.name"
+                  />
+                </div>
+                <div class="mb-3">
+                  <label for="labelInput" class="form-label">Label</label>
+                  <input
+                    type="text"
+                    id="labelInput"
+                    class="form-control"
+                    v-model="device.label"
+                  />
+                </div>
+                <div class="mb-3">
+                  <label for="deviceNetworkIdInput" class="form-label"
+                    >Device Network ID</label
+                  >
+                  <input
+                    type="text"
+                    id="deviceNetworkIdInput"
+                    class="form-control"
+                    v-model="device.deviceNetworkId"
+                  />
+                </div>
 
-            <v-divider></v-divider>
-            <v-card-title>Preferences</v-card-title>
-            <div class="card-text">
-              <v-form>
+                <div class="mb-3">
+                  <label class="form-label">Integration</label>
+                  <select
+                    class="form-select"
+                    aria-label="Integration"
+                    v-model="device.integrationId"
+                  >
+                    <option
+                      v-for="integration in integrations"
+                      :key="integration.id"
+                      :value="integration.id"
+                    >
+                      {{ integration.name }}
+                    </option>
+                  </select>
+                </div>
+                <div class="mb-3">
+                  <label class="form-label">Type</label>
+
+                  <div class="input-group mb-3">
+                    <button
+                      class="btn btn-outline-secondary css-tooltip"
+                      type="button"
+                      data-tooltip="Filter type based on selected integration"
+                      @click="dhFiltering = !dhFiltering"
+                    >
+                      <span
+                        :class="dhFiltering ? 'bi-funnel-fill' : 'bi-funnel'"
+                      ></span>
+                    </button>
+                    <select
+                      class="form-select"
+                      aria-label="Type"
+                      v-model="device.deviceHandlerId"
+                    >
+                      <option
+                        v-for="dth in filteredDevices"
+                        :key="dth.id"
+                        :value="dth.id"
+                      >
+                        {{ dth.name }} ({{ dth.namespace }})
+                      </option>
+                    </select>
+                  </div>
+                </div>
+              </form>
+
+              <hr />
+              <h5 class="card-title">Preferences</h5>
+              <form>
                 <div v-for="(section, i) in preferences.sections" :key="i">
                   <div v-for="(body, j) in section.body" :key="j">
-                    <div v-if="body.displayDuringSetup === true">
-                      <div v-if="body.type === 'bool'">
-                        <v-switch
-                          :id="body.name"
-                          :name="body.name"
-                          :label="body.title"
+                    <div
+                      v-if="body.type === 'bool'"
+                      class="form-check form-switch mb-3"
+                    >
+                      <input
+                        class="form-check-input"
+                        type="checkbox"
+                        role="switch"
+                        v-model="settings[body.name].value"
+                      />
+                      <label class="form-check-label">{{ body.title }}</label>
+                    </div>
+                    <div v-if="body.type === 'decimal'" class="mb-3">
+                      <label class="form-label">{{ body.title }}</label>
+                      <input
+                        type="number"
+                        step="any"
+                        class="form-control"
+                        v-model="settings[body.name].value"
+                      />
+                    </div>
+
+                    <div v-if="body.type === 'email'">
+                      <label class="form-label">{{ body.title }}</label>
+                      <input
+                        type="email"
+                        class="form-control"
+                        v-model="settings[body.name].value"
+                      />
+                    </div>
+                    <div v-if="body.type === 'enum'">
+                      <enum-input
+                        v-if="settings[body.name]"
+                        v-bind:options="body.options"
+                        v-bind:body="body"
+                        v-model="settings[body.name].value"
+                      ></enum-input>
+                    </div>
+                    <div v-if="body.type === 'number'">
+                      <label class="form-label">{{ body.title }}</label>
+                      <input
+                        type="number"
+                        step="1"
+                        class="form-control"
+                        v-model="settings[body.name].value"
+                      />
+                    </div>
+                    <div v-if="body.type === 'password'">
+                      <label class="form-label">{{ body.title }}</label>
+                      <input
+                        type="password"
+                        class="form-control"
+                        v-model="settings[body.name].value"
+                      />
+                    </div>
+                    <div v-if="body.type === 'phone'">
+                      <label class="form-label">{{ body.title }}</label>
+                      <input
+                        type="tel"
+                        class="form-control"
+                        v-model="settings[body.name].value"
+                      />
+                    </div>
+                    <div v-if="body.type === 'time'">
+                      <label class="form-label">{{ body.title }}</label>
+                      <input
+                        type="time"
+                        class="form-control"
+                        v-model="settings[body.name].value"
+                      />
+                    </div>
+                    <div v-if="body.type === 'text' || body.type === 'string'">
+                      <div class="mb-3">
+                        <label class="form-label">{{ body.title }}</label>
+                        <input
+                          type="text"
+                          class="form-control"
                           v-model="settings[body.name].value"
-                        ></v-switch>
-                      </div>
-                      <div v-if="body.type === 'decimal'">
-                        <v-text-field
-                          type="number"
-                          step="any"
-                          :id="body.name"
-                          :name="body.name"
-                          :label="body.title"
-                          v-model="settings[body.name].value"
-                        ></v-text-field>
-                      </div>
-                      <div v-if="body.type === 'email'">
-                        <v-text-field
-                          type="email"
-                          :id="body.name"
-                          :name="body.name"
-                          :label="body.title"
-                          v-model="settings[body.name].value"
-                        ></v-text-field>
-                      </div>
-                      <div v-if="body.type === 'enum'">
-                        <enum-input
-                          v-if="settings[body.name]"
-                          v-bind:options="body.options"
-                          v-bind:body="body"
-                          v-model="settings[body.name].value"
-                        ></enum-input>
-                      </div>
-                      <div v-if="body.type === 'number'">
-                        <v-text-field
-                          type="number"
-                          step="1"
-                          :id="body.name"
-                          :name="body.name"
-                          :label="body.title"
-                          v-model="settings[body.name].value"
-                        ></v-text-field>
-                      </div>
-                      <div v-if="body.type === 'password'">
-                        <v-text-field
-                          type="password"
-                          :label="body.title"
-                          :id="body.name"
-                          :name="body.name"
-                          v-model="settings[body.name].value"
-                        ></v-text-field>
-                      </div>
-                      <div v-if="body.type === 'phone'">
-                        <v-text-field
-                          type="tel"
-                          :id="body.name"
-                          :name="body.name"
-                          :label="body.title"
-                          v-model="settings[body.name].value"
-                        ></v-text-field>
-                      </div>
-                      <div v-if="body.type === 'time'">
-                        <v-text-field
-                          type="time"
-                          :id="body.name"
-                          :name="body.name"
-                          :label="body.title"
-                          v-model="settings[body.name].value"
-                        ></v-text-field>
-                      </div>
-                      <div
-                        v-if="body.type === 'text' || body.type === 'string'"
-                      >
-                        <v-text-field
-                          :id="body.name"
-                          :name="body.name"
-                          :label="body.title"
-                          v-model="settings[body.name].value"
-                        ></v-text-field>
+                        />
                       </div>
                     </div>
                   </div>
                 </div>
-              </v-form>
+              </form>
             </div>
-            <v-card-actions>
-              <v-btn color="primary" @click="addDevice"> Add </v-btn>
-            </v-card-actions>
+            <div class="row g-3">
+              <div class="col-auto me-auto">
+                <button
+                  type="button"
+                  class="btn btn-primary"
+                  @click="addDevice"
+                >
+                  Add
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </div>
-
+    </div>
   </div>
 </template>
 <script>
-import EnumInput from "@/components/device/DeviceEnumInput";
+import EnumInput from "@/components/device/DeviceEnumInput.vue";
 
 export default {
-  name: "Device Add",
+  name: "DeviceAdd",
   data() {
     return {
       device: { name: "", label: "", deviceNetworkId: "", deviceHandlerId: "" },
+      dhFiltering: false,
       deviceHandlers: {},
       integrations: {},
       preferences: {},
@@ -158,8 +210,30 @@ export default {
     EnumInput,
   },
   watch: {
-    "device.deviceHandlerId": function (val) {
+    "device.deviceHandlerId": function () {
       this.updatePreferenceLayout();
+    },
+  },
+  computed: {
+    filteredDevices: function () {
+      if (this.dhFiltering && this.device.integrationId != null) {
+        console.log("filtering");
+        var integration = this.integrations.find(
+          (i) => i.id == this.device.integrationId
+        );
+        if (integration.tags != null) {
+          return this.deviceHandlers.filter(
+            (dh) =>
+              (dh.tags != null &&
+                integration.tags.some((t) => dh.tags.indexOf(t) >= 0)) ||
+              this.device.deviceHandlerId == dh.id
+          );
+        } else {
+          return this.deviceHandlers;
+        }
+      } else {
+        return this.deviceHandlers;
+      }
     },
   },
   methods: {
@@ -215,7 +289,9 @@ export default {
     },
   },
   mounted: function () {
-    fetch("/api/integrations?field=id&field=name&field=label")
+    fetch(
+      "/api/integrations?type=DEVICE&field=id&field=name&field=label&field=tags"
+    )
       .then((response) => response.json())
       .then((data) => {
         if (typeof data !== "undefined" && data != null) {
@@ -225,7 +301,7 @@ export default {
         }
       });
 
-    fetch(`/api/device-handlers?field=id&field=name&field=namespace`)
+    fetch(`/api/device-handlers?field=id&field=name&field=namespace&field=tags`)
       .then((response) => response.json())
       .then((data) => {
         if (typeof data !== "undefined" && data != null) {
