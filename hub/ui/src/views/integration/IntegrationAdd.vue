@@ -1,30 +1,30 @@
 <template>
-  <v-container fluid>
-    <v-layout>
-      <v-row>
-        <v-col
-          v-for="integrationType in integrationTypes"
-          :key="integrationType.id"
-          :cols="12"
-        >
-          <v-card>
-            <v-card-title>{{ integrationType.name }}</v-card-title>
-            <v-card-text>
+  <div class="container-fluid">
+    <div class="row gy-3">
+      <div
+        class="col-12"
+        v-for="integrationType in integrationTypes"
+        :key="integrationType.id"
+      >
+        <div class="card">
+          <div class="card-body">
+            <h5 class="card-title">{{ integrationType.name }}</h5>
+            <div class="card-text">
               {{ integrationType.description }}
-            </v-card-text>
-            <v-card-actions>
-              <v-btn
+              <br />
+              <button
+                class="btn btn-primary"
                 color="primary"
                 @click="addIntegration(integrationType.id)"
               >
                 Add
-              </v-btn>
-            </v-card-actions>
-          </v-card>
-        </v-col>
-      </v-row>
-    </v-layout>
-  </v-container>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </template>
 <script>
 function handleErrors(response) {
@@ -35,38 +35,38 @@ function handleErrors(response) {
 }
 
 export default {
-  name: 'Integration Add',
+  name: "IntegrationAdd",
   data() {
     return {
-      integrationTypes: []
+      integrationTypes: [],
     };
   },
   methods: {
-    addIntegration: function(integrationTypeId) {
+    addIntegration: function (integrationTypeId) {
       var body = { id: integrationTypeId };
-      fetch('/api/integrations', { method: 'POST', body: JSON.stringify(body) })
+      fetch("/api/integrations", { method: "POST", body: JSON.stringify(body) })
         .then(handleErrors)
-        .then(response => {
+        .then((response) => {
           return response.json();
         })
-        .then(data => {
+        .then((data) => {
           console.log(JSON.stringify(data));
           this.$router.push(`/integrations/${data.id}`);
         })
-        .catch(error => {
+        .catch((error) => {
           console.log(error);
         });
-    }
+    },
   },
-  mounted: function() {
-    fetch('/api/integration_types')
-      .then(response => response.json())
-      .then(data => {
-        if (data != null) {
+  mounted: function () {
+    fetch("/api/integration_types")
+      .then((response) => response.json())
+      .then((data) => {
+        if (typeof data !== "undefined" && data != null) {
           this.integrationTypes = data;
         }
       });
-  }
+  },
 };
 </script>
 <style scoped></style>

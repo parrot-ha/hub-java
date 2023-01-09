@@ -1,11 +1,11 @@
 <template>
-  <v-container fluid>
-    <v-layout>
-      <v-row>
-        <v-col :cols="12">
-          <v-card>
-            <v-card-title>Settings</v-card-title>
-            <v-card-text>
+  <div class="container-fluid">
+
+      <div class="row">
+        <div class="col-12">
+          <div class="card">
+            <h5 class="card-title">Settings</h5>
+            <div class="card-text">
               <v-form>
                 <v-text-field label="Name" v-model="device.name"></v-text-field>
                 <v-text-field
@@ -18,25 +18,23 @@
                 ></v-text-field>
                 <v-select
                   :items="deviceHandlers"
-                  :item-text="item => item.name + ' (' + item.namespace + ')'"
+                  :item-text="(item) => item.name + ' (' + item.namespace + ')'"
                   item-value="id"
                   label="Type"
                   v-model="device.deviceHandlerId"
                 ></v-select>
               </v-form>
-            </v-card-text>
+            </div>
             <v-card-actions>
-              <v-btn color="primary" @click="saveDevice">
-                Save
-              </v-btn>
+              <v-btn color="primary" @click="saveDevice"> Save </v-btn>
               <v-btn color="error" @click="deleteDevice">Delete</v-btn>
             </v-card-actions>
-          </v-card>
-        </v-col>
-        <v-col :cols="12">
-          <v-card>
-            <v-card-title>Information</v-card-title>
-            <v-card-text>
+          </div>
+        </div>
+        <div class="col-12">
+          <div class="card">
+            <h5 class="card-title">Information</h5>
+            <div class="card-text">
               <v-simple-table>
                 <tbody>
                   <tr>
@@ -67,41 +65,41 @@
                   </tr>
                 </tbody>
               </v-simple-table>
-            </v-card-text>
-            <v-card-actions> </v-card-actions>
-          </v-card>
-        </v-col>
-      </v-row>
-    </v-layout>
-  </v-container>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+  </div>
 </template>
 <script>
 export default {
-  name: 'Device Show',
+  name: "Device Show",
   data() {
     return {
       device: {},
       deviceHandlers: {},
       preferences: {},
       settings: {},
-      commands: []
+      commands: [],
     };
   },
-  mounted: function() {
+  mounted: function () {
     var deviceId = this.$route.params.id;
 
     fetch(`/api/devices/${deviceId}`)
-      .then(response => response.json())
-      .then(data => {
-        if (data != null) {
+      .then((response) => response.json())
+      .then((data) => {
+        if (typeof data !== "undefined" && data != null) {
           this.device = data;
         }
       });
 
     fetch(`/api/devices/${deviceId}/commands`)
-      .then(response => response.json())
-      .then(data => {
-        if (data != null) {
+      .then((response) => response.json())
+      .then((data) => {
+        if (typeof data !== "undefined" && data != null) {
           for (var cmd of data) {
             if (cmd.arguments) {
               cmd.values = [];
@@ -115,13 +113,13 @@ export default {
       });
 
     fetch(`/api/device-handlers?field=id&field=name&field=namespace`)
-      .then(response => response.json())
-      .then(data => {
-        if (data != null) {
+      .then((response) => response.json())
+      .then((data) => {
+        if (typeof data !== "undefined" && data != null) {
           this.deviceHandlers = data;
         }
       });
-  }
+  },
 };
 </script>
 <style scoped></style>

@@ -1,96 +1,93 @@
 <template>
-  <v-container fluid>
-    <v-layout>
-      <v-row>
-        <v-col>
-          <v-card>
-            <v-card-title>{{ hub.name }}</v-card-title>
-            <v-card-text>
-              <v-simple-table>
-                <template v-slot:default>
-                  <tbody>
-                    <tr>
-                      <td>Name</td>
-                      <td>{{ hub.name }}</td>
-                    </tr>
-                    <tr>
-                      <td>Hub ID</td>
-                      <td>{{ hub.id }}</td>
-                    </tr>
-                    <tr>
-                      <td>Version</td>
-                      <td>{{ hub.version }}</td>
-                    </tr>
-                    <tr>
-                      <td>Date Created</td>
-                      <td></td>
-                    </tr>
-                    <tr>
-                      <td>IP Address</td>
-                      <td></td>
-                    </tr>
-                    <tr>
-                      <td>MAC Address</td>
-                      <td></td>
-                    </tr>
-                    <tr v-for="(integration, i) in integrations" :key="i">
-                      <td>{{ integration.name }}</td>
-                      <td>
-                        <ul>
-                          <li
-                            v-for="(value, name) in integration.settings"
-                            :key="name"
-                          >
-                            {{ name }}: <strong>{{ value }}</strong>
-                          </li>
-                        </ul>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>Events</td>
-                      <td></td>
-                    </tr>
-                    <tr>
-                      <td>Utilities</td>
-                      <td></td>
-                    </tr>
-                  </tbody>
-                </template>
-              </v-simple-table>
-            </v-card-text>
-            <v-card-actions> </v-card-actions>
-          </v-card>
-        </v-col>
-      </v-row>
-    </v-layout>
-  </v-container>
+  <div class="container-fluid">
+    <div class="row">
+      <div class="col">
+        <div class="card">
+          <div class="card-body">
+            <h5 class="card-title">{{ hub.name }}</h5>
+            <div class="card-text">
+              <table class="table">
+                <tbody>
+                  <tr>
+                    <th scope="row">Name</th>
+                    <td>{{ hub.name }}</td>
+                  </tr>
+                  <tr>
+                    <th>Hub ID</th>
+                    <td>{{ hub.id }}</td>
+                  </tr>
+                  <tr>
+                    <th scope="row">Version</th>
+                    <td>{{ hub.version }}</td>
+                  </tr>
+                  <tr>
+                    <th scope="row">Date Created</th>
+                    <td></td>
+                  </tr>
+                  <tr>
+                    <th scope="row">IP Address</th>
+                    <td></td>
+                  </tr>
+                  <tr>
+                    <th scope="row">MAC Address</th>
+                    <td></td>
+                  </tr>
+                  <tr v-for="(integration, i) in integrations" :key="i">
+                    <th scope="row">{{ integration.name }}</th>
+                    <td>
+                      <ul>
+                        <li
+                          v-for="(value, name) in integration.settings"
+                          :key="name"
+                        >
+                          {{ name }}: <strong>{{ value }}</strong>
+                        </li>
+                      </ul>
+                    </td>
+                  </tr>
+                  <tr>
+                    <th scope="row">Events</th>
+                    <td></td>
+                  </tr>
+                  <tr>
+                    <th scope="row">Utilities</th>
+                    <td></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </template>
 <script>
 export default {
-  name: 'Hub',
+  name: "HubView",
   data() {
     return {
       hub: {},
-      integrations: {}
+      integrations: {},
     };
   },
-  mounted: function() {
-    fetch('/api/hub')
-      .then(response => response.json())
-      .then(data => {
-        if (data != null) {
+  mounted: function () {
+    fetch("/api/hub")
+      .then((response) => response.json())
+      .then((data) => {
+        if (typeof data !== "undefined" && data != null) {
           this.hub = data;
         }
       });
 
-    fetch('/api/integrations')
-      .then(response => response.json())
-      .then(data => {
-        if (data != null) {
+    fetch("/api/integrations")
+      .then((response) => response.json())
+      .then((data) => {
+        if (typeof data !== "undefined" && data != null) {
           this.integrations = data;
         }
       });
-  }
+  },
 };
 </script>
 <style scoped></style>

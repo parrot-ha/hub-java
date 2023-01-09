@@ -1,28 +1,30 @@
 <template>
-  <v-container fluid>
-    <v-layout>
-      <v-row>
-        <v-col>
-          <v-card>
-            <v-card-title></v-card-title>
-            <v-card-text>
-              <router-link :to="{ name: 'LoggerConfig' }"
-                >Logger Configuration</router-link
-              >
-            </v-card-text>
-            <v-card-actions>
-              <v-btn color="primary" @click="reloadAutomationApps">
-                Reload Automation Apps
-              </v-btn>
-              <v-btn color="primary" @click="reloadDeviceHandlers">
-                Reload Device Handlers
-              </v-btn>
-            </v-card-actions>
-          </v-card>
-        </v-col>
-      </v-row>
-    </v-layout>
-  </v-container>
+  <div class="container-fluid">
+    <div class="row">
+      <div class="col">
+        <div class="card">
+          <h5 class="card-title"></h5>
+          <div class="card-body">
+            <div class="card-text">
+              <div class="d-flex gap-3">
+                <router-link
+                  class="btn btn-primary"
+                  :to="{ name: 'LoggerConfig' }"
+                  >Logger Configuration</router-link
+                >
+                <button class="btn btn-primary" @click="reloadAutomationApps">
+                  Reload Automation Apps
+                </button>
+                <button class="btn btn-primary" @click="reloadDeviceHandlers">
+                  Reload Device Handlers
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </template>
 <script>
 function handleErrors(response) {
@@ -33,46 +35,46 @@ function handleErrors(response) {
 }
 
 export default {
-  name: 'Settings',
+  name: "SettingsView",
   data() {
     return {};
   },
   methods: {
-    reloadAutomationApps: function() {
-      var body = { action: 'reload' };
-      fetch('/api/settings/automation-apps', {
-        method: 'POST',
-        body: JSON.stringify(body)
+    reloadAutomationApps: function () {
+      var body = { action: "reload" };
+      fetch("/api/settings/automation-apps", {
+        method: "POST",
+        body: JSON.stringify(body),
       })
         .then(handleErrors)
-        .then(response => {
+        .then((response) => {
           return response.json();
         })
-        .then(data => {
-          console.log('success');
+        .then(() => {
+          console.log("success");
         })
-        .catch(error => {
+        .catch((error) => {
           console.log(error);
         });
     },
-    reloadDeviceHandlers: function() {
-      var body = { action: 'reload' };
-      fetch('/api/settings/device-handlers', {
-        method: 'POST',
-        body: JSON.stringify(body)
+    reloadDeviceHandlers: function () {
+      var body = { action: "reload" };
+      fetch("/api/settings/device-handlers", {
+        method: "POST",
+        body: JSON.stringify(body),
       })
         .then(handleErrors)
-        .then(response => {
+        .then((response) => {
           return response.json();
         })
-        .then(data => {
-          console.log('success');
+        .then(() => {
+          console.log("success");
         })
-        .catch(error => {
+        .catch((error) => {
           console.log(error);
         });
-    }
-  }
+    },
+  },
 };
 </script>
 <style scoped></style>

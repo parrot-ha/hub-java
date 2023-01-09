@@ -1,11 +1,11 @@
 <template>
-  <v-container fluid>
-    <v-layout>
-      <v-row>
-        <v-col :cols="12">
-          <v-card>
-            <v-card-title>Definition</v-card-title>
-            <v-card-text>
+  <div class="container-fluid">
+    <div class="row">
+      <div class="col">
+        <div class="card">
+          <div class="card-body">
+            <h5 class="card-title">Definition</h5>
+            <div class="card-text">
               <v-form>
                 <v-text-field
                   label="Name"
@@ -18,23 +18,27 @@
                   disabled
                 ></v-text-field>
               </v-form>
-            </v-card-text>
-          </v-card>
-        </v-col>
-        <v-col :cols="12">
-          <v-card>
-            <v-card-title>Settings</v-card-title>
-            <v-card-text>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-12">
+        <div class="card">
+          <div class="card-body">
+            <h5 class="card-title">Settings</h5>
+            <div class="card-text">
               Add setting definitions in the source code and then set the values
               here
-            </v-card-text>
+            </div>
             <v-card-actions></v-card-actions>
-          </v-card>
-        </v-col>
-        <v-col :cols="12">
-          <v-card>
-            <v-card-title>OAuth</v-card-title>
-            <v-card-text>
+          </div>
+        </div>
+      </div>
+      <div class="col-12">
+        <div class="card">
+          <div class="card-body">
+            <h5 class="card-title">OAuth</h5>
+            <div class="card-text">
               <div v-if="!automationApp.oAuthEnabled">
                 <v-btn
                   color="primary"
@@ -60,64 +64,55 @@
                   readonly
                 ></v-text-field>
               </div>
-            </v-card-text>
+            </div>
             <v-card-actions></v-card-actions>
-          </v-card>
-        </v-col>
-        <v-col :cols="12">
-          <v-btn color="primary" @click="updateAutomationApp">
-            Update
-          </v-btn>
-        </v-col>
-      </v-row>
-    </v-layout>
-  </v-container>
+          </div>
+        </div>
+      </div>
+      <div class="col-12">
+        <v-btn color="primary" @click="updateAutomationApp"> Update </v-btn>
+      </div>
+    </div>
+  </div>
 </template>
 <script>
-function handleErrors(response) {
-  if (!response.ok) {
-    throw Error(response.statusText);
-  }
-  return response;
-}
-
 export default {
-  name: 'AutomationAppSettings',
+  name: "AutomationAppSettings",
   data() {
     return {
-      aaId: '',
-      automationApp: { oAuthEnabled: false }
+      aaId: "",
+      automationApp: { oAuthEnabled: false },
     };
   },
   methods: {
-    updateAutomationApp: function() {
+    updateAutomationApp: function () {
       var body = this.automationApp;
       fetch(`/api/automation-apps/${this.aaId}`, {
-        method: 'PUT',
-        body: JSON.stringify(body)
+        method: "PUT",
+        body: JSON.stringify(body),
       })
-        .then(response => response.json())
-        .then(data => {
+        .then((response) => response.json())
+        .then((data) => {
           if (data.success) {
-            console.log('success');
+            console.log("success");
           } else {
-            console.log('problem saving automation app');
+            console.log("problem saving automation app");
           }
         });
-    }
+    },
   },
 
-  mounted: function() {
+  mounted: function () {
     this.aaId = this.$route.params.id;
 
     fetch(`/api/automation-apps/${this.aaId}`)
-      .then(response => response.json())
-      .then(data => {
-        if (data != null) {
+      .then((response) => response.json())
+      .then((data) => {
+        if (typeof data !== "undefined" && data != null) {
           this.automationApp = data;
         }
       });
-  }
+  },
 };
 </script>
 <style scoped></style>

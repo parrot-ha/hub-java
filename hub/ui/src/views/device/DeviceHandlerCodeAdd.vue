@@ -1,33 +1,36 @@
 <template>
-  <v-container fluid class="fill-height">
-    <v-row>
-      <v-col>
-        <div ref="alertBox">
-          <v-alert
-            v-model="alert"
-            close-text="Close Alert"
-            outlined
-            type="error"
-            dismissible
-            @input="debouncedResizeEditor"
-          >
-            {{ alertMessage }}
-          </v-alert>
+  <div class="container-fluid">
+    <div class="row">
+      <div class="col">
+        <div
+          ref="alertBox"
+          class="alert alert-danger alert-dismissible"
+          role="alert"
+          v-if="alertMessage"
+        >
+          {{ alertMessage }}
+          <button
+            type="button"
+            class="btn-close"
+            aria-label="Close"
+            @click="alertMessage = null"
+          ></button>
         </div>
-      </v-col>
-    </v-row>
-    <v-row>
-      <v-col>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col">
         <code-editor
           :source="deviceHandler.sourceCode"
-          title="Edit"
+          title="Add"
+          buttonName="Save"
           :savePending="savePending"
           :editorHeight="editorHeight"
           @saveCodeButtonClicked="saveCode"
         ></code-editor>
-      </v-col>
-    </v-row>
-  </v-container>
+      </div>
+    </div>
+  </div>
 </template>
 <script>
 function handleErrors(response) {
@@ -37,53 +40,50 @@ function handleErrors(response) {
   return response;
 }
 
-import CodeEditor from '@/components/common/CodeEditor';
-import _debounce from 'lodash/debounce';
+import CodeEditor from "@/components/common/CodeEditor.vue";
+import _debounce from "lodash/debounce";
 
 export default {
-  name: 'DeviceHandlerCodeAdd',
+  name: "DeviceHandlerCodeAdd",
   components: {
-    CodeEditor
+    CodeEditor,
   },
   data() {
     return {
       savePending: false,
-      alert: false,
-      alertMessage: '',
-      deviceHandler: { sourceCode: '' },
-      editorHeight: '500px'
+      alertMessage: null,
+      deviceHandler: { sourceCode: "" },
+      editorHeight: "500px",
     };
   },
   watch: {
-    alert() {
+    alertMessage() {
       this.debouncedResizeEditor();
-    }
+    },
   },
   methods: {
     saveCode(updatedCode) {
       this.savePending = true;
-      this.alert = false;
-      this.alertMessage = '';
+      this.alertMessage = null;
       this.deviceHandler.sourceCode = updatedCode;
 
       fetch(`/api/device-handlers/source`, {
-        method: 'POST',
-        body: JSON.stringify(this.deviceHandler)
+        method: "POST",
+        body: JSON.stringify(this.deviceHandler),
       })
         .then(handleErrors)
-        .then(response => {
+        .then((response) => {
           return response.json();
         })
-        .then(data => {
+        .then((data) => {
           this.savePending = false;
           if (!data.success) {
             this.alertMessage = data.message;
-            this.alert = true;
           } else {
             this.$router.push(`/dh-code/${data.id}/edit`);
           }
         })
-        .catch(error => {
+        .catch((error) => {
           this.savePending = false;
           console.log(error);
         });
@@ -92,22 +92,27 @@ export default {
       this.debouncedResizeEditor();
     },
     resizeEditor() {
-      this.editorHeight = `${window.innerHeight -
-        (this.$refs.alertBox.clientHeight + 202)}px`;
-    }
+      this.editorHeight = `${
+        window.innerHeight -
+        (this.editorHeightAdjustment =
+          (this.$refs.alertBox?.clientHeight
+            ? this.$refs.alertBox.clientHeight + 20
+            : 0) + 153)
+      }px`;
+    },
   },
   created() {
-    window.addEventListener('resize', this.onResize);
+    window.addEventListener("resize", this.onResize);
     this.debouncedResizeEditor = _debounce(this.resizeEditor, 250);
   },
-  destroyed() {
-    window.removeEventListener('resize', this.onResize);
+  unmounted() {
+    window.removeEventListener("resize", this.onResize);
   },
-  mounted: function() {
+  mounted: function () {
+    this.resizeEditor();
     this.$nextTick(() => {
       this.resizeEditor();
     });
-  }
+  },
 };
 </script>
-<style scoped></style>
