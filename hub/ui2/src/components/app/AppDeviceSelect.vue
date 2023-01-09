@@ -8,8 +8,8 @@
             {{ body.title }}
           </h5>
           <div class="card-text">
-            <div v-if="value">
-              <div v-for="settingVal in value" :key="settingVal">
+            <div v-if="modelValue">
+              <div v-for="settingVal in modelValue" :key="settingVal">
                 {{ devices[settingVal.trim()] }}
               </div>
             </div>
@@ -28,8 +28,8 @@
             >{{ body.title }}
           </h5>
           <div class="card-text">
-            <div v-if="value">
-              {{ devices[value.trim()] }}
+            <div v-if="modelValue">
+              {{ devices[modelValue.trim()] }}
             </div>
             <div v-else>
               <div>{{ body.description }}</div>
@@ -40,8 +40,8 @@
     </div>
 
     <div class="row" justify="center">
-      <div class="modal" tabindex="-1" :visible="dialog">
-        <div class="modal-dialog">
+      <div class="modal" tabindex="-1" ref="appDeviceSelectModal">
+        <div class="modal-dialog modal-fullscreen">
           <div class="modal-content">
             <div class="modal-header">
               <h5 class="modal-title">Device List</h5>
@@ -56,7 +56,7 @@
               <div v-for="deviceItem in deviceList" :key="deviceItem.id">
                 <div class="form-check">
                   <input
-                    v-bind="value"
+                    v-model="selectedDevices"
                     class="form-check-input"
                     type="checkbox"
                     :value="deviceItem.id"
@@ -71,12 +71,19 @@
               <button
                 type="button"
                 class="btn btn-secondary"
-                data-bs-dismiss="modal"
+                @click="modal.hide()"
               >
-                Close
+                Cancel
               </button>
-              <button type="button" class="btn btn-primary">
-                Save changes
+              <button
+                type="button"
+                class="btn btn-primary"
+                @click="
+                  $emit('update:modelValue', selectedDevices);
+                  modal.hide();
+                "
+              >
+                Done
               </button>
             </div>
           </div>
@@ -87,24 +94,26 @@
 </template>
 
 <script>
+import { Modal } from "bootstrap";
+
 export default {
   name: "AppDeviceSelect",
-  props: ["value", "body", "devices"],
+  props: ["modelValue", "body", "devices"],
+  emits: ["update:modelValue"],
   data() {
     return {
+      modal: null,
       deviceList: {},
-      //selectedDevices: [],
-      dialog: false,
+      selectedDevices: [],
       modalVisible: false,
     };
   },
   methods: {
     closeDialog: function () {
-      this.dialog = false;
       this.$emit("input", this.value);
     },
     deviceSelectClick: function () {
-      console.log("device select")
+      console.log("device select");
       fetch(`/api/devices?filter=${this.body.type}`)
         .then((response) => response.json())
         .then((data) => {
@@ -112,9 +121,12 @@ export default {
             this.deviceList = data;
           }
         });
-
-      this.dialog = true;
+      this.selectedDevices = this.modelValue;
+      this.modal.show();
     },
+  },
+  mounted: function () {
+    this.modal = new Modal(this.$refs.appDeviceSelectModal);
   },
 };
 </script>

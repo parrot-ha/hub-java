@@ -1,18 +1,19 @@
 <template>
-  <v-text-field
-    type="time"
-    :label="body.title"
-    :id="body.name"
-    :name="body.name"
-    :value="dateTimeToTime(value)"
-    v-on:input="$emit('input', timeToDateTime($event))"
-  ></v-text-field>
+  <div class="mb-3">
+    <label class="form-label">{{ body.title }}</label>
+    <input
+      class="form-control"
+      type="time"
+      :value="dateTimeToTime(modelValue)"
+      @input="$emit('update:modelValue', timeToDateTime($event.target.value))"
+    />
+  </div>
 </template>
 
 <script>
 export default {
   name: "AppTimeInput",
-  props: ["value", "body"],
+  props: ["modelValue", "body"],
   data() {
     return {};
   },
@@ -40,5 +41,3 @@ export default {
   },
 };
 </script>
-
-<style scoped></style>

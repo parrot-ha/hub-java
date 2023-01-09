@@ -1,19 +1,25 @@
 <template>
   <div>
-    <div v-if="body.multiple">
-      <div v-for="childApp in childApps" :key="childApp.id">
-        <v-btn block @click="onChildNav(childApp.id)">{{
-          childApp.displayName
-        }}</v-btn>
+    <div class="d-grid" v-if="body.multiple">
+      <div class="d-grid" v-for="childApp in childApps" :key="childApp.id">
+        <button class="btn btn-light" @click="onChildNav(childApp.id)">
+          {{ childApp.displayName }}
+        </button>
       </div>
-      <v-btn block @click="onAddChild(body.namespace, body.appName)">{{
-        body.title
-      }}</v-btn>
+      <button
+        class="btn btn-light"
+        @click="onAddChild(body.namespace, body.appName)"
+      >
+        {{ body.title }}
+      </button>
     </div>
-    <div v-else>
-      <v-btn block @click="onAddChild(body.namespace, body.appName)">{{
-        body.title
-      }}</v-btn>
+    <div class="d-grid" v-else>
+      <button
+        class="btn btn-light"
+        @click="onAddChild(body.namespace, body.appName)"
+      >
+        {{ body.title }}
+      </button>
     </div>
   </div>
 </template>

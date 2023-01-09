@@ -108,6 +108,7 @@ export default {
     window.removeEventListener("resize", this.onResize);
   },
   mounted: function () {
+    this.resizeEditor();
     this.$nextTick(() => {
       this.debouncedResizeEditor();
     });

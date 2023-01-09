@@ -109,10 +109,10 @@ export default {
     window.removeEventListener("resize", this.onResize);
   },
   mounted: function () {
+    this.resizeEditor();
     this.$nextTick(() => {
       this.resizeEditor();
     });
   },
 };
 </script>
-<style scoped></style>

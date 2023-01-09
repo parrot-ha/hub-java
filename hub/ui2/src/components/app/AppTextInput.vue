@@ -1,23 +1,21 @@
 <template>
-  <v-text-field
-    type="text"
-    :label="body.title"
-    :id="body.name"
-    :name="body.name"
-    :value="value"
-    v-on:input="$emit('input', $event)"
-  ></v-text-field>
+  <div class="mb-3">
+    <label class="form-label">{{ body.title }}</label>
+    <input
+      class="form-control"
+      type="text"
+      :value="modelValue"
+      @input="$emit('update:modelValue', $event.target.value)"
+    />
+  </div>
 </template>
 
 <script>
 export default {
   name: "AppTextInput",
-  props: ["value", "body"],
+  props: ["modelValue", "body"],
   data() {
     return {};
   },
-  methods: {},
 };
 </script>
-
-<style scoped></style>

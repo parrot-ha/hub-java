@@ -108,6 +108,7 @@ export default {
     window.removeEventListener("resize", this.onResize);
   },
   mounted: function () {
+    this.resizeEditor();
     this.dhId = this.$route.params.id;
 
     fetch(`/api/device-handlers/${this.dhId}/source`)
@@ -124,4 +125,3 @@ export default {
   },
 };
 </script>
-<style scoped></style>

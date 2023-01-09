@@ -116,6 +116,8 @@ export default {
     window.removeEventListener("resize", this.onResize);
   },
   mounted: function () {
+    this.resizeEditor();
+
     this.aaId = this.$route.params.id;
 
     fetch(`/api/automation-apps/${this.aaId}/source`)

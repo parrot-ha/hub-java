@@ -1,165 +1,124 @@
 <template>
   <div class="container-fluid">
-    <div class="row">
-      <div class="col">
-        <div class="card">
-          <div class="card-body">
-            <h5 class="card-title">
-              {{ page.title }}
+    <div class="row g-3">
+      <div class="col-auto me-auto">
+        <h5>{{ page.title }}</h5>
+      </div>
+      <div class="col-auto">
+        <are-you-sure-dialog
+          title="Are you sure?"
+          body="Are you sure you want to uninstall this Automation
+                    App?"
+          confirm-button="Uninstall"
+          @confirm-action="uninstallClick"
+          >Uninstall</are-you-sure-dialog
+        >
+      </div>
+    </div>
 
-              <v-dialog
-                v-if="page.defaults || page.uninstall == true"
-                v-model="iaaUninstallDialog"
-                persistent
-                max-width="290"
-              >
-                <template v-slot:activator="{ on, attrs }">
-                  <v-btn color="error" v-bind="attrs" v-on="on"
-                    >Uninstall</v-btn
-                  >
-                </template>
-                <div class="card">
-                  <v-card-title class="headline"> Are you sure? </v-card-title>
-                  <v-card-text
-                    >Are you sure you want to uninstall this Automation
-                    App?</v-card-text
-                  >
-                  <v-card-actions>
-
-                    <v-btn
-                      color="primary"
-                      text
-                      @click="iaaUninstallDialog = false"
-                    >
-                      Cancel
-                    </v-btn>
-                    <v-btn color="error" text @click="uninstallClick">
-                      Delete
-                    </v-btn>
-                  </v-card-actions>
-                </div>
-              </v-dialog>
-            </h5>
-
-            <div class="card-text">
-              <div v-for="(section, i) in page.sections" :key="i">
-                <br />
-                <h3>{{ section.title }}</h3>
-                <div class="card">
-                  <div class="card-text">
-                    <div v-for="(body, j) in section.body" :key="j">
-                      <div
-                        v-if="
-                          body.element === 'input' &&
-                          body.type.startsWith('capability')
-                        "
-                      >
-                        <!-- display a device input -->
-                        <device-select
-                          v-if="settings[body.name]"
-                          v-model="settings[body.name].value"
-                          v-bind:body="body"
-                          v-bind:devices="devices"
-                        ></device-select>
-                      </div>
-                      <div v-if="body.type === 'app'">
-                        <child-app v-bind:body="body"></child-app>
-                      </div>
-                      <div v-if="body.type === 'enum'">
-                        <enum-input
-                          v-if="settings[body.name]"
-                          v-bind:options="body.options"
-                          v-bind:body="body"
-                          v-model="settings[body.name].value"
-                        ></enum-input>
-                      </div>
-                      <div v-if="body.type === 'bool'">
-                        <bool-input
-                          v-if="settings[body.name]"
-                          v-bind:body="body"
-                          v-model="settings[body.name].value"
-                        ></bool-input>
-                      </div>
-                      <div v-if="body.type === 'email'">
-                        <email-input
-                          v-if="settings[body.name]"
-                          v-bind:body="body"
-                          v-model="settings[body.name].value"
-                        ></email-input>
-                      </div>
-                      <div v-if="body.type === 'number'">
-                        <number-input
-                          v-if="settings[body.name]"
-                          v-bind:body="body"
-                          v-model="settings[body.name].value"
-                        ></number-input>
-                      </div>
-                      <div
-                        v-if="body.type === 'text' && body.element === 'input'"
-                      >
-                        <text-input
-                          v-if="settings[body.name]"
-                          v-bind:body="body"
-                          v-model="settings[body.name].value"
-                        ></text-input>
-                      </div>
-                      <div v-if="body.type === 'password'">
-                        <password-input
-                          v-if="settings[body.name]"
-                          v-bind:body="body"
-                          v-model="settings[body.name].value"
-                        ></password-input>
-                      </div>
-                      <div v-if="body.type === 'time'">
-                        <time-input
-                          v-if="settings[body.name]"
-                          v-bind:body="body"
-                          v-model="settings[body.name].value"
-                        ></time-input>
-                      </div>
-                      <div v-if="body.type === 'paragraph'">
-                        <paragraph-element
-                          v-bind:body="body"
-                        ></paragraph-element>
-                      </div>
-                      <div v-if="body.element === 'href'">
-                        <href-element
-                          v-bind:body="body"
-                          v-on:hrefPage="hrefClick"
-                        ></href-element>
-                      </div>
-                      <div
-                        v-if="body.type === 'text' && body.element === 'label'"
-                      >
-                        ADD LABEL INPUT
-                      </div>
-
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <br />
-              <div v-if="page.defaults">DEFAULTS GO HERE (MODE AND NAME)</div>
-            </div>
-            <v-card-actions>
-
-              <v-btn
-                v-if="doneButtonVisible"
-                color="primary"
-                @click="doneClick"
-              >
-                Done
-              </v-btn>
-              <v-btn
-                v-if="page.nextPage && page.install == false"
-                color="primary"
-                @click="nextClick"
-              >
-                Next
-              </v-btn>
-            </v-card-actions>
-          </div>
+    <div v-for="(section, i) in page.sections" :key="i">
+      <br />
+      <h3>{{ section.title }}</h3>
+      <div v-for="(body, j) in section.body" :key="j">
+        <div
+          v-if="body.element === 'input' && body.type.startsWith('capability')"
+        >
+          <!-- display a device input -->
+          <device-select
+            v-if="settings[body.name]"
+            v-model="settings[body.name].value"
+            :body="body"
+            :devices="devices"
+          ></device-select>
         </div>
+        <div v-if="body.type === 'app'">
+          <child-app v-bind:body="body"></child-app>
+        </div>
+        <div v-if="body.type === 'enum'">
+          <enum-input
+            v-if="settings[body.name]"
+            v-bind:options="body.options"
+            v-bind:body="body"
+            v-model="settings[body.name].value"
+          ></enum-input>
+        </div>
+        <div v-if="body.type === 'bool'">
+          <bool-input
+            v-if="settings[body.name]"
+            v-bind:body="body"
+            v-model="settings[body.name].value"
+          ></bool-input>
+        </div>
+        <div v-if="body.type === 'email'">
+          <email-input
+            v-if="settings[body.name]"
+            v-bind:body="body"
+            v-model="settings[body.name].value"
+          ></email-input>
+        </div>
+        <div v-if="body.type === 'number'">
+          <number-input
+            v-if="settings[body.name]"
+            :body="body"
+            v-model="settings[body.name].value"
+          ></number-input>
+        </div>
+        <div v-if="body.type === 'text' && body.element === 'input'">
+          <text-input
+            v-if="settings[body.name]"
+            v-bind:body="body"
+            v-model="settings[body.name].value"
+          ></text-input>
+        </div>
+        <div v-if="body.type === 'password'">
+          <password-input
+            v-if="settings[body.name]"
+            v-bind:body="body"
+            v-model="settings[body.name].value"
+          ></password-input>
+        </div>
+        <div v-if="body.type === 'time'">
+          <time-input
+            v-if="settings[body.name]"
+            v-bind:body="body"
+            v-model="settings[body.name].value"
+          ></time-input>
+        </div>
+        <div v-if="body.type === 'paragraph'">
+          <paragraph-element v-bind:body="body"></paragraph-element>
+        </div>
+        <div v-if="body.element === 'href'">
+          <href-element
+            v-bind:body="body"
+            v-on:hrefPage="hrefClick"
+          ></href-element>
+        </div>
+        <div v-if="body.type === 'text' && body.element === 'label'">
+          ADD LABEL INPUT
+        </div>
+      </div>
+    </div>
+    <br />
+    <div v-if="page.defaults">DEFAULTS GO HERE (MODE AND NAME)</div>
+
+    <div class="row g-3">
+      <div class="col-auto me-auto">
+        <button
+          class="btn btn-primary"
+          v-if="doneButtonVisible"
+          @click="doneClick"
+        >
+          Done
+        </button>
+      </div>
+      <div class="col-auto">
+        <button
+          v-if="page.nextPage && page.install == false"
+          class="btn btn-primary"
+          @click="nextClick"
+        >
+          Next
+        </button>
       </div>
     </div>
   </div>
@@ -178,6 +137,7 @@ import PasswordInput from "@/components/app/AppPasswordInput.vue";
 import TimeInput from "@/components/app/AppTimeInput.vue";
 import TextInput from "@/components/app/AppTextInput.vue";
 import ParagraphElement from "@/components/app/AppParagraphElement.vue";
+import AreYouSureDialog from "@/components/common/AreYouSureDialog.vue";
 
 export default {
   name: "InstalledAutomationAppConfig",
@@ -193,6 +153,7 @@ export default {
     PasswordInput,
     TextInput,
     TimeInput,
+    AreYouSureDialog,
   },
   data() {
     return {
@@ -204,7 +165,6 @@ export default {
       previousSettings: {},
       devices: {},
       breadcrumb: [],
-      iaaUninstallDialog: false,
       refreshFunction: null,
     };
   },
@@ -218,7 +178,7 @@ export default {
     },
   },
   watch: {
-    $route(to, from) {
+    $route() {
       // react to route changes...
       this.processRoute();
     },
@@ -246,10 +206,10 @@ export default {
           }
         });
     },
-    nextClick: function (event) {
+    nextClick: function () {
       this.nextPageNavigate(this.page.nextPage);
     },
-    doneClick: function (event) {
+    doneClick: function () {
       if (this.page.install == false) {
         fetch(`/api/iaas/${this.iaaId}/cfg/settings`, {
           method: "PATCH",
@@ -283,7 +243,7 @@ export default {
           });
       }
     },
-    uninstallClick: function (event) {
+    uninstallClick: function () {
       fetch(`/api/iaas/${this.iaaId}`, {
         method: "DELETE",
       })
