@@ -80,14 +80,14 @@ export default {
           body: JSON.stringify(setArgs),
         })
           .then(handleErrors)
-          .then((response) => {});
+          .then(() => {});
       } else {
         fetch(url, {
           method: "POST",
           body: null,
         })
           .then(handleErrors)
-          .then((response) => {});
+          .then(() => {});
       }
     },
   },

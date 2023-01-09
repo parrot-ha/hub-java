@@ -77,6 +77,8 @@ public class IntegrationApiHandler extends BaseApiHandler {
                                     break;
                                 case "tags":
                                     integrationMap.put("tags", ((DeviceIntegration) abstractIntegration).getTags());
+                                case "description":
+                                    integrationMap.put("description", abstractIntegration.getDescription());
                             }
                         }
 

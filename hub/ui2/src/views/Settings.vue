@@ -4,19 +4,23 @@
       <div class="col">
         <div class="card">
           <h5 class="card-title"></h5>
-          <div class="card-text">
-            <router-link :to="{ name: 'LoggerConfig' }"
-              >Logger Configuration</router-link
-            >
+          <div class="card-body">
+            <div class="card-text">
+              <div class="d-flex gap-3">
+                <router-link
+                  class="btn btn-primary"
+                  :to="{ name: 'LoggerConfig' }"
+                  >Logger Configuration</router-link
+                >
+                <button class="btn btn-primary" @click="reloadAutomationApps">
+                  Reload Automation Apps
+                </button>
+                <button class="btn btn-primary" @click="reloadDeviceHandlers">
+                  Reload Device Handlers
+                </button>
+              </div>
+            </div>
           </div>
-          <v-card-actions>
-            <v-btn color="primary" @click="reloadAutomationApps">
-              Reload Automation Apps
-            </v-btn>
-            <v-btn color="primary" @click="reloadDeviceHandlers">
-              Reload Device Handlers
-            </v-btn>
-          </v-card-actions>
         </div>
       </div>
     </div>
@@ -31,7 +35,7 @@ function handleErrors(response) {
 }
 
 export default {
-  name: "Settings",
+  name: "SettingsView",
   data() {
     return {};
   },
@@ -46,7 +50,7 @@ export default {
         .then((response) => {
           return response.json();
         })
-        .then((data) => {
+        .then(() => {
           console.log("success");
         })
         .catch((error) => {
@@ -63,7 +67,7 @@ export default {
         .then((response) => {
           return response.json();
         })
-        .then((data) => {
+        .then(() => {
           console.log("success");
         })
         .catch((error) => {

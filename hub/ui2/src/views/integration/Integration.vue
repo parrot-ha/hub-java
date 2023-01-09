@@ -1,14 +1,14 @@
 <template>
   <div class="container-fluid">
+    <div class="row gy-3">
+      <div class="col-12">
+        <h2>{{ integration.label }} ({{ integration.name }})</h2>
 
-      <div class="row">
-        <div class="col-12">
-          <h2>{{ integration.label }} ({{ integration.name }})</h2>
-
-          <div class="card">
+        <div class="card">
+          <div class="card-body">
             <h5 class="card-title">Information</h5>
             <div class="card-text">
-              <v-simple-table>
+              <table class="table">
                 <tbody>
                   <tr
                     v-for="(value, name, i) in integration.information"
@@ -18,85 +18,127 @@
                     <td>{{ value }}</td>
                   </tr>
                 </tbody>
-              </v-simple-table>
+              </table>
             </div>
           </div>
         </div>
+      </div>
 
-        <div class="col-12">
-          <div class="card">
+      <div class="col-12">
+        <div class="card">
+          <div class="card-body">
             <h5 class="card-title">Settings</h5>
             <div class="card-text">
               <v-form>
-                <v-text-field
-                  label="Label"
-                  v-model="integration.label"
-                ></v-text-field>
-                <v-divider></v-divider>
+                <div class="mb-3">
+                  <label for="labelInput" class="form-label">Label</label>
+                  <input
+                    type="text"
+                    id="labelInput"
+                    class="form-control"
+                    v-model="integration.label"
+                  />
+                </div>
+                <hr />
                 <div v-for="(section, i) in preferences.sections" :key="i">
                   <div v-for="(body, j) in section.body" :key="j">
-                    <div v-if="body.type === 'text'">
-                      <v-text-field
-                        :label="body.title"
+                    <div v-if="body.type === 'text'" class="mb-3">
+                      <label class="form-label">{{ body.title }}</label>
+                      <input
+                        type="text"
+                        class="form-control"
                         v-model="settings[body.name].value"
-                      ></v-text-field>
+                      />
                     </div>
-                    <div v-else-if="body.type === 'enum'">
-                      <v-select
-                        :items="body.options"
-                        :label="body.title"
-                        v-model="settings[body.name].value"
-                      ></v-select>
+                    <div v-else-if="body.type === 'enum'" class="mb-3">
+                      <label class="form-label">{{ body.title }}</label>
+                      <select
+                        class="form-select"
+                        :aria-label="body.title"
+                        :value="settings[body.name].value"
+                        :multiple="body.multiple"
+                      >
+                        <option v-for="(item, i) in body.options" :key="i">
+                          {{ item }}
+                        </option>
+                      </select>
                     </div>
-                    <div v-else-if="body.type === 'bool'">
-                      <v-switch
-                        :label="body.title"
+                    <div v-else-if="body.type === 'bool'" class="mb-3">
+                      <input
+                        class="form-check-input"
+                        type="checkbox"
+                        role="switch"
                         v-model="settings[body.name].value"
-                      ></v-switch>
+                      />
+                      <label class="form-check-label">{{ body.title }}</label>
                     </div>
                   </div>
                 </div>
               </v-form>
-            </div>
-            <v-card-actions>
-              <v-btn color="primary" @click="saveIntegration"> Save </v-btn>
-              <v-spacer></v-spacer>
-              <v-dialog
-                v-model="integrationDeleteDialog"
-                persistent
-                max-width="290"
+              <div class="d-flex gap-3">
+                <button class="btn btn-primary" @click="saveIntegration">
+                  Save
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-danger"
+                  data-bs-toggle="modal"
+                  data-bs-target="#deleteModal"
+                >
+                  Delete
+                </button>
+              </div>
+              <div
+                class="modal fade"
+                id="deleteModal"
+                tabindex="-1"
+                aria-labelledby="deleteModalLabel"
+                aria-hidden="true"
               >
-                <template v-slot:activator="{ on, attrs }">
-                  <v-btn color="error" v-bind="attrs" v-on="on">Delete</v-btn>
-                </template>
-                <div class="card">
-                  <v-card-title class="headline"> Are you sure? </v-card-title>
-                  <v-card-text
-                    >Are you sure you want to delete this
-                    integration?</v-card-text
-                  >
-                  <v-card-actions>
-                    <v-spacer></v-spacer>
-                    <v-btn
-                      color="primary"
-                      text
-                      @click="integrationDeleteDialog = false"
-                    >
-                      Cancel
-                    </v-btn>
-                    <v-btn color="error" text @click="deleteIntegration">
-                      Delete
-                    </v-btn>
-                  </v-card-actions>
+                <div class="modal-dialog">
+                  <div class="modal-content">
+                    <div class="modal-header">
+                      <h1 class="modal-title fs-5" id="deleteModalLabel">
+                        Are you sure?
+                      </h1>
+                      <button
+                        type="button"
+                        class="btn-close"
+                        data-bs-dismiss="modal"
+                        aria-label="Close"
+                      ></button>
+                    </div>
+                    <div class="modal-body">
+                      Are you sure you want to delete this integration?
+                    </div>
+                    <div class="modal-footer">
+                      <button
+                        type="button"
+                        class="btn btn-secondary"
+                        data-bs-dismiss="modal"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="button"
+                        class="btn btn-danger"
+                        @click="deleteIntegration"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </div>
                 </div>
-              </v-dialog>
-            </v-card-actions>
+              </div>
+            </div>
           </div>
         </div>
+      </div>
 
-        <div class="col-12" v-for="(section, i) in pageLayout" :key="i">
-          <div class="card">
-            <h5 class="card-title">{{ section.title }} </h5>
+      <div class="col-12" v-for="(section, i) in pageLayout" :key="i">
+        <div class="card">
+          <div class="card-body">
+            <h5 class="card-title">{{ section.title }}</h5>
             <div class="card-text">
               <div v-for="(bodyItem, j) in section.body" :key="j">
                 <div v-if="bodyItem.type === 'table'">
@@ -127,109 +169,123 @@
                   </table>
                 </div>
                 <div v-if="bodyItem.type === 'button'">
-                  <v-btn
-                    :color="bodyItem.color"
+                  <button
+                    :class="'btn btn-' + bodyItem.color"
                     @click="
                       handleButtonAction(bodyItem.action, bodyItem.response)
                     "
                     :disabled="pageData[bodyItem.disabled]"
                   >
                     {{ bodyItem.title }}
-                  </v-btn>
+                  </button>
                 </div>
               </div>
             </div>
-
           </div>
         </div>
+      </div>
 
-    <div class="col-12" v-if="featureExists('deviceScan')">
-          <div class="card">
-            <v-card-title
-              >Device Scanning
+      <div class="col-12" v-if="featureExists('deviceScan')">
+        <div class="card">
+          <div class="card-body">
+            <div class="card-title">
+              Device Scanning
               <v-progress-circular
                 v-show="scanDevicesRunning"
                 indeterminate
                 color="primary"
               ></v-progress-circular>
-            </v-card-title>
+            </div>
             <div class="card-text">
               <div id="foundDeviceDiv">
                 {{ foundDevices }}
               </div>
+              <div class="d-flex gap-3">
+                <button
+                  class="btn btn-success"
+                  :disabled="scanDevicesRunning"
+                  @click="startScan"
+                >
+                  Start Scan
+                </button>
+                <button
+                  class="btn btn-danger"
+                  :disabled="!scanDevicesRunning"
+                  @click="stopScan"
+                >
+                  Stop Scan
+                </button>
+              </div>
             </div>
-            <v-card-actions>
-              <v-btn
-                :disabled="scanDevicesRunning"
-                color="success"
-                @click="startScan"
-              >
-                Start Scan
-              </v-btn>
-              <v-btn
-                :disabled="!scanDevicesRunning"
-                color="error"
-                @click="stopScan"
-                >Stop Scan</v-btn
-              >
-            </v-card-actions>
           </div>
         </div>
+      </div>
 
-  <div class="col-12" v-if="featureExists('deviceExclude')">
-          <div class="card">
-            <v-card-title
-              >Device Exclude
+      <div class="col-12" v-if="featureExists('deviceExclude')">
+        <div class="card">
+          <div class="card-body">
+            <div class="card-title">
+              Device Exclude
               <v-progress-circular
                 v-show="excludeDevicesRunning"
                 indeterminate
                 color="primary"
-              ></v-progress-circular
-            ></v-card-title>
+              ></v-progress-circular>
+            </div>
             <div class="card-text">
               <div id="deviceExcludedDiv">
                 {{ excludedDevices }}
               </div>
+              <div class="d-flex gap-3">
+                <button
+                  class="btn btn-success"
+                  :disabled="excludeDevicesRunning"
+                  @click="startExclude"
+                >
+                  Start Exclude
+                </button>
+                <button
+                  class="btn btn-danger"
+                  :disabled="!excludeDevicesRunning"
+                  @click="stopExclude"
+                >
+                  Stop Exclude
+                </button>
+              </div>
             </div>
-            <v-card-actions>
-              <v-btn
-                :disabled="excludeDevicesRunning"
-                color="success"
-                @click="startExclude"
-              >
-                Start Exclude
-              </v-btn>
-              <v-btn
-                :disabled="!excludeDevicesRunning"
-                color="error"
-                @click="stopExclude"
-                >Stop Exclude</v-btn
-              >
-            </v-card-actions>
           </div>
         </div>
+      </div>
 
-          <div class="col-12" v-if="featureExists('reset')">
-          <div class="card">
+      <div class="col-12" v-if="featureExists('reset')">
+        <div class="card">
+          <div class="card-body">
             <h5 class="card-title">Reset</h5>
             <div class="card-text">
               <h5 style="color: red">
                 {{ getFeatureOption("reset", "resetWarning") }}
               </h5>
-              <v-form>
-                <v-text-field
-                  label='Type "reset" and click Reset button to reset'
-                  v-model="reset"
-                ></v-text-field>
-              </v-form>
+              <form>
+                <div class="mb-3">
+                  <label for="resetInput" class="form-label"
+                    >Type "reset" and click Reset button to reset</label
+                  >
+                  <input
+                    type="text"
+                    id="resetInput"
+                    class="form-control"
+                    v-model="reset"
+                  />
+                </div>
+              </form>
+              <button class="btn btn-danger" @click="resetIntegration">
+                Reset
+              </button>
             </div>
-            <v-card-actions>
-              <v-btn color="error" @click="resetIntegration">Reset</v-btn>
-            </v-card-actions>
           </div>
         </div>
       </div>
-
+    </div>
   </div>
 </template>
 <script>
@@ -241,7 +297,7 @@ function handleErrors(response) {
 }
 
 export default {
-  name: "Integration",
+  name: "IntegrationView",
   data() {
     return {
       integrationId: "",
@@ -285,7 +341,7 @@ export default {
         .then((response) => {
           return response.json();
         })
-        .then((data) => {
+        .then(() => {
           console.log("integration was deleted!");
           this.$router.push("/integrations");
         })
@@ -304,7 +360,7 @@ export default {
         .then((response) => {
           return response.json();
         })
-        .then((data) => {
+        .then(() => {
           console.log("success");
         })
         .catch((error) => {
@@ -369,7 +425,7 @@ export default {
         body: JSON.stringify(body),
       })
         .then((response) => response.json())
-        .then((data) => {
+        .then(() => {
           vm.scanDevicesRunning = true;
           // check status
           setTimeout(
@@ -388,7 +444,7 @@ export default {
         body: JSON.stringify(body),
       })
         .then((response) => response.json())
-        .then((data) => {
+        .then(() => {
           vm.checkStatus();
         });
     },
@@ -421,7 +477,7 @@ export default {
         body: JSON.stringify(body),
       })
         .then((response) => response.json())
-        .then((data) => {
+        .then(() => {
           vm.excludeDevicesRunning = true;
           // check status
           setTimeout(
@@ -440,7 +496,7 @@ export default {
         body: JSON.stringify(body),
       })
         .then((response) => response.json())
-        .then((data) => {
+        .then(() => {
           vm.checkExcludeStatus();
         });
     },
@@ -453,7 +509,7 @@ export default {
           body: JSON.stringify(body),
         })
           .then((response) => response.json())
-          .then((data) => {
+          .then(() => {
             vm.checkStatus();
           });
       } else {

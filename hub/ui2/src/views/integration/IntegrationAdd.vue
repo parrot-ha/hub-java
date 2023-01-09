@@ -1,28 +1,29 @@
 <template>
   <div class="container-fluid">
-
-      <div class="row">
-        <div class="col-12"
-          v-for="integrationType in integrationTypes"
-          :key="integrationType.id"
-        >
-          <div class="card">
+    <div class="row gy-3">
+      <div
+        class="col-12"
+        v-for="integrationType in integrationTypes"
+        :key="integrationType.id"
+      >
+        <div class="card">
+          <div class="card-body">
             <h5 class="card-title">{{ integrationType.name }}</h5>
             <div class="card-text">
               {{ integrationType.description }}
-            </div>
-            <v-card-actions>
-              <v-btn
+              <br />
+              <button
+                class="btn btn-primary"
                 color="primary"
                 @click="addIntegration(integrationType.id)"
               >
                 Add
-              </v-btn>
-            </v-card-actions>
+              </button>
+            </div>
           </div>
         </div>
       </div>
-
+    </div>
   </div>
 </template>
 <script>
@@ -34,7 +35,7 @@ function handleErrors(response) {
 }
 
 export default {
-  name: "Integration Add",
+  name: "IntegrationAdd",
   data() {
     return {
       integrationTypes: [],

@@ -3,116 +3,99 @@
     <div class="row">
       <div class="col">
         <div class="card">
-          <h5 class="card-title"></h5>
-          <div class="card-text">
-            <div>
-              <v-data-table :headers="headers" :items="loggers">
-                <template v-slot:top>
-                  <v-toolbar flat>
-                    <v-toolbar-title>Logging Configuration</v-toolbar-title>
-                    <v-divider class="mx-4" inset vertical></v-divider>
-                    <v-spacer></v-spacer>
-                    <v-dialog v-model="dialog" max-width="500px">
-                      <template v-slot:activator="{ on, attrs }">
-                        <v-btn
-                          color="primary"
-                          dark
-                          class="mb-2"
-                          v-bind="attrs"
-                          v-on="on"
+          <div class="card-body">
+            <div
+              class="card-title d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3"
+            >
+              <h5>Loggers</h5>
+              <div class="btn-toolbar mb-2 mb-md-0">
+                <logger-add-modal @loggerSaved="loadLoggingConfig"
+                  >Add Logger</logger-add-modal
+                >
+              </div>
+            </div>
+            <div class="card-text">
+              <div>
+                <table class="table">
+                  <thead>
+                    <tr>
+                      <th>Name</th>
+                      <th>Level</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="logger in loggers" :key="logger.name">
+                      <td>{{ logger.name }}</td>
+                      <td>
+                        <logger-add-modal
+                          @loggerSaved="loadLoggingConfig"
+                          :logger-name="logger.name"
+                          :logger-level="logger.level"
+                          >{{ logger.level }}</logger-add-modal
                         >
-                          New Item
-                        </v-btn>
-                      </template>
-                      <div class="card">
-                        <h5 class="card-title">
-                          <span class="headline">{{ formTitle }}</span>
-                        </h5>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
 
-                        <div class="card-text">
-                          <div>
-                            <v-text-field
-                              v-model="editedItem.name"
-                              label="Logger Name"
-                            ></v-text-field>
-                          </div>
-                          <div>
-                            <v-select
-                              v-model="editedItem.level"
-                              :items="loggerLevels"
-                              label="Level"
-                            ></v-select>
-                          </div>
-                        </div>
-
-                        <v-card-actions>
-                          <v-spacer></v-spacer>
-                          <v-btn
-                            color="blue darken-1"
-                            text
-                            @click="closeNewDialog"
-                          >
-                            Cancel
-                          </v-btn>
-                          <v-btn
-                            color="blue darken-1"
-                            text
-                            @click="saveNewLogger"
-                          >
-                            Save
-                          </v-btn>
-                        </v-card-actions>
+                <div
+                  class="modal fade"
+                  id="addModal"
+                  tabindex="-1"
+                  aria-labelledby="addModalLabel"
+                  aria-hidden="true"
+                >
+                  <div class="modal-dialog">
+                    <div class="modal-content">
+                      <div class="modal-header">
+                        <h1 class="modal-title fs-5" id="addModalLabel">
+                          Add Logger
+                        </h1>
+                        <button
+                          type="button"
+                          class="btn-close"
+                          data-bs-dismiss="modal"
+                          aria-label="Close"
+                        ></button>
                       </div>
-                    </v-dialog>
-                  </v-toolbar>
-                </template>
-                <template v-slot:item.level="props">
-                  <v-edit-dialog
-                    v-model:return-value="props.item.level"
-                    large
-                    persistent
-                    @save="save(props.item)"
-                    @cancel="cancel"
-                  >
-                    <div>{{ props.item.level }}</div>
-                    <template v-slot:input>
-                      <div class="mt-4 title">Update Level</div>
-                      <v-select
-                        v-model="props.item.level"
-                        :items="loggerLevels"
-                        label="Level"
-                      ></v-select>
-                    </template>
-                  </v-edit-dialog>
-                </template>
-              </v-data-table>
-              <v-snackbar v-model="snack" :timeout="3000" :color="snackColor">
-                {{ snackText }}
-
-                <template v-slot:action="{ attrs }">
-                  <v-btn v-bind="attrs" text @click="snack = false">
-                    Close
-                  </v-btn>
-                </template>
-              </v-snackbar>
+                      <div class="modal-body">
+                        Are you sure you want to delete this integration?
+                      </div>
+                      <div class="modal-footer">
+                        <button
+                          type="button"
+                          class="btn btn-secondary"
+                          data-bs-dismiss="modal"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          type="button"
+                          class="btn btn-danger"
+                          @click="deleteIntegration"
+                        >
+                          Save
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
-
         </div>
       </div>
     </div>
   </div>
 </template>
 <script>
-function handleErrors(response) {
-  if (!response.ok) {
-    throw Error(response.statusText);
-  }
-  return response;
-}
+import LoggerAddModal from "@/components/settings/LoggerAddModal.vue";
 
 export default {
   name: "LoggerConfig",
+  components: {
+    LoggerAddModal,
+  },
   data() {
     return {
       dialog: false,
