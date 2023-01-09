@@ -1,36 +1,34 @@
 <template>
-  <v-card height="100%" id="editorCard">
-    <h5 class="card-title">
-      {{ title }}
-      <v-spacer></v-spacer>
-      <v-progress-circular
-        v-show="savePending"
-        indeterminate
-        color="primary"
-      ></v-progress-circular>
-      <v-btn color="primary" :disabled="savePending" @click="saveCode">
-        Save
-      </v-btn>
-      <slot></slot>
-    </h5>
-
-    <div class="card-text">
-      <div class="editor-wrapper" :style="{ height: editorHeight }">
-        <div class="ace-editor" ref="ace"></div>
+  <div>
+    <div class="row g-3">
+      <div class="col-auto me-auto">
+        <h4>
+          {{ title }}
+        </h4>
       </div>
+      <div class="col-auto">
+        <div class="d-flex gap-3">
+          <span v-show="savePending" class="spinner-border"></span>
+          <button
+            class="btn btn-primary"
+            :disabled="savePending"
+            @click="saveCode"
+          >
+            Save
+          </button>
+          <slot></slot>
+        </div>
+      </div>
+    </div>
+    <br />
+
+    <div class="editor-wrapper" :style="{ height: editorHeight }">
+      <div class="ace-editor" ref="ace"></div>
     </div>
   </div>
 </template>
 <script>
-function handleErrors(response) {
-  if (!response.ok) {
-    throw Error(response.statusText);
-  }
-  return response;
-}
-
 import ace from "ace-builds";
-import "ace-builds/webpack-resolver";
 import "ace-builds/src-noconflict/theme-monokai";
 import "ace-builds/src-noconflict/mode-groovy";
 

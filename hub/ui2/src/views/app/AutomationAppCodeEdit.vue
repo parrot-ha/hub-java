@@ -2,17 +2,19 @@
   <div class="container-fluid">
     <div class="row">
       <div class="col">
-        <div ref="alertBox">
-          <v-alert
-            v-model="alert"
-            close-text="Close Alert"
-            outlined
-            type="error"
-            dismissible
-            @input="debouncedResizeEditor"
-          >
-            {{ alertMessage }}
-          </v-alert>
+        <div
+          ref="alertBox"
+          class="alert alert-danger alert-dismissible"
+          role="alert"
+          v-if="alertMessage"
+        >
+          {{ alertMessage }}
+          <button
+            type="button"
+            class="btn-close"
+            aria-label="Close"
+            @click="alertMessage = null"
+          ></button>
         </div>
       </div>
     </div>
@@ -20,19 +22,19 @@
       <div class="col">
         <code-editor
           :source="automationApp.sourceCode"
-          title="Add"
+          title="Edit"
           :savePending="savePending"
           :editorHeight="editorHeight"
           @saveCodeButtonClicked="saveCode"
         >
-          <v-btn
-            color="primary"
+          <button
+            class="btn btn-outline-primary"
             outlined
             :to="{ name: 'AutomationAppSettings', params: { id: aaId } }"
             mx-2
           >
             App Settings
-          </v-btn>
+          </button>
         </code-editor>
       </div>
     </div>
@@ -46,7 +48,7 @@ function handleErrors(response) {
   return response;
 }
 
-import CodeEditor from "@/components/common/CodeEditor";
+import CodeEditor from "@/components/common/CodeEditor.vue";
 import _debounce from "lodash/debounce";
 
 export default {
@@ -57,23 +59,21 @@ export default {
   data() {
     return {
       savePending: false,
-      alert: false,
-      alertMessage: "",
+      alertMessage: null,
       aaId: "",
       automationApp: { sourceCode: "" },
       editorHeight: "500px",
     };
   },
   watch: {
-    alert() {
+    alertMessage() {
       this.debouncedResizeEditor();
     },
   },
   methods: {
     saveCode(updatedCode) {
       this.savePending = true;
-      this.alert = false;
-      this.alertMessage = "";
+      this.alertMessage = null;
       this.automationApp.sourceCode = updatedCode;
 
       fetch(`/api/automation-apps/${this.aaId}/source`, {
@@ -88,7 +88,6 @@ export default {
           this.savePending = false;
           if (!data.success) {
             this.alertMessage = data.message;
-            this.alert = true;
           }
         })
         .catch((error) => {
@@ -102,7 +101,10 @@ export default {
     resizeEditor() {
       this.editorHeight = `${
         window.innerHeight -
-        (this.editorHeightAdjustment = this.$refs.alertBox.clientHeight + 202)
+        (this.editorHeightAdjustment =
+          (this.$refs.alertBox?.clientHeight
+            ? this.$refs.alertBox.clientHeight + 20
+            : 0) + 153)
       }px`;
     },
   },

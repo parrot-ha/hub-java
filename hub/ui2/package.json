@@ -9,6 +9,7 @@
     "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs --fix --ignore-path .gitignore"
   },
   "dependencies": {
+    "ace-builds": "^1.14.0",
     "bootstrap": "^5.2.3",
     "bootstrap-icons": "^1.10.3",
     "leaflet": "^1.9.3",

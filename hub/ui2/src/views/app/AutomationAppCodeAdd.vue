@@ -2,17 +2,19 @@
   <div class="container-fluid">
     <div class="row">
       <div class="col">
-        <div ref="alertBox">
-          <v-alert
-            v-model="alert"
-            close-text="Close Alert"
-            outlined
-            type="error"
-            dismissible
-            @input="debouncedResizeEditor"
-          >
-            {{ alertMessage }}
-          </v-alert>
+        <div
+          ref="alertBox"
+          class="alert alert-danger alert-dismissible"
+          role="alert"
+          v-if="alertMessage"
+        >
+          {{ alertMessage }}
+          <button
+            type="button"
+            class="btn-close"
+            aria-label="Close"
+            @click="alertMessage = null"
+          ></button>
         </div>
       </div>
     </div>
@@ -37,7 +39,7 @@ function handleErrors(response) {
   return response;
 }
 
-import CodeEditor from "@/components/common/CodeEditor";
+import CodeEditor from "@/components/common/CodeEditor.vue";
 import _debounce from "lodash/debounce";
 
 export default {
@@ -48,22 +50,20 @@ export default {
   data() {
     return {
       savePending: false,
-      alert: false,
-      alertMessage: "",
+      alertMessage: null,
       automationApp: { sourceCode: "" },
       editorHeight: "500px",
     };
   },
   watch: {
-    alert() {
+    alertMessage() {
       this.debouncedResizeEditor();
     },
   },
   methods: {
     saveCode(updatedCode) {
       this.savePending = true;
-      this.alert = false;
-      this.alertMessage = "";
+      this.alertMessage = null;
       this.automationApp.sourceCode = updatedCode;
 
       fetch(`/api/automation-apps/source`, {
@@ -78,7 +78,6 @@ export default {
           this.savePending = false;
           if (!data.success) {
             this.alertMessage = data.message;
-            this.alert = true;
           } else {
             this.$router.push(`/aa-code/${data.aaId}/edit`);
           }
@@ -93,7 +92,11 @@ export default {
     },
     resizeEditor() {
       this.editorHeight = `${
-        window.innerHeight - (this.$refs.alertBox.clientHeight + 202)
+        window.innerHeight -
+        (this.editorHeightAdjustment =
+          (this.$refs.alertBox?.clientHeight
+            ? this.$refs.alertBox.clientHeight + 20
+            : 0) + 153)
       }px`;
     },
   },
