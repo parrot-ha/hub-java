@@ -147,7 +147,7 @@
               </form>
 
               <h5 class="card-title">Preferences</h5>
-              <v-form>
+              <form>
                 <div v-for="(section, i) in preferences.sections" :key="i">
                   <div v-for="(body, j) in section.body" :key="j">
                     <div
@@ -233,7 +233,7 @@
                     </div>
                   </div>
                 </div>
-              </v-form>
+              </form>
             </div>
             <div class="row g-3">
               <div class="col-auto me-auto">
@@ -246,56 +246,12 @@
                 </button>
               </div>
               <div class="col-auto">
-                <button
-                  type="button"
-                  class="btn btn-danger"
-                  data-bs-toggle="modal"
-                  data-bs-target="#deleteModal"
-                >
-                  Delete
-                </button>
-              </div>
-            </div>
-            <div
-              class="modal fade"
-              id="deleteModal"
-              tabindex="-1"
-              aria-labelledby="deleteModalLabel"
-              aria-hidden="true"
-            >
-              <div class="modal-dialog">
-                <div class="modal-content">
-                  <div class="modal-header">
-                    <h1 class="modal-title fs-5" id="deleteModalLabel">
-                      Are you sure?
-                    </h1>
-                    <button
-                      type="button"
-                      class="btn-close"
-                      data-bs-dismiss="modal"
-                      aria-label="Close"
-                    ></button>
-                  </div>
-                  <div class="modal-body">
-                    Are you sure you want to delete this device?
-                  </div>
-                  <div class="modal-footer">
-                    <button
-                      type="button"
-                      class="btn btn-secondary"
-                      data-bs-dismiss="modal"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      type="button"
-                      class="btn btn-danger"
-                      @click="deleteDevice"
-                    >
-                      Delete
-                    </button>
-                  </div>
-                </div>
+                <are-you-sure-dialog
+                  title="Are you sure?"
+                  body="Are you sure you want to delete this device?"
+                  confirm-button="Delete"
+                  @confirm-action="deleteDevice"
+                ></are-you-sure-dialog>
               </div>
             </div>
           </div>
@@ -306,6 +262,7 @@
 </template>
 <script>
 import EnumInput from "@/components/device/DeviceEnumInput.vue";
+import AreYouSureDialog from "@/components/common/AreYouSureDialog.vue";
 
 export default {
   name: "DeviceConfigView",
@@ -320,11 +277,11 @@ export default {
       settings: {},
       currentStates: {},
       information: {},
-      deviceDeleteDialog: false,
     };
   },
   components: {
     EnumInput,
+    AreYouSureDialog,
   },
   computed: {
     filteredDevices: function () {
@@ -361,24 +318,26 @@ export default {
           this.preferences = data;
           if (data.sections) {
             for (var section of data.sections) {
-              for (var input of section.input) {
-                if (typeof this.settings[input.name] === "undefined") {
-                  this.settings[input.name] = {
-                    name: input.name,
-                    value:
-                      input.defaultValue == null ||
-                      typeof input.defaultValue === "undefined"
-                        ? null
-                        : input.defaultValue,
-                    type: input.type,
-                    multiple: input.multiple ? true : false,
-                  };
-                } else if (
-                  this.settings[input.name].value == null &&
-                  input.defaultValue != null &&
-                  typeof input.defaultValue !== "undefined"
-                ) {
-                  this.settings[input.name].value = input.defaultValue;
+              if (section.input != null) {
+                for (var input of section.input) {
+                  if (typeof this.settings[input.name] === "undefined") {
+                    this.settings[input.name] = {
+                      name: input.name,
+                      value:
+                        input.defaultValue == null ||
+                        typeof input.defaultValue === "undefined"
+                          ? null
+                          : input.defaultValue,
+                      type: input.type,
+                      multiple: input.multiple ? true : false,
+                    };
+                  } else if (
+                    this.settings[input.name].value == null &&
+                    input.defaultValue != null &&
+                    typeof input.defaultValue !== "undefined"
+                  ) {
+                    this.settings[input.name].value = input.defaultValue;
+                  }
                 }
               }
             }
@@ -394,7 +353,6 @@ export default {
         .then((response) => response.json())
         .then((data) => {
           if (data.success) {
-            console.log("success");
             this.updatePreferenceLayout();
           } else {
             console.log("problem saving device");
@@ -402,18 +360,13 @@ export default {
         });
     },
     deleteDevice: function () {
-      console.log("delete device!");
       fetch(`/api/devices/${this.deviceId}`, { method: "DELETE" })
         .then((response) => response.json())
         .then((data) => {
-          console.log(JSON.stringify(data));
-          console.log(`data ${data}`);
           if (data.success) {
-            console.log("device was deleted!");
             this.$router.push("/devices");
           } else {
             console.log("problem deleting device");
-            //$('#deletModal').modal('hide');
           }
         });
     },
@@ -493,7 +446,7 @@ export default {
       var eventMap = JSON.parse(event.data);
 
       var matched = false;
-      this.currentStates.forEach(function (item, index) {
+      this.currentStates.forEach(function (item) {
         if (item.name == eventMap.name) {
           item.stringValue = eventMap.value;
           matched = true;
