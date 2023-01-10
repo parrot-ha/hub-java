@@ -18,15 +18,15 @@
  */
 package com.parrotha.internal.app;
 
+import com.parrotha.api.Response;
+import com.parrotha.internal.BaseApiHandler;
+import com.parrotha.internal.entity.EntityService;
+import com.parrotha.internal.hub.ScheduleService;
 import groovy.json.JsonBuilder;
 import groovy.json.JsonSlurper;
 import groovy.lang.MissingMethodException;
 import io.javalin.Javalin;
 import org.apache.commons.lang3.StringUtils;
-import com.parrotha.api.Response;
-import com.parrotha.internal.BaseApiHandler;
-import com.parrotha.internal.hub.ScheduleService;
-import com.parrotha.internal.entity.EntityService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,7 +39,6 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import static io.javalin.core.security.SecurityUtil.roles;
 import static com.parrotha.internal.ui.UIFramework.UIRole.ADMIN;
 import static com.parrotha.internal.ui.UIFramework.UIRole.ANYONE;
 
@@ -59,9 +58,9 @@ public class AutomationAppApiHandler extends BaseApiHandler {
 
     public void setupApi(Javalin app) {
         // local endpoint for web service apps
-        app.get("/api/automationapps/installations/:id/*", ctx -> {
+        app.get("/api/automationapps/installations/{id}/<subpath>", ctx -> {
             String installedAutomationAppId = ctx.pathParam("id");
-            String path = "/" + ctx.splat(0);
+            String path = "/" + ctx.pathParam("subpath");
 
             Map<String, List<String>> queryParamMap = ctx.queryParamMap();
             Map<String, Object> params = new HashMap();
@@ -84,7 +83,7 @@ public class AutomationAppApiHandler extends BaseApiHandler {
                 buildStandardJsonResponse(ctx, true);
             }
 
-        }, roles(ANYONE, ADMIN));
+        }, ANYONE, ADMIN);
 
         app.get("/api/automation-apps", ctx -> {
             String filter = ctx.queryParam("filter");
@@ -100,7 +99,7 @@ public class AutomationAppApiHandler extends BaseApiHandler {
             ctx.result(new JsonBuilder(aas).toString());
         });
 
-        app.get("/api/automation-apps/:id", ctx -> {
+        app.get("/api/automation-apps/{id}", ctx -> {
             String id = ctx.pathParam("id");
             AutomationApp automationApp = automationAppService.getAutomationAppById(id);
             Map<String, Object> response = new HashMap<>();
@@ -116,7 +115,7 @@ public class AutomationAppApiHandler extends BaseApiHandler {
             ctx.result(new JsonBuilder(response).toString());
         });
 
-        app.put("/api/automation-apps/:id", ctx -> {
+        app.put("/api/automation-apps/{id}", ctx -> {
             String id = ctx.pathParam("id");
 
             boolean automationAppSaved = false;
@@ -146,7 +145,7 @@ public class AutomationAppApiHandler extends BaseApiHandler {
             buildStandardJsonResponse(ctx, automationAppSaved);
         });
 
-        app.get("/api/automation-apps/:id/source", ctx -> {
+        app.get("/api/automation-apps/{id}/source", ctx -> {
             String id = ctx.pathParam("id");
             String sourceCode = automationAppService.getAutomationAppSourceCode(id);
             Map<String, String> response = new HashMap<>();
@@ -159,9 +158,9 @@ public class AutomationAppApiHandler extends BaseApiHandler {
             ctx.result(new JsonBuilder(response).toString());
         });
 
-        app.put("/api/automation-apps/:id/source", ctx -> {
+        app.put("/api/automation-apps/{id}/source", ctx -> {
             String id = ctx.pathParam("id");
-            Map bodyMap = (Map) new JsonSlurper().parse(ctx.bodyAsInputStream());
+            Map bodyMap = (Map) new JsonSlurper().parse(ctx.bodyInputStream());
             String sourceCode = (String) bodyMap.get("sourceCode");
             try {
                 boolean response = entityService.updateAutomationAppSourceCode(id, sourceCode);
@@ -178,7 +177,7 @@ public class AutomationAppApiHandler extends BaseApiHandler {
 
         // create new automation app from source code
         app.post("/api/automation-apps/source", ctx -> {
-            Map bodyMap = (Map) new JsonSlurper().parse(ctx.bodyAsInputStream());
+            Map bodyMap = (Map) new JsonSlurper().parse(ctx.bodyInputStream());
             String sourceCode = (String) bodyMap.get("sourceCode");
             try {
                 //save source code
@@ -199,7 +198,7 @@ public class AutomationAppApiHandler extends BaseApiHandler {
             }
         });
 
-        app.get("/api/iaas/:id", ctx -> {
+        app.get("/api/iaas/{id}", ctx -> {
             String id = ctx.pathParam("id");
             InstalledAutomationApp installedAutomationApp = automationAppService.getInstalledAutomationApp(id);
             Map<String, Object> model = new HashMap<>();
@@ -216,7 +215,7 @@ public class AutomationAppApiHandler extends BaseApiHandler {
             ctx.result(new JsonBuilder(model).toString());
         });
 
-        app.put("/api/iaas/:id", ctx -> {
+        app.put("/api/iaas/{id}", ctx -> {
             String id = ctx.pathParam("id");
 
             boolean installedAutomationAppSaved = false;
@@ -248,7 +247,7 @@ public class AutomationAppApiHandler extends BaseApiHandler {
         });
 
         // remove an installed automation app
-        app.delete("/api/iaas/:id", ctx -> {
+        app.delete("/api/iaas/{id}", ctx -> {
             String id = ctx.pathParam("id");
 
             //run uninstalled method
@@ -271,14 +270,14 @@ public class AutomationAppApiHandler extends BaseApiHandler {
             ctx.result(new JsonBuilder(model).toString());
         });
 
-        app.post("/api/iaas/:id/methods/:methodName", ctx -> {
+        app.post("/api/iaas/{id}/methods/{methodName}", ctx -> {
             String id = ctx.pathParam("id");
             String methodName = ctx.pathParam("methodName");
             entityService.runInstalledAutomationAppMethod(id, methodName);
             ctx.status(200);
         });
 
-        app.get("/api/iaas/:id/schedules", ctx -> {
+        app.get("/api/iaas/{id}/schedules", ctx -> {
             String id = ctx.pathParam("id");
 
             List<Map<String, String>> scheduleList = scheduleService.getSchedulesForInstalledAutomationApp(id);
@@ -298,7 +297,7 @@ public class AutomationAppApiHandler extends BaseApiHandler {
             automationAppModel.put("message", "");
             String automationAppId = "";
 
-            if("child".equals(type)) {
+            if ("child".equals(type)) {
                 String parentAppId = (String) bodyMap.get("id");
                 String appName = (String) bodyMap.get("appName");
                 String namespace = (String) bodyMap.get("namespace");
@@ -315,19 +314,20 @@ public class AutomationAppApiHandler extends BaseApiHandler {
             ctx.result(new JsonBuilder(automationAppModel).toString());
         });
 
-        app.get("/api/iaas/:id/child-apps", ctx -> {
+        app.get("/api/iaas/{id}/child-apps", ctx -> {
             // get the installed child apps of an installed automation app
             String id = ctx.pathParam("id");
             String appName = ctx.queryParam("appName");
             String namespace = ctx.queryParam("namespace");
             List<InstalledAutomationApp> childApps = automationAppService.getChildInstalledAutomationApps(id, appName, namespace);
-            List<Map> childAppListMap = childApps.stream().map(ca -> Map.of("id", ca.getId(), "displayName", ca.getDisplayName())).collect(Collectors.toList());
+            List<Map> childAppListMap = childApps.stream().map(ca -> Map.of("id", ca.getId(), "displayName", ca.getDisplayName()))
+                    .collect(Collectors.toList());
             ctx.status(200);
             ctx.contentType("application/json");
             ctx.result(new JsonBuilder(childAppListMap).toString());
         });
 
-        app.get("/api/iaas/:id/cfg/page", ctx -> {
+        app.get("/api/iaas/{id}/cfg/page", ctx -> {
             // get first page of automation app configuration or if single page app, get that.
             String id = ctx.pathParam("id");
             Object pageInfo = entityService.getInstalledAutomationAppConfigurationPage(id, null);
@@ -336,7 +336,7 @@ public class AutomationAppApiHandler extends BaseApiHandler {
             ctx.result(new JsonBuilder(pageInfo).toString());
         });
 
-        app.get("/api/iaas/:id/cfg/page/:pageName", ctx -> {
+        app.get("/api/iaas/{id}/cfg/page/{pageName}", ctx -> {
             // get named page of automation app configuration.
             String id = ctx.pathParam("id");
             String pageName = ctx.pathParam("pageName");
@@ -346,7 +346,7 @@ public class AutomationAppApiHandler extends BaseApiHandler {
             ctx.result(new JsonBuilder(pageInfo).toString());
         });
 
-        app.get("/api/iaas/:id/cfg/settings", ctx -> {
+        app.get("/api/iaas/{id}/cfg/settings", ctx -> {
             String id = ctx.pathParam("id");
             InstalledAutomationApp installedAutomationApp = automationAppService.getInstalledAutomationApp(id);
             List<InstalledAutomationAppSetting> settings = installedAutomationApp.getSettings();
@@ -362,7 +362,7 @@ public class AutomationAppApiHandler extends BaseApiHandler {
             ctx.result(new JsonBuilder(settingsMap).toString());
         });
 
-        app.get("/api/iaas/:id/cfg/info", ctx -> {
+        app.get("/api/iaas/{id}/cfg/info", ctx -> {
             String id = ctx.pathParam("id");
             InstalledAutomationApp installedAutomationApp = automationAppService.getInstalledAutomationApp(id);
             Map<String, Object> installedAutomationAppInfo = new LinkedHashMap<>();
@@ -384,7 +384,7 @@ public class AutomationAppApiHandler extends BaseApiHandler {
                     .getAllInstalledAutomationApps();
 
             for (InstalledAutomationApp iaa : installedAutomationApps) {
-                if(iaa.getParentInstalledAutomationAppId() == null || includeChildren) {
+                if (iaa.getParentInstalledAutomationAppId() == null || includeChildren) {
                     Map<String, String> iaaData = new HashMap<>();
                     iaaData.put("id", iaa.getId());
                     iaaData.put("parentAppId", iaa.getParentInstalledAutomationAppId());
@@ -402,7 +402,7 @@ public class AutomationAppApiHandler extends BaseApiHandler {
         });
 
         // we are updating iaa config and we are not done updating the cfg
-        app.patch("/api/iaas/:id/cfg/settings", ctx -> {
+        app.patch("/api/iaas/{id}/cfg/settings", ctx -> {
             String id = ctx.pathParam("id");
             String body = ctx.body();
             updateIAASettings(id, body);
@@ -410,7 +410,7 @@ public class AutomationAppApiHandler extends BaseApiHandler {
         });
 
         // we are done updating an iaa so run installed or updated depending
-        app.post("/api/iaas/:id/cfg/settings", ctx -> {
+        app.post("/api/iaas/{id}/cfg/settings", ctx -> {
             String id = ctx.pathParam("id");
             String body = ctx.body();
             updateIAASettings(id, body);

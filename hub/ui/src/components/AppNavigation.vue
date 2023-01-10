@@ -6,10 +6,10 @@
     <div class="position-sticky pt-3">
       <ul class="nav flex-column">
         <li class="nav-item" v-for="item in items" :key="item.title">
-          <RouterLink :to="item.href" class="nav-link"
-            ><span data-bs-target="#sidebarMenu" data-bs-toggle="collapse"
+          <router-link :to="item.href" class="nav-link"
+            ><span data-bs-target="#sidebarMenu" :data-bs-toggle="sidebarToggle"
               ><i :class="item.icon"></i> {{ item.title }}</span
-            ></RouterLink
+            ></router-link
           >
         </li>
       </ul>
@@ -23,8 +23,7 @@ export default {
   data() {
     return {
       appTitle: "Parrot Hub",
-      sidebarMenu: true,
-      toggleMini: false,
+      sidebarToggle: "collapse",
       items: [
         { title: "Home", href: "/", icon: "bi bi-house" },
         {
@@ -62,6 +61,25 @@ export default {
         },
       ],
     };
+  },
+  mounted() {
+    this.onResize();
+    this.$nextTick(() => {
+      window.addEventListener("resize", this.onResize);
+    });
+  },
+
+  beforeUnmount() {
+    window.removeEventListener("resize", this.onResize);
+  },
+  methods: {
+    onResize() {
+      if (window.innerWidth < 768) {
+        this.sidebarToggle = "collapse";
+      } else {
+        this.sidebarToggle = "collapse.show";
+      }
+    },
   },
 };
 </script>

@@ -48,7 +48,7 @@ public class DeviceApiHandler extends BaseApiHandler {
     }
 
     public void setupApi(Javalin app) {
-        app.ws("/api/devices/:id/events", ws -> {
+        app.ws("/api/devices/{id}/events", ws -> {
             final Map<String, DeviceSocketEventListener> deviceSocketEventListenerMap = new HashMap<>();
             ws.onConnect(ctx -> {
                 String deviceId = ctx.pathParam("id");
@@ -65,7 +65,7 @@ public class DeviceApiHandler extends BaseApiHandler {
             });
         });
 
-        app.get("/api/devices/:id/settings", ctx -> {
+        app.get("/api/devices/ctx.bodyInputStream()/settings", ctx -> {
             String id = ctx.pathParam("id");
             Device device = deviceService.getDeviceById(id);
             Map<String, DeviceSetting> settings = device.getNameToSettingMap();
@@ -74,7 +74,7 @@ public class DeviceApiHandler extends BaseApiHandler {
             ctx.result(new JsonBuilder(settings).toString());
         });
 
-        app.get("/api/devices/:id/preferences-layout", ctx -> {
+        app.get("/api/devices/ctx.bodyInputStream()/preferences-layout", ctx -> {
             // get device handler preferences.
             String id = ctx.pathParam("id");
             Object pageInfo = entityService.getDevicePreferencesLayout(id);
@@ -86,7 +86,7 @@ public class DeviceApiHandler extends BaseApiHandler {
             ctx.result(new JsonBuilder(pageInfo).toString());
         });
 
-        app.get("/api/devices/:id/tiles", ctx -> {
+        app.get("/api/devices/ctx.bodyInputStream()/tiles", ctx -> {
             // get device handler preferences.
             String id = ctx.pathParam("id");
             Object pageInfo = entityService.getDevicePreferencesLayout(id);
@@ -129,7 +129,7 @@ public class DeviceApiHandler extends BaseApiHandler {
         });
 
         // retrieve a device
-        app.get("/api/devices/:id", ctx -> {
+        app.get("/api/devices/ctx.bodyInputStream()", ctx -> {
             String id = ctx.pathParam("id");
             Device device = deviceService.getDeviceById(id);
 
@@ -156,7 +156,7 @@ public class DeviceApiHandler extends BaseApiHandler {
         });
 
         // remove a device
-        app.delete("/api/devices/:id", ctx -> {
+        app.delete("/api/devices/{id}", ctx -> {
             String id = ctx.pathParam("id");
             boolean deviceRemoved = deviceService.removeDevice(id);
             Map<String, Object> model = new HashMap<>();
@@ -222,8 +222,6 @@ public class DeviceApiHandler extends BaseApiHandler {
                         } catch (Exception e) {
                             //logger.warn("Exception running device method", e);
                         }
-                    } else {
-                        deviceAdded = false;
                     }
                 }
             }
@@ -239,7 +237,7 @@ public class DeviceApiHandler extends BaseApiHandler {
         });
 
         // Update a device
-        app.put("/api/devices/:id", ctx -> {
+        app.put("/api/devices/{id}", ctx -> {
             String id = ctx.pathParam("id");
 
             boolean deviceSaved = false;
@@ -288,7 +286,7 @@ public class DeviceApiHandler extends BaseApiHandler {
             ctx.result(new JsonBuilder(model).toString());
         });
 
-        app.get("/api/devices/:id/states", ctx -> {
+        app.get("/api/devices/{id}/states", ctx -> {
             String id = ctx.pathParam("id");
             Device device = deviceService.getDeviceById(id);
 
@@ -304,7 +302,7 @@ public class DeviceApiHandler extends BaseApiHandler {
             ctx.result(new JsonBuilder(currentStates).toString());
         });
 
-        app.get("/api/devices/:id/events", ctx -> {
+        app.get("/api/devices/{id}/events", ctx -> {
             String id = ctx.pathParam("id");
             Date fromDate = Date.from(LocalDateTime.now().minusDays(7).atZone(ZoneId.systemDefault()).toInstant());
             List<EventWrapper> events = entityService.eventsSince("DEVICE", id, fromDate, -1);
@@ -314,7 +312,7 @@ public class DeviceApiHandler extends BaseApiHandler {
             ctx.result(new JsonBuilder(events).toString());
         });
 
-        app.get("/api/devices/:id/information", ctx -> {
+        app.get("/api/devices/{id}/information", ctx -> {
             String id = ctx.pathParam("id");
             Device device = deviceService.getDeviceById(id);
             device.getData();
@@ -325,7 +323,7 @@ public class DeviceApiHandler extends BaseApiHandler {
             ctx.result(new JsonBuilder(information).toString());
         });
 
-        app.get("/api/devices/:id/commands", ctx -> {
+        app.get("/api/devices/{id}/commands", ctx -> {
             String id = ctx.pathParam("id");
             Device device = deviceService.getDeviceById(id);
 
@@ -365,7 +363,7 @@ public class DeviceApiHandler extends BaseApiHandler {
             ctx.result(new JsonBuilder(commands).toString());
         });
 
-        app.post("/api/devices/:id/commands/:command", ctx -> {
+        app.post("/api/devices/{id}/commands/{command}", ctx -> {
             String id = ctx.pathParam("id");
             String command = ctx.pathParam("command");
             String body = ctx.body();
@@ -422,7 +420,7 @@ public class DeviceApiHandler extends BaseApiHandler {
             }
         });
 
-        app.get("/api/device-handlers/:id/source", ctx -> {
+        app.get("/api/device-handlers/{id}/source", ctx -> {
             String id = ctx.pathParam("id");
             String sourceCode = deviceService.getDeviceHandlerSourceCode(id);
             Map<String, String> response = new HashMap<>();
@@ -435,9 +433,9 @@ public class DeviceApiHandler extends BaseApiHandler {
             ctx.result(new JsonBuilder(response).toString());
         });
 
-        app.put("/api/device-handlers/:id/source", ctx -> {
+        app.put("/api/device-handlers/{id}/source", ctx -> {
             String id = ctx.pathParam("id");
-            Map bodyMap = (Map) new JsonSlurper().parse(ctx.bodyAsInputStream());
+            Map bodyMap = (Map) new JsonSlurper().parse(ctx.bodyInputStream());
             String sourceCode = (String) bodyMap.get("sourceCode");
             try {
                 boolean response = entityService.updateDeviceHandlerSourceCode(id, sourceCode);
@@ -454,7 +452,7 @@ public class DeviceApiHandler extends BaseApiHandler {
 
         // create new device handler from source code
         app.post("/api/device-handlers/source", ctx -> {
-            Map bodyMap = (Map) new JsonSlurper().parse(ctx.bodyAsInputStream());
+            Map bodyMap = (Map) new JsonSlurper().parse(ctx.bodyInputStream());
             String sourceCode = (String) bodyMap.get("sourceCode");
             try {
                 //save source code in new file
@@ -480,7 +478,7 @@ public class DeviceApiHandler extends BaseApiHandler {
             }
         });
 
-        app.get("/api/device-handlers/:id/preferences-layout", ctx -> {
+        app.get("/api/device-handlers/{id}/preferences-layout", ctx -> {
             // get device handler preferences.
             String id = ctx.pathParam("id");
             Object pageInfo = entityService.getDeviceHandlerPreferencesLayout(id);

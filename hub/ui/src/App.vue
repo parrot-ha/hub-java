@@ -8,7 +8,7 @@
           <div
             class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3"
           >
-            <RouterView />
+            <router-view></router-view>
           </div>
         </main>
       </div>
@@ -17,8 +17,8 @@
 </template>
 
 <script setup>
-import { RouterLink, RouterView } from "vue-router";
-import AppNavigation from "./components/AppNavigation.vue";
-import AppHeader from "./components/AppHeader.vue";
+import { RouterView } from "vue-router";
+import AppNavigation from "@/components/AppNavigation.vue";
+import AppHeader from "@/components/AppHeader.vue";
 </script>
 
