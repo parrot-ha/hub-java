@@ -27,14 +27,17 @@
           :editorHeight="editorHeight"
           @saveCodeButtonClicked="saveCode"
         >
-          <button
+          <router-link
             class="btn btn-outline-primary"
             outlined
-            :to="{ name: 'AutomationAppSettings', params: { id: aaId } }"
+            :to="{
+              name: 'AutomationAppSettings',
+              params: { id: aaId },
+            }"
             mx-2
           >
             App Settings
-          </button>
+          </router-link>
         </code-editor>
       </div>
     </div>
@@ -60,7 +63,7 @@ export default {
     return {
       savePending: false,
       alertMessage: null,
-      aaId: "",
+      aaId: "0",
       automationApp: { sourceCode: "" },
       editorHeight: "500px",
     };

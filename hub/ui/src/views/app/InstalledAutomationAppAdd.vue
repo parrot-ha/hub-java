@@ -8,22 +8,19 @@
       >
         <div class="card">
           <div class="card-body">
-            <v-card-title
-              >{{ automationApp.name }} ({{
-                automationApp.namespace
-              }})</v-card-title
-            >
+            <h5 class="card-title">{{ automationApp.name }} ({{
+              automationApp.namespace
+              }})</h5>
             <div class="card-text">
               {{ automationApp.description }}
             </div>
-            <v-card-actions>
-              <v-btn
-                color="primary"
+
+              <button class="btn btn-primary"
                 @click="addAutomationApp(automationApp.id)"
               >
                 Add
-              </v-btn>
-            </v-card-actions>
+              </button>
+
           </div>
         </div>
       </div>

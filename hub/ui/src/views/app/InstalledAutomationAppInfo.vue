@@ -66,7 +66,6 @@
                 </tbody>
               </table>
             </div>
-            <v-card-actions></v-card-actions>
           </div>
         </div>
       </div>
@@ -90,7 +89,6 @@
                 </tbody>
               </table>
             </div>
-            <v-card-actions></v-card-actions>
           </div>
         </div>
       </div>

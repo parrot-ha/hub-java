@@ -6,7 +6,7 @@
           <div class="card">
             <h5 class="card-title">Settings</h5>
             <div class="card-text">
-              <v-form>
+              <form>
                 <v-text-field label="Name" v-model="device.name"></v-text-field>
                 <v-text-field
                   label="Label"
@@ -23,7 +23,7 @@
                   label="Type"
                   v-model="device.deviceHandlerId"
                 ></v-select>
-              </v-form>
+              </form>
             </div>
             <v-card-actions>
               <v-btn color="primary" @click="saveDevice"> Save </v-btn>

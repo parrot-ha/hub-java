@@ -29,7 +29,7 @@
           <div class="card-body">
             <h5 class="card-title">Settings</h5>
             <div class="card-text">
-              <v-form>
+              <form>
                 <div class="mb-3">
                   <label for="labelInput" class="form-label">Label</label>
                   <input
@@ -74,7 +74,7 @@
                     </div>
                   </div>
                 </div>
-              </v-form>
+              </form>
               <div class="d-flex gap-3">
                 <button class="btn btn-primary" @click="saveIntegration">
                   Save
@@ -190,11 +190,7 @@
           <div class="card-body">
             <div class="card-title">
               Device Scanning
-              <v-progress-circular
-                v-show="scanDevicesRunning"
-                indeterminate
-                color="primary"
-              ></v-progress-circular>
+              <span v-show="scanDevicesRunning" class="spinner-border"></span>
             </div>
             <div class="card-text">
               <div id="foundDeviceDiv">
@@ -226,11 +222,7 @@
           <div class="card-body">
             <div class="card-title">
               Device Exclude
-              <v-progress-circular
-                v-show="excludeDevicesRunning"
-                indeterminate
-                color="primary"
-              ></v-progress-circular>
+              <span v-show="excludeDevicesRunning" class="spinner-border"></span>
             </div>
             <div class="card-text">
               <div id="deviceExcludedDiv">
