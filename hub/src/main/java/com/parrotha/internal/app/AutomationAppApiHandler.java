@@ -59,9 +59,9 @@ public class AutomationAppApiHandler extends BaseApiHandler {
 
     public void setupApi(Javalin app) {
         // local endpoint for web service apps
-        app.get("/api/automationapps/installations/:id/<subpath>", ctx -> {
+        app.get("/api/automationapps/installations/:id/*", ctx -> {
             String installedAutomationAppId = ctx.pathParam("id");
-            String path = "/" + ctx.pathParam("subpath");
+            String path = "/" + ctx.splat(0);
 
             Map<String, List<String>> queryParamMap = ctx.queryParamMap();
             Map<String, Object> params = new HashMap();
