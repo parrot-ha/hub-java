@@ -20,7 +20,7 @@ package com.parrotha.internal.ui;
 
 import io.javalin.Javalin;
 import io.javalin.http.Context;
-import io.javalin.security.RouteRole;
+import io.javalin.core.security.Role;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,15 +31,15 @@ public class UIFramework {
 
     public void start() {
         this.app = Javalin.create(config -> {
-            config.staticFiles.add("/web");
-            config.spaRoot.addFile("/", "/web/index.html");
+            config.addStaticFiles("/web");
+            config.addSinglePageRoot("/", "/web/index.html");
             config.accessManager((handler, ctx, permittedRoles) -> {
                 UIRole userRole = (UIRole) getUserRole(ctx);
                 if (permittedRoles.size() == 0) {
                     // assume everyone can access
                     logger.warn("There are no permitted roles for {}, everyone can access", ctx.matchedPath());
                     handler.handle(ctx);
-                } else if (permittedRoles.contains(UIRole.ANYONE) || permittedRoles.contains(userRole)) {
+                } else if(permittedRoles.contains(UIRole.ANYONE) || permittedRoles.contains(userRole)) {
                     handler.handle(ctx);
                 } else {
                     ctx.status(401).result("Unauthorized");
@@ -58,7 +58,7 @@ public class UIFramework {
         return this.app;
     }
 
-    private RouteRole getUserRole(Context ctx) {
+    private Role getUserRole(Context ctx) {
         // determine user role based on request
         // typically done by inspecting headers
 
@@ -66,7 +66,7 @@ public class UIFramework {
         return UIRole.ADMIN;
     }
 
-    public enum UIRole implements RouteRole {
+    public enum UIRole implements Role {
         ANYONE,
         ADMIN,
         POWER_USER,

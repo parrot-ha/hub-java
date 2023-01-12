@@ -57,7 +57,7 @@ public class ExtensionApiHandler extends BaseApiHandler {
             ctx.result(new JsonBuilder(extensions).toString());
         });
 
-        app.post("/api/extensions/{id}", ctx -> {
+        app.post("/api/extensions/:id", ctx -> {
             String id = ctx.pathParam("id");
             if ("download".equals(ctx.queryParam("action"))) {
                 // download extension
@@ -70,14 +70,14 @@ public class ExtensionApiHandler extends BaseApiHandler {
             ctx.status(202);
         });
 
-        app.delete("/api/extensions/{id}", ctx -> {
+        app.delete("/api/extensions/:id", ctx -> {
             String id = ctx.pathParam("id");
             boolean status = extensionService.deleteExtension(id);
 
             ctx.status(200);
         });
 
-        app.get("/api/extensions/{id}/status", ctx -> {
+        app.get("/api/extensions/:id/status", ctx -> {
             String id = ctx.pathParam("id");
             String status = extensionService.getExtensionStatus(id);
 
@@ -136,7 +136,7 @@ public class ExtensionApiHandler extends BaseApiHandler {
             ctx.result(new JsonBuilder(model).toString());
         });
 
-        app.patch("/api/extension_locations/{id}", ctx -> {
+        app.patch("/api/extension_locations/:id", ctx -> {
             boolean result = false;
 
             String id = ctx.pathParam("id");
@@ -155,7 +155,7 @@ public class ExtensionApiHandler extends BaseApiHandler {
             ctx.result(new JsonBuilder(Map.of("success", result)).toString());
         });
 
-        app.delete("/api/extension_locations/{id}", ctx -> {
+        app.delete("/api/extension_locations/:id", ctx -> {
             String id = ctx.pathParam("id");
             boolean result = extensionService.deleteLocation(id);
             ctx.status(200);

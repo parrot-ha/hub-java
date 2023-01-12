@@ -124,7 +124,7 @@ public class IntegrationApiHandler extends BaseApiHandler {
             ctx.result(new JsonBuilder(integrationModel).toString());
         });
 
-        app.get("/api/integrations/{id}", ctx -> {
+        app.get("/api/integrations/:id", ctx -> {
             Map<String, Object> integrationModel = new HashMap<>();
             String id = ctx.pathParam("id");
 
@@ -159,7 +159,7 @@ public class IntegrationApiHandler extends BaseApiHandler {
             ctx.result(new JsonBuilder(integrationModel).toString());
         });
 
-        app.get("/api/integrations/{id}/settings", ctx -> {
+        app.get("/api/integrations/:id/settings", ctx -> {
             String id = ctx.pathParam("id");
             Map<String, Map> settingsMap = new HashMap<>();
             AbstractIntegration abstractIntegration = integrationService.getIntegrationById(id);
@@ -176,7 +176,7 @@ public class IntegrationApiHandler extends BaseApiHandler {
             ctx.result(new JsonBuilder(settingsMap).toString());
         });
 
-        app.delete("/api/integrations/{id}", ctx -> {
+        app.delete("/api/integrations/:id", ctx -> {
             String id = ctx.pathParam("id");
 
             boolean integrationRemoved = integrationService.removeIntegration(id);
@@ -187,7 +187,7 @@ public class IntegrationApiHandler extends BaseApiHandler {
             ctx.result(new JsonBuilder(model).toString());
         });
 
-        app.get("/api/integrations/{id}/preferences-layout", ctx -> {
+        app.get("/api/integrations/:id/preferences-layout", ctx -> {
             String id = ctx.pathParam("id");
             AbstractIntegration abstractIntegration = integrationService.getIntegrationById(id);
 
@@ -202,7 +202,7 @@ public class IntegrationApiHandler extends BaseApiHandler {
             }
         });
 
-        app.get("/api/integrations/{id}/page-layout", ctx -> {
+        app.get("/api/integrations/:id/page-layout", ctx -> {
             String id = ctx.pathParam("id");
             AbstractIntegration abstractIntegration = integrationService.getIntegrationById(id);
 
@@ -217,7 +217,7 @@ public class IntegrationApiHandler extends BaseApiHandler {
             }
         });
 
-        app.get("/api/integrations/{id}/page-data", ctx -> {
+        app.get("/api/integrations/:id/page-data", ctx -> {
             String id = ctx.pathParam("id");
             AbstractIntegration abstractIntegration = integrationService.getIntegrationById(id);
 
@@ -232,7 +232,7 @@ public class IntegrationApiHandler extends BaseApiHandler {
             }
         });
 
-        app.post("/api/integrations/{id}/button-action", ctx -> {
+        app.post("/api/integrations/:id/button-action", ctx -> {
             String id = ctx.pathParam("id");
             AbstractIntegration abstractIntegration = integrationService.getIntegrationById(id);
 
@@ -254,7 +254,7 @@ public class IntegrationApiHandler extends BaseApiHandler {
             }
         });
 
-        app.post("/api/integrations/{id}/features/{feature}", ctx -> {
+        app.post("/api/integrations/:id/features/:feature", ctx -> {
             String id = ctx.pathParam("id");
             String feature = ctx.pathParam("feature");
             String body = ctx.body();
@@ -284,7 +284,7 @@ public class IntegrationApiHandler extends BaseApiHandler {
             ctx.result(new JsonBuilder(model).toString());
         });
 
-        app.post("/api/integrations/{id}/settings", ctx -> {
+        app.post("/api/integrations/:id/settings", ctx -> {
             String id = ctx.pathParam("id");
             String body = ctx.body();
             Map bodyMap = (Map) (new JsonSlurper().parseText(body));
