@@ -3,9 +3,13 @@
     <div v-if="command.arguments">
       <div class="input-group mb-3">
         <div class="input-group-prepend">
-          <v-btn color="primary" @click="commandClick(deviceId, command.name)">
+          <button
+            type="button"
+            class="btn btn-primary"
+            @click="commandClick(deviceId, command.name)"
+          >
             {{ command.name }}
-          </v-btn>
+          </button>
         </div>
         <span v-for="(arg, i) in command.arguments" :key="i">
           <input
@@ -26,9 +30,13 @@
       </div>
     </div>
     <div v-else>
-      <v-btn color="primary" @click="commandClick(deviceId, command.name)">
+      <button
+        type="button"
+        class="btn btn-primary"
+        @click="commandClick(deviceId, command.name)"
+      >
         {{ command.name }}
-      </v-btn>
+      </button>
     </div>
   </div>
 </template>
@@ -42,23 +50,22 @@ function handleErrors(response) {
 }
 
 export default {
-  name: 'DeviceCommand',
-  props: ['deviceId', 'command'],
+  name: "DeviceCommand",
+  props: ["deviceId", "command"],
   data() {
     return {};
   },
   methods: {
-    commandClick: function(deviceId, command) {
+    commandClick: function (deviceId, command) {
       var url = `/api/devices/${deviceId}/commands/${command}`;
       var setArgs = [];
       if (this.command.arguments != null) {
-        console.log(this.command.arguments);
         for (var arg of this.command.arguments) {
           if (arg.value) {
             setArgs.push({
               name: arg.name,
               value: arg.value,
-              dataType: arg.dataType
+              dataType: arg.dataType,
             });
           } else {
             // break out after first null
@@ -69,21 +76,21 @@ export default {
       //TODO: handle response
       if (setArgs.length > 0) {
         fetch(url, {
-          method: 'POST',
-          body: JSON.stringify(setArgs)
+          method: "POST",
+          body: JSON.stringify(setArgs),
         })
           .then(handleErrors)
-          .then(response => {});
+          .then(() => {});
       } else {
         fetch(url, {
-          method: 'POST',
-          body: null
+          method: "POST",
+          body: null,
         })
           .then(handleErrors)
-          .then(response => {});
+          .then(() => {});
       }
-    }
-  }
+    },
+  },
 };
 </script>
 

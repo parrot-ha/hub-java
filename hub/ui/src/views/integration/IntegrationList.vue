@@ -1,19 +1,28 @@
 <template>
-  <v-container fluid>
-    <v-layout>
-      <v-row>
-        <v-col>
-          <v-card>
-            <v-card-title>Integrations</v-card-title>
-            <v-card-text>
-              <router-link :to="{ name: 'IntegrationAdd' }"
-                >Add Integration</router-link
-              >
-              <v-simple-table>
+  <div class="container-fluid">
+    <div class="row">
+      <div class="col">
+        <div class="card">
+          <div class="card-body">
+            <div
+              class="card-title d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3"
+            >
+              <h5>Integrations</h5>
+              <div class="btn-toolbar mb-2 mb-md-0">
+                <router-link
+                  class="btn btn-outline-secondary"
+                  :to="{ name: 'IntegrationAdd' }"
+                  >Add Integration</router-link
+                >
+              </div>
+            </div>
+
+            <div class="card-text">
+              <table class="table">
                 <thead>
                   <tr>
-                    <th scope="col" style="width:48%">Name</th>
-                    <th scope="col" style="width:52%">Description</th>
+                    <th scope="col" style="width: 30%">Name</th>
+                    <th scope="col" style="width: 70%">Description</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -22,7 +31,7 @@
                       <router-link
                         :to="{
                           name: 'Integration',
-                          params: { id: integration.id }
+                          params: { id: integration.id },
                         }"
                         >{{ integration.label }} ({{
                           integration.name
@@ -32,32 +41,31 @@
                     <td>{{ integration.description }}</td>
                   </tr>
                 </tbody>
-              </v-simple-table>
-            </v-card-text>
-            <v-card-actions> </v-card-actions>
-          </v-card>
-        </v-col>
-      </v-row>
-    </v-layout>
-  </v-container>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </template>
 <script>
 export default {
-  name: 'IntegrationList',
+  name: "IntegrationList",
   data() {
     return {
-      integrations: []
+      integrations: [],
     };
   },
-  mounted: function() {
-    fetch('/api/integrations')
-      .then(response => response.json())
-      .then(data => {
-        if (data != null) {
+  mounted: function () {
+    fetch("/api/integrations?field=id&field=name&field=label&field=description")
+      .then((response) => response.json())
+      .then((data) => {
+        if (typeof data !== "undefined" && data != null) {
           this.integrations = data;
         }
       });
-  }
+  },
 };
 </script>
 <style scoped></style>

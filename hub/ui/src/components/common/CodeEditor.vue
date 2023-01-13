@@ -1,47 +1,45 @@
 <template>
-  <v-card height="100%" id="editorCard">
-    <v-card-title>
-      {{ title }}
-      <v-spacer></v-spacer>
-      <v-progress-circular
-        v-show="savePending"
-        indeterminate
-        color="primary"
-      ></v-progress-circular>
-      <v-btn color="primary" :disabled="savePending" @click="saveCode">
-        Save
-      </v-btn>
-      <slot></slot>
-    </v-card-title>
-
-    <v-card-text>
-      <div class="editor-wrapper" :style="{ height: editorHeight }">
-        <div class="ace-editor" ref="ace"></div>
+  <div>
+    <div class="row g-3">
+      <div class="col-auto me-auto">
+        <h4>
+          {{ title }}
+        </h4>
       </div>
-    </v-card-text>
-  </v-card>
+      <div class="col-auto">
+        <div class="d-flex gap-3">
+          <span v-show="savePending" class="spinner-border"></span>
+          <button
+            class="btn btn-primary"
+            :disabled="savePending"
+            @click="saveCode"
+          >
+            Save
+          </button>
+          <slot></slot>
+        </div>
+      </div>
+    </div>
+    <br />
+
+    <div class="editor-wrapper" :style="{ height: editorHeight }">
+      <div class="ace-editor" ref="ace"></div>
+    </div>
+  </div>
 </template>
 <script>
-function handleErrors(response) {
-  if (!response.ok) {
-    throw Error(response.statusText);
-  }
-  return response;
-}
-
-import ace from 'ace-builds';
-import 'ace-builds/webpack-resolver';
-import 'ace-builds/src-noconflict/theme-monokai';
-import 'ace-builds/src-noconflict/mode-groovy';
+import ace from "ace-builds";
+import "ace-builds/src-noconflict/theme-monokai";
+import "ace-builds/src-noconflict/mode-groovy";
 
 export default {
-  name: 'CodeEditor',
-  props: ['title', 'source', 'savePending', 'editorHeight'],
-  emits: ['saveCodeButtonClicked'],
+  name: "CodeEditor",
+  props: ["title", "source", "savePending", "editorHeight"],
+  emits: ["saveCodeButtonClicked"],
   data() {
     return {
-      localSource: '',
-      editor: null
+      localSource: "",
+      editor: null,
     };
   },
   watch: {
@@ -56,14 +54,14 @@ export default {
       this.$nextTick(() => {
         this.editor.resize();
       });
-    }
+    },
   },
   methods: {
     saveCode() {
-      this.$emit('saveCodeButtonClicked', this.editor.getValue());
-    }
+      this.$emit("saveCodeButtonClicked", this.editor.getValue());
+    },
   },
-  mounted: function() {
+  mounted: function () {
     this.editor = ace.edit(this.$refs.ace, {
       minLines: 10,
       fontSize: 16,
@@ -71,12 +69,12 @@ export default {
       mode: this.modePath,
       tabSize: 4,
       showGutter: true,
-      showPrintMargin: false
+      showPrintMargin: false,
     });
     this.editor.renderer.setScrollMargin(0, 5, 0, 5);
-    this.editor.session.setMode('ace/mode/groovy');
-    this.editor.setTheme('ace/theme/monokai');
-  }
+    this.editor.session.setMode("ace/mode/groovy");
+    this.editor.setTheme("ace/theme/monokai");
+  },
 };
 </script>
 <style scoped>

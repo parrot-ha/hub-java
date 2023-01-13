@@ -1,26 +1,26 @@
 <template>
-  <v-card class="app-href-element my-3" outlined @click="hrefClicked">
-    <v-card-title>{{ body.title }}</v-card-title>
-    <v-card-text>{{ body.description }}</v-card-text>
-  </v-card>
+  <div class="card" @click="hrefClicked">
+    <h5 class="card-title">{{ body.title }}</h5>
+    <div class="card-text">{{ body.description }}</div>
+  </div>
 </template>
 
 <script>
 export default {
-  name: 'AppHrefElement',
-  props: ['body'],
+  name: "AppHrefElement",
+  props: ["body"],
   data() {
     return {};
   },
   methods: {
-    hrefClicked: function() {
+    hrefClicked: function () {
       if (this.body.url) {
-        window.open(this.body.url, '_blank');
+        window.open(this.body.url, "_blank");
       } else {
-        this.$emit('hrefPage', this.body.page);
+        this.$emit("hrefPage", this.body.page);
       }
-    }
-  }
+    },
+  },
 };
 </script>
 

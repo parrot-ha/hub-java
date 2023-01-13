@@ -18,15 +18,15 @@
  */
 package com.parrotha.internal.app;
 
+import com.parrotha.api.Response;
+import com.parrotha.internal.BaseApiHandler;
+import com.parrotha.internal.entity.EntityService;
+import com.parrotha.internal.hub.ScheduleService;
 import groovy.json.JsonBuilder;
 import groovy.json.JsonSlurper;
 import groovy.lang.MissingMethodException;
 import io.javalin.Javalin;
 import org.apache.commons.lang3.StringUtils;
-import com.parrotha.api.Response;
-import com.parrotha.internal.BaseApiHandler;
-import com.parrotha.internal.hub.ScheduleService;
-import com.parrotha.internal.entity.EntityService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,9 +39,9 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import static io.javalin.core.security.SecurityUtil.roles;
 import static com.parrotha.internal.ui.UIFramework.UIRole.ADMIN;
 import static com.parrotha.internal.ui.UIFramework.UIRole.ANYONE;
+import static io.javalin.core.security.SecurityUtil.roles;
 
 public class AutomationAppApiHandler extends BaseApiHandler {
     private static final Logger logger = LoggerFactory.getLogger(AutomationAppApiHandler.class);
@@ -298,7 +298,7 @@ public class AutomationAppApiHandler extends BaseApiHandler {
             automationAppModel.put("message", "");
             String automationAppId = "";
 
-            if("child".equals(type)) {
+            if ("child".equals(type)) {
                 String parentAppId = (String) bodyMap.get("id");
                 String appName = (String) bodyMap.get("appName");
                 String namespace = (String) bodyMap.get("namespace");
@@ -321,7 +321,8 @@ public class AutomationAppApiHandler extends BaseApiHandler {
             String appName = ctx.queryParam("appName");
             String namespace = ctx.queryParam("namespace");
             List<InstalledAutomationApp> childApps = automationAppService.getChildInstalledAutomationApps(id, appName, namespace);
-            List<Map> childAppListMap = childApps.stream().map(ca -> Map.of("id", ca.getId(), "displayName", ca.getDisplayName())).collect(Collectors.toList());
+            List<Map> childAppListMap = childApps.stream().map(ca -> Map.of("id", ca.getId(), "displayName", ca.getDisplayName()))
+                    .collect(Collectors.toList());
             ctx.status(200);
             ctx.contentType("application/json");
             ctx.result(new JsonBuilder(childAppListMap).toString());
@@ -384,7 +385,7 @@ public class AutomationAppApiHandler extends BaseApiHandler {
                     .getAllInstalledAutomationApps();
 
             for (InstalledAutomationApp iaa : installedAutomationApps) {
-                if(iaa.getParentInstalledAutomationAppId() == null || includeChildren) {
+                if (iaa.getParentInstalledAutomationAppId() == null || includeChildren) {
                     Map<String, String> iaaData = new HashMap<>();
                     iaaData.put("id", iaa.getId());
                     iaaData.put("parentAppId", iaa.getParentInstalledAutomationAppId());

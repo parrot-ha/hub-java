@@ -19,8 +19,8 @@
 package com.parrotha.internal.ui;
 
 import io.javalin.Javalin;
-import io.javalin.core.security.Role;
 import io.javalin.http.Context;
+import io.javalin.core.security.Role;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -70,7 +70,7 @@ public class UIFramework {
         ANYONE,
         ADMIN,
         POWER_USER,
-        USER;
+        USER
     }
 
 }

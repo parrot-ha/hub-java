@@ -1,14 +1,14 @@
 <template>
-  <v-container fluid>
-    <v-layout>
-      <v-row>
-        <v-col :cols="12">
-          <h2>{{ integration.label }} ({{ integration.name }})</h2>
+  <div class="container-fluid">
+    <div class="row gy-3">
+      <div class="col-12">
+        <h2>{{ integration.label }} ({{ integration.name }})</h2>
 
-          <v-card>
-            <v-card-title>Information</v-card-title>
-            <v-card-text>
-              <v-simple-table>
+        <div class="card">
+          <div class="card-body">
+            <h5 class="card-title">Information</h5>
+            <div class="card-text">
+              <table class="table">
                 <tbody>
                   <tr
                     v-for="(value, name, i) in integration.information"
@@ -18,90 +18,128 @@
                     <td>{{ value }}</td>
                   </tr>
                 </tbody>
-              </v-simple-table>
-            </v-card-text>
-          </v-card>
-        </v-col>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
 
-        <v-col :cols="12">
-          <v-card>
-            <v-card-title>Settings</v-card-title>
-            <v-card-text>
-              <v-form>
-                <v-text-field
-                  label="Label"
-                  v-model="integration.label"
-                ></v-text-field>
-                <v-divider></v-divider>
+      <div class="col-12">
+        <div class="card">
+          <div class="card-body">
+            <h5 class="card-title">Settings</h5>
+            <div class="card-text">
+              <form>
+                <div class="mb-3">
+                  <label for="labelInput" class="form-label">Label</label>
+                  <input
+                    type="text"
+                    id="labelInput"
+                    class="form-control"
+                    v-model="integration.label"
+                  />
+                </div>
+                <hr />
                 <div v-for="(section, i) in preferences.sections" :key="i">
                   <div v-for="(body, j) in section.body" :key="j">
-                    <div v-if="body.type === 'text'">
-                      <v-text-field
-                        :label="body.title"
+                    <div v-if="body.type === 'text'" class="mb-3">
+                      <label class="form-label">{{ body.title }}</label>
+                      <input
+                        type="text"
+                        class="form-control"
                         v-model="settings[body.name].value"
-                      ></v-text-field>
+                      />
                     </div>
-                    <div v-else-if="body.type === 'enum'">
-                      <v-select
-                        :items="body.options"
-                        :label="body.title"
-                        v-model="settings[body.name].value"
-                      ></v-select>
+                    <div v-else-if="body.type === 'enum'" class="mb-3">
+                      <label class="form-label">{{ body.title }}</label>
+                      <select
+                        class="form-select"
+                        :aria-label="body.title"
+                        :value="settings[body.name].value"
+                        :multiple="body.multiple"
+                      >
+                        <option v-for="(item, i) in body.options" :key="i">
+                          {{ item }}
+                        </option>
+                      </select>
                     </div>
-                    <div v-else-if="body.type === 'bool'">
-                      <v-switch
-                        :label="body.title"
+                    <div v-else-if="body.type === 'bool'" class="mb-3">
+                      <input
+                        class="form-check-input"
+                        type="checkbox"
+                        role="switch"
                         v-model="settings[body.name].value"
-                      ></v-switch>
+                      />
+                      <label class="form-check-label">{{ body.title }}</label>
                     </div>
                   </div>
                 </div>
-              </v-form>
-            </v-card-text>
-            <v-card-actions>
-              <v-btn color="primary" @click="saveIntegration">
-                Save
-              </v-btn>
-              <v-spacer></v-spacer>
-              <v-dialog
-                v-model="integrationDeleteDialog"
-                persistent
-                max-width="290"
+              </form>
+              <div class="d-flex gap-3">
+                <button class="btn btn-primary" @click="saveIntegration">
+                  Save
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-danger"
+                  data-bs-toggle="modal"
+                  data-bs-target="#deleteModal"
+                >
+                  Delete
+                </button>
+              </div>
+              <div
+                class="modal fade"
+                id="deleteModal"
+                tabindex="-1"
+                aria-labelledby="deleteModalLabel"
+                aria-hidden="true"
               >
-                <template v-slot:activator="{ on, attrs }">
-                  <v-btn color="error" v-bind="attrs" v-on="on">Delete</v-btn>
-                </template>
-                <v-card>
-                  <v-card-title class="headline">
-                    Are you sure?
-                  </v-card-title>
-                  <v-card-text
-                    >Are you sure you want to delete this
-                    integration?</v-card-text
-                  >
-                  <v-card-actions>
-                    <v-spacer></v-spacer>
-                    <v-btn
-                      color="primary"
-                      text
-                      @click="integrationDeleteDialog = false"
-                    >
-                      Cancel
-                    </v-btn>
-                    <v-btn color="error" text @click="deleteIntegration">
-                      Delete
-                    </v-btn>
-                  </v-card-actions>
-                </v-card>
-              </v-dialog>
-            </v-card-actions>
-          </v-card>
-        </v-col>
+                <div class="modal-dialog">
+                  <div class="modal-content">
+                    <div class="modal-header">
+                      <h1 class="modal-title fs-5" id="deleteModalLabel">
+                        Are you sure?
+                      </h1>
+                      <button
+                        type="button"
+                        class="btn-close"
+                        data-bs-dismiss="modal"
+                        aria-label="Close"
+                      ></button>
+                    </div>
+                    <div class="modal-body">
+                      Are you sure you want to delete this integration?
+                    </div>
+                    <div class="modal-footer">
+                      <button
+                        type="button"
+                        class="btn btn-secondary"
+                        data-bs-dismiss="modal"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="button"
+                        class="btn btn-danger"
+                        @click="deleteIntegration"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
 
-        <v-col v-for="(section, i) in pageLayout" :key="i" :cols="12">
-          <v-card>
-            <v-card-title>{{ section.title }} </v-card-title>
-            <v-card-text>
+      <div class="col-12" v-for="(section, i) in pageLayout" :key="i">
+        <div class="card">
+          <div class="card-body">
+            <h5 class="card-title">{{ section.title }}</h5>
+            <div class="card-text">
               <div v-for="(bodyItem, j) in section.body" :key="j">
                 <div v-if="bodyItem.type === 'table'">
                   <table>
@@ -131,110 +169,116 @@
                   </table>
                 </div>
                 <div v-if="bodyItem.type === 'button'">
-                  <v-btn
-                    :color="bodyItem.color"
+                  <button
+                    :class="'btn btn-' + bodyItem.color"
                     @click="
                       handleButtonAction(bodyItem.action, bodyItem.response)
                     "
                     :disabled="pageData[bodyItem.disabled]"
                   >
                     {{ bodyItem.title }}
-                  </v-btn>
+                  </button>
                 </div>
               </div>
-            </v-card-text>
-            <v-card-actions> </v-card-actions>
-          </v-card>
-        </v-col>
+            </div>
+          </div>
+        </div>
+      </div>
 
-        <v-col v-if="featureExists('deviceScan')" :cols="12">
-          <v-card>
-            <v-card-title
-              >Device Scanning
-              <v-progress-circular
-                v-show="scanDevicesRunning"
-                indeterminate
-                color="primary"
-              ></v-progress-circular>
-            </v-card-title>
-            <v-card-text>
+      <div class="col-12" v-if="featureExists('deviceScan')">
+        <div class="card">
+          <div class="card-body">
+            <div class="card-title">
+              Device Scanning
+              <span v-show="scanDevicesRunning" class="spinner-border"></span>
+            </div>
+            <div class="card-text">
               <div id="foundDeviceDiv">
                 {{ foundDevices }}
               </div>
-            </v-card-text>
-            <v-card-actions>
-              <v-btn
-                :disabled="scanDevicesRunning"
-                color="success"
-                @click="startScan"
-              >
-                Start Scan
-              </v-btn>
-              <v-btn
-                :disabled="!scanDevicesRunning"
-                color="error"
-                @click="stopScan"
-                >Stop Scan</v-btn
-              >
-            </v-card-actions>
-          </v-card>
-        </v-col>
+              <div class="d-flex gap-3">
+                <button
+                  class="btn btn-success"
+                  :disabled="scanDevicesRunning"
+                  @click="startScan"
+                >
+                  Start Scan
+                </button>
+                <button
+                  class="btn btn-danger"
+                  :disabled="!scanDevicesRunning"
+                  @click="stopScan"
+                >
+                  Stop Scan
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
 
-        <v-col v-if="featureExists('deviceExclude')" :cols="12">
-          <v-card>
-            <v-card-title
-              >Device Exclude
-              <v-progress-circular
-                v-show="excludeDevicesRunning"
-                indeterminate
-                color="primary"
-              ></v-progress-circular
-            ></v-card-title>
-            <v-card-text>
+      <div class="col-12" v-if="featureExists('deviceExclude')">
+        <div class="card">
+          <div class="card-body">
+            <div class="card-title">
+              Device Exclude
+              <span v-show="excludeDevicesRunning" class="spinner-border"></span>
+            </div>
+            <div class="card-text">
               <div id="deviceExcludedDiv">
                 {{ excludedDevices }}
               </div>
-            </v-card-text>
-            <v-card-actions>
-              <v-btn
-                :disabled="excludeDevicesRunning"
-                color="success"
-                @click="startExclude"
-              >
-                Start Exclude
-              </v-btn>
-              <v-btn
-                :disabled="!excludeDevicesRunning"
-                color="error"
-                @click="stopExclude"
-                >Stop Exclude</v-btn
-              >
-            </v-card-actions>
-          </v-card>
-        </v-col>
+              <div class="d-flex gap-3">
+                <button
+                  class="btn btn-success"
+                  :disabled="excludeDevicesRunning"
+                  @click="startExclude"
+                >
+                  Start Exclude
+                </button>
+                <button
+                  class="btn btn-danger"
+                  :disabled="!excludeDevicesRunning"
+                  @click="stopExclude"
+                >
+                  Stop Exclude
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
 
-        <v-col v-if="featureExists('reset')" :cols="12">
-          <v-card>
-            <v-card-title>Reset</v-card-title>
-            <v-card-text>
-              <h5 style="color:red;">
-                {{ getFeatureOption('reset', 'resetWarning') }}
+      <div class="col-12" v-if="featureExists('reset')">
+        <div class="card">
+          <div class="card-body">
+            <h5 class="card-title">Reset</h5>
+            <div class="card-text">
+              <h5 style="color: red">
+                {{ getFeatureOption("reset", "resetWarning") }}
               </h5>
-              <v-form>
-                <v-text-field
-                  label='Type "reset" and click Reset button to reset'
-                  v-model="reset"
-                ></v-text-field>
-              </v-form>
-            </v-card-text>
-            <v-card-actions>
-              <v-btn color="error" @click="resetIntegration">Reset</v-btn>
-            </v-card-actions>
-          </v-card>
-        </v-col>
-      </v-row>
-    </v-layout>
-  </v-container>
+              <form>
+                <div class="mb-3">
+                  <label for="resetInput" class="form-label"
+                    >Type "reset" and click Reset button to reset</label
+                  >
+                  <input
+                    type="text"
+                    id="resetInput"
+                    class="form-control"
+                    v-model="reset"
+                  />
+                </div>
+              </form>
+              <button class="btn btn-danger" @click="resetIntegration">
+                Reset
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </template>
 <script>
 function handleErrors(response) {
@@ -245,12 +289,12 @@ function handleErrors(response) {
 }
 
 export default {
-  name: 'Integration',
+  name: "IntegrationView",
   data() {
     return {
-      integrationId: '',
+      integrationId: "",
       integration: {
-        settings: {}
+        settings: {},
       },
       settings: {},
       preferences: {},
@@ -260,68 +304,68 @@ export default {
       scanDevicesRunning: false,
       excludedDevices: null,
       excludeDevicesRunning: false,
-      reset: '',
-      integrationDeleteDialog: false
+      reset: "",
+      integrationDeleteDialog: false,
     };
   },
   methods: {
-    handleButtonAction: function(action, responseIndex) {
+    handleButtonAction: function (action, responseIndex) {
       console.log(
-        'handleButtonAction ' + action + ' response ' + responseIndex
+        "handleButtonAction " + action + " response " + responseIndex
       );
 
       fetch(`/api/integrations/${this.integrationId}/button-action`, {
-        method: 'POST',
-        body: JSON.stringify({ action: action })
+        method: "POST",
+        body: JSON.stringify({ action: action }),
       })
-        .then(response => response.json())
-        .then(data => {
-          if (data != null) {
+        .then((response) => response.json())
+        .then((data) => {
+          if (typeof data !== "undefined" && data != null) {
             this.pageData[responseIndex] = data.responseData;
           }
         });
     },
-    deleteIntegration: function() {
+    deleteIntegration: function () {
       fetch(`/api/integrations/${this.integrationId}`, {
-        method: 'DELETE'
+        method: "DELETE",
       })
         .then(handleErrors)
-        .then(response => {
+        .then((response) => {
           return response.json();
         })
-        .then(data => {
-          console.log('integration was deleted!');
-          this.$router.push('/integrations');
+        .then(() => {
+          console.log("integration was deleted!");
+          this.$router.push("/integrations");
         })
-        .catch(error => {
+        .catch((error) => {
           console.log(error);
         });
     },
-    saveIntegration: function() {
+    saveIntegration: function () {
       var updatedSettings = this.settings;
       updatedSettings.label = { value: this.integration.label };
       fetch(`/api/integrations/${this.integrationId}/settings`, {
-        method: 'POST',
-        body: JSON.stringify(updatedSettings)
+        method: "POST",
+        body: JSON.stringify(updatedSettings),
       })
         .then(handleErrors)
-        .then(response => {
+        .then((response) => {
           return response.json();
         })
-        .then(data => {
-          console.log('success');
+        .then(() => {
+          console.log("success");
         })
-        .catch(error => {
+        .catch((error) => {
           console.log(error);
         });
     },
 
-    featureExists: function(value) {
-      if (this.integration == null || typeof this.integration === 'undefined')
+    featureExists: function (value) {
+      if (this.integration == null || typeof this.integration === "undefined")
         return false;
       if (
         this.integration.features == null ||
-        typeof this.integration.features === 'undefined'
+        typeof this.integration.features === "undefined"
       )
         return false;
       for (const property in this.integration.features) {
@@ -329,35 +373,35 @@ export default {
       }
       return false;
     },
-    getFeatureOption: function(featureName, optionName) {
-      if (this.integration == null || typeof this.integration === 'undefined')
-        return '';
+    getFeatureOption: function (featureName, optionName) {
+      if (this.integration == null || typeof this.integration === "undefined")
+        return "";
       if (
         this.integration.features == null ||
-        typeof this.integration.features === 'undefined'
+        typeof this.integration.features === "undefined"
       )
-        return '';
+        return "";
       if (
         this.integration.features[featureName] == null ||
-        typeof this.integration.features[featureName] === 'undefined'
+        typeof this.integration.features[featureName] === "undefined"
       )
-        return '';
+        return "";
       return this.integration.features[featureName][optionName];
     },
-    checkStatus: function() {
+    checkStatus: function () {
       var vm = this;
-      var body = { action: 'getScanStatus' };
+      var body = { action: "getScanStatus" };
       fetch(`/api/integrations/${vm.integrationId}/features/deviceScan`, {
-        method: 'POST',
-        body: JSON.stringify(body)
+        method: "POST",
+        body: JSON.stringify(body),
       })
-        .then(response => response.json())
-        .then(data => {
+        .then((response) => response.json())
+        .then((data) => {
           vm.scanDevicesRunning = data.response.running;
           vm.foundDevices = data.response.foundDevices;
           if (data.response.running) {
             setTimeout(
-              function() {
+              function () {
                 this.checkStatus();
               }.bind(this),
               2000
@@ -365,51 +409,51 @@ export default {
           }
         });
     },
-    startScan: function() {
+    startScan: function () {
       var vm = this;
-      var body = { action: 'startScan' };
+      var body = { action: "startScan" };
       fetch(`/api/integrations/${vm.integrationId}/features/deviceScan`, {
-        method: 'POST',
-        body: JSON.stringify(body)
+        method: "POST",
+        body: JSON.stringify(body),
       })
-        .then(response => response.json())
-        .then(data => {
+        .then((response) => response.json())
+        .then(() => {
           vm.scanDevicesRunning = true;
           // check status
           setTimeout(
-            function() {
+            function () {
               this.checkStatus();
             }.bind(this),
             2000
           );
         });
     },
-    stopScan: function() {
+    stopScan: function () {
       var vm = this;
-      var body = { action: 'stopScan' };
+      var body = { action: "stopScan" };
       fetch(`/api/integrations/${vm.integrationId}/features/deviceScan`, {
-        method: 'POST',
-        body: JSON.stringify(body)
+        method: "POST",
+        body: JSON.stringify(body),
       })
-        .then(response => response.json())
-        .then(data => {
+        .then((response) => response.json())
+        .then(() => {
           vm.checkStatus();
         });
     },
-    checkExcludeStatus: function() {
+    checkExcludeStatus: function () {
       var vm = this;
-      var body = { action: 'getExcludeStatus' };
+      var body = { action: "getExcludeStatus" };
       fetch(`/api/integrations/${vm.integrationId}/features/deviceExclude`, {
-        method: 'POST',
-        body: JSON.stringify(body)
+        method: "POST",
+        body: JSON.stringify(body),
       })
-        .then(response => response.json())
-        .then(data => {
+        .then((response) => response.json())
+        .then((data) => {
           vm.excludeDevicesRunning = data.response.running;
           vm.excludedDevices = data.response.excludedDevices;
           if (data.response.running) {
             setTimeout(
-              function() {
+              function () {
                 this.checkExcludeStatus();
               }.bind(this),
               2000
@@ -417,68 +461,68 @@ export default {
           }
         });
     },
-    startExclude: function() {
+    startExclude: function () {
       var vm = this;
-      var body = { action: 'startExclude' };
+      var body = { action: "startExclude" };
       fetch(`/api/integrations/${vm.integrationId}/features/deviceExclude`, {
-        method: 'POST',
-        body: JSON.stringify(body)
+        method: "POST",
+        body: JSON.stringify(body),
       })
-        .then(response => response.json())
-        .then(data => {
+        .then((response) => response.json())
+        .then(() => {
           vm.excludeDevicesRunning = true;
           // check status
           setTimeout(
-            function() {
+            function () {
               this.checkExcludeStatus();
             }.bind(this),
             2000
           );
         });
     },
-    stopExclude: function() {
+    stopExclude: function () {
       var vm = this;
-      var body = { action: 'stopExclude' };
+      var body = { action: "stopExclude" };
       fetch(`/api/integrations/${vm.integrationId}/features/deviceExclude`, {
-        method: 'POST',
-        body: JSON.stringify(body)
+        method: "POST",
+        body: JSON.stringify(body),
       })
-        .then(response => response.json())
-        .then(data => {
+        .then((response) => response.json())
+        .then(() => {
           vm.checkExcludeStatus();
         });
     },
-    resetIntegration: function() {
+    resetIntegration: function () {
       var vm = this;
-      if (vm.reset === 'reset') {
-        var body = { action: 'reset' };
+      if (vm.reset === "reset") {
+        var body = { action: "reset" };
         fetch(`/api/integrations/${vm.integrationId}/features/reset`, {
-          method: 'POST',
-          body: JSON.stringify(body)
+          method: "POST",
+          body: JSON.stringify(body),
         })
-          .then(response => response.json())
-          .then(data => {
+          .then((response) => response.json())
+          .then(() => {
             vm.checkStatus();
           });
       } else {
         //TODO: display this to the user instead of just in the console.
-        console.log('Please type reset into text box');
+        console.log("Please type reset into text box");
       }
     },
-    loadPreferencesLayout: function() {
+    loadPreferencesLayout: function () {
       fetch(`/api/integrations/${this.integrationId}/preferences-layout`)
-        .then(response => response.json())
-        .then(data => {
+        .then((response) => response.json())
+        .then((data) => {
           this.preferences = data;
           for (var section of data.sections) {
             for (var input of section.input) {
-              if (typeof this.settings[input.name] === 'undefined') {
+              if (typeof this.settings[input.name] === "undefined") {
                 //TODO: is empty string ok, or should it be null?
                 this.settings[input.name] = {
                   name: input.name,
                   value: input.multiple ? [] : null,
                   type: input.type,
-                  multiple: input.multiple
+                  multiple: input.multiple,
                 };
               } else {
                 // check if multiple changed
@@ -489,7 +533,7 @@ export default {
                   if (input.multiple) {
                     if (
                       this.settings[input.name].value === null ||
-                      this.settings[input.name].value === ''
+                      this.settings[input.name].value === ""
                     ) {
                       this.settings[input.name].value = [];
                     } else if (
@@ -507,21 +551,21 @@ export default {
           }
         });
     },
-    loadPageLayout: function() {
+    loadPageLayout: function () {
       fetch(`/api/integrations/${this.integrationId}/page-layout`)
-        .then(response => response.json())
-        .then(data => {
+        .then((response) => response.json())
+        .then((data) => {
           this.pageLayout = data;
         });
-    }
+    },
   },
-  mounted: function() {
+  mounted: function () {
     this.integrationId = this.$route.params.id;
 
     fetch(`/api/integrations/${this.integrationId}`)
-      .then(response => response.json())
-      .then(data => {
-        if (data != null) {
+      .then((response) => response.json())
+      .then((data) => {
+        if (typeof data !== "undefined" && data != null) {
           this.integration = data;
           if (this.settings == null) {
             this.settings = {};
@@ -530,23 +574,23 @@ export default {
       });
 
     fetch(`/api/integrations/${this.integrationId}/settings`)
-      .then(response => response.json())
-      .then(data => {
-        if (data != null) {
+      .then((response) => response.json())
+      .then((data) => {
+        if (typeof data !== "undefined" && data != null) {
           this.settings = data;
         }
       })
       .then(this.loadPreferencesLayout());
 
     fetch(`/api/integrations/${this.integrationId}/page-data`)
-      .then(response => response.json())
-      .then(data => {
-        if (data != null) {
+      .then((response) => response.json())
+      .then((data) => {
+        if (typeof data !== "undefined" && data != null) {
           this.pageData = data;
         }
       })
       .then(this.loadPageLayout());
-  }
+  },
 };
 </script>
 <style scoped></style>

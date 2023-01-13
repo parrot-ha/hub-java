@@ -1,61 +1,77 @@
 <template>
-  <v-container fluid>
-    <v-layout>
-      <v-row>
-        <v-col>
-          <v-card>
-            <v-card-title>Device Handler Code</v-card-title>
-            <v-card-text>
-              <router-link :to="{ name: 'DeviceHandlerCodeAdd' }"
-                >Add Device Handler Code</router-link
-              >
-              <v-data-table
-                :headers="headers"
-                :items="deviceHandlerCodeList"
-                sort-by="name"
-                disable-pagination
-                hide-default-footer
-                class="elevation-1"
-              >
-                <template v-slot:item.name="{ item }">
-                  <router-link
-                    :to="{
-                      name: 'DeviceHandlerCodeEdit',
-                      params: { id: item.id }
-                    }"
-                    >{{ item.name }}</router-link
-                  >
-                </template>
-              </v-data-table>
-            </v-card-text>
-            <v-card-actions> </v-card-actions>
-          </v-card>
-        </v-col>
-      </v-row>
-    </v-layout>
-  </v-container>
+  <div class="container-fluid">
+    <div class="row g-3">
+      <div class="col-auto me-auto">
+        <h5>Device Handler Code</h5>
+      </div>
+      <div class="col-auto">
+        <router-link
+          class="btn btn-outline-secondary"
+          :to="{ name: 'DeviceHandlerCodeAdd' }"
+          >Add New</router-link
+        >
+      </div>
+    </div>
+
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Namespace</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr v-for="dh in sortedCodeList" :key="dh.id">
+          <td>
+            <router-link
+              :to="{
+                name: 'DeviceHandlerCodeEdit',
+                params: { id: dh.id },
+              }"
+              >{{ dh.name }}</router-link
+            >
+          </td>
+          <td>{{ dh.namespace }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
 </template>
+
 <script>
 export default {
-  name: 'DeviceHandlerCodeList',
+  name: "DeviceHandlerCodeList",
   data() {
     return {
-      deviceHandlerCodeList: [],
-      headers: [
-        { text: 'Name', value: 'name' },
-        { text: 'Namespace', value: 'namespace' }
-      ]
+      codeList: [],
     };
   },
-  mounted: function() {
-    fetch('/api/device-handlers?filter=user')
-      .then(response => response.json())
-      .then(data => {
-        if (data != null) {
-          this.deviceHandlerCodeList = data;
+  computed: {
+    sortedCodeList() {
+      let sortedCodeList = [...this.codeList].sort((a, b) => {
+        const nameA = a.name.toUpperCase();
+        const nameB = b.name.toUpperCase();
+        if (nameA < nameB) {
+          return -1;
+        }
+        if (nameA > nameB) {
+          return 1;
+        }
+
+        return 0;
+      });
+      return sortedCodeList;
+    },
+  },
+  mounted: function () {
+    fetch("/api/device-handlers?filter=user")
+      .then((response) => response.json())
+      .then((data) => {
+        if (typeof data !== "undefined" && data != null) {
+          this.codeList = data;
         }
       });
-  }
+  },
 };
 </script>
 <style scoped></style>

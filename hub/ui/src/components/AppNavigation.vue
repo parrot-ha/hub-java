@@ -1,128 +1,86 @@
 <template>
-  <div>
-    <v-app-bar app color="primary" dark elevation="0">
-      <v-app-bar-nav-icon
-        @click.stop="sidebarMenu = !sidebarMenu"
-      ></v-app-bar-nav-icon>
-      <v-spacer></v-spacer>
-      <v-btn @click="toggleTheme" color="primary" class="mr-2">{{
-        buttonText
-      }}</v-btn>
-      <v-icon>mdi-account</v-icon>
-    </v-app-bar>
-    <v-navigation-drawer
-      v-model="sidebarMenu"
-      app
-      floating
-      :permanent="sidebarMenu"
-      :mini-variant.sync="mini"
-    >
-      <v-list dense color="primary" dark>
-        <v-list-item>
-          <v-list-item-action>
-            <v-icon @click.stop="sidebarMenu = !sidebarMenu"
-              >mdi-chevron-left</v-icon
-            >
-          </v-list-item-action>
-          <v-list-item-content>
-            <v-list-item-title>
-              <h3 class="font-weight-thin">Parrot Hub</h3>
-            </v-list-item-title>
-          </v-list-item-content>
-        </v-list-item>
-      </v-list>
-      <v-list-item class="px-2" @click="toggleMini = !toggleMini">
-        <v-list-item-avatar>
-          <v-icon>mdi-account-outline</v-icon>
-        </v-list-item-avatar>
-        <v-list-item-content class="text-truncate">
-          User
-        </v-list-item-content>
-        <v-btn icon small>
-          <v-icon>mdi-chevron-left</v-icon>
-        </v-btn>
-      </v-list-item>
-      <v-divider></v-divider>
-      <v-list>
-        <v-list-item
-          v-for="item in items"
-          :key="item.title"
-          link
-          :to="item.href"
-        >
-          <v-list-item-icon>
-            <v-icon color="primary">{{ item.icon }}</v-icon>
-          </v-list-item-icon>
-          <v-list-item-content>
-            <v-list-item-title class="primary--text">{{
-              item.title
-            }}</v-list-item-title>
-          </v-list-item-content>
-        </v-list-item>
-      </v-list>
-    </v-navigation-drawer>
-  </div>
+  <nav
+    id="sidebarMenu"
+    class="col-md-3 col-lg-2 d-md-block bg-light sidebar collapse"
+  >
+    <div class="position-sticky pt-3">
+      <ul class="nav flex-column">
+        <li class="nav-item" v-for="item in items" :key="item.title">
+          <router-link :to="item.href" class="nav-link"
+            ><span data-bs-target="#sidebarMenu" :data-bs-toggle="sidebarToggle"
+              ><i :class="item.icon"></i> {{ item.title }}</span
+            ></router-link
+          >
+        </li>
+      </ul>
+    </div>
+  </nav>
 </template>
 
 <script>
 export default {
-  name: 'AppNavigation',
+  name: "AppNavigation",
   data() {
     return {
-      appTitle: 'Parrot Hub',
-      sidebarMenu: true,
-      toggleMini: false,
+      appTitle: "Parrot Hub",
+      sidebarToggle: "collapse",
       items: [
-        { title: 'Home', href: '/', icon: 'mdi-home-outline' },
+        { title: "Home", href: "/", icon: "bi bi-house" },
         {
-          title: 'Location',
-          href: '/location',
-          icon: 'mdi-map-clock-outline'
+          title: "Location",
+          href: "/location",
+          icon: "bi bi-geo-alt",
         },
-        { title: 'Hub', href: '/hub', icon: 'mdi-desktop-tower' },
+        { title: "Hub", href: "/hub", icon: "bi bi-modem" },
         {
-          title: 'Devices',
-          href: '/devices',
-          icon: 'mdi-devices'
+          title: "Devices",
+          href: "/devices",
+          icon: "bi bi-boxes",
         },
-        { title: 'AutomationApps', href: '/iaas', icon: 'mdi-cogs' },
+        { title: "AutomationApps", href: "/iaas", icon: "bi bi-gear" },
         {
-          title: 'Integrations',
-          href: '/integrations',
-          icon: 'mdi-lan-connect'
+          title: "Integrations",
+          href: "/integrations",
+          icon: "bi bi-diagram-3",
         },
-        { title: 'Settings', href: '/settings', icon: 'mdi-tune' },
+        { title: "Settings", href: "/settings", icon: "bi bi-sliders" },
         {
-          title: 'AutomationApp Code',
-          href: '/aa-code',
-          icon: 'mdi-file-document-edit-outline'
-        },
-        {
-          title: 'Device Handler Code',
-          href: '/dh-code',
-          icon: 'mdi-file-document-edit-outline'
+          title: "AutomationApp Code",
+          href: "/aa-code",
+          icon: "bi bi-file-earmark-text",
         },
         {
-          title: 'Extensions',
-          href: '/extensions',
-          icon: 'mdi-puzzle-outline'
-        }
-      ]
+          title: "Device Handler Code",
+          href: "/dh-code",
+          icon: "bi bi-file-earmark-text",
+        },
+        {
+          title: "Extensions",
+          href: "/extensions",
+          icon: "bi bi-puzzle",
+        },
+      ],
     };
   },
-  computed: {
-    mini() {
-      return this.$vuetify.breakpoint.smAndDown || this.toggleMini;
-    },
-    buttonText() {
-      return !this.$vuetify.theme.dark ? 'Go Dark' : 'Go Light';
-    }
+  mounted() {
+    this.onResize();
+    this.$nextTick(() => {
+      window.addEventListener("resize", this.onResize);
+    });
+  },
+
+  beforeUnmount() {
+    window.removeEventListener("resize", this.onResize);
   },
   methods: {
-    toggleTheme() {
-      this.$vuetify.theme.dark = !this.$vuetify.theme.dark;
-    }
-  }
+    onResize() {
+      if (window.innerWidth < 768) {
+        this.sidebarToggle = "collapse";
+      } else {
+        this.sidebarToggle = "collapse.show";
+      }
+    },
+  },
 };
 </script>
 

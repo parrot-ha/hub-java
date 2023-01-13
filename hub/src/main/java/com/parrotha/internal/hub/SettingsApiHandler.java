@@ -104,7 +104,7 @@ public class SettingsApiHandler extends BaseApiHandler {
             LoggerContext loggerContext = (LoggerContext) LogManager.getContext(false);
             Configuration config = loggerContext.getConfiguration();
             config.addLogger(name, new LoggerConfig(name, Level.toLevel(level), false));
-            loggerContext.updateLoggers();  // This causes all Loggers to refetch information from their LoggerConfig.
+            loggerContext.updateLoggers();  // This causes all Loggers to fetch information from their LoggerConfig.
             buildStandardJsonResponse(ctx, true);
         });
 

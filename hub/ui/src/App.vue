@@ -1,21 +1,24 @@
 <template>
-  <v-app>
-    <app-navigation></app-navigation>
-    <v-main transition="slide-x-transition">
-      <router-view></router-view>
-    </v-main>
-  </v-app>
+  <div>
+    <app-header></app-header>
+    <div class="container-fluid">
+      <div class="row">
+        <app-navigation></app-navigation>
+        <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+          <div
+            class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3"
+          >
+            <router-view></router-view>
+          </div>
+        </main>
+      </div>
+    </div>
+  </div>
 </template>
 
-<script>
-import AppNavigation from '@/components/AppNavigation';
-
-export default {
-  name: 'App',
-  components: {
-    AppNavigation
-  }
-};
+<script setup>
+import { RouterView } from "vue-router";
+import AppNavigation from "@/components/AppNavigation.vue";
+import AppHeader from "@/components/AppHeader.vue";
 </script>
 
-<style></style>

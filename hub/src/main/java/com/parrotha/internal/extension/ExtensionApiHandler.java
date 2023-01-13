@@ -43,7 +43,7 @@ public class ExtensionApiHandler extends BaseApiHandler {
         });
 
         app.get("/api/extensions", ctx -> {
-            boolean refresh = ctx.queryParam("refresh", "false").equals("true");
+            boolean refresh = "true".equals(ctx.queryParam("refresh"));
 
             //TODO: return pointer to status of refresh?
             if (refresh) {

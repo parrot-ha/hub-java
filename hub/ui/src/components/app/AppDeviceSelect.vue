@@ -1,97 +1,133 @@
 <template>
   <div>
     <div v-if="body.multiple">
-      <v-card @click="deviceSelectClick">
-        <v-card-title>{{ body.title }}</v-card-title>
-        <v-card-text>
-          <div v-if="value">
-            <div v-for="settingVal in value" :key="settingVal">
-              {{ devices[settingVal.trim()] }}
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title">
+            <a href="#" class="stretched-link" @click="deviceSelectClick"></a>
+            {{ body.title }}
+          </h5>
+          <div class="card-text">
+            <div v-if="modelValue">
+              <div v-for="settingVal in modelValue" :key="settingVal">
+                {{ devices[settingVal.trim()] }}
+              </div>
+            </div>
+            <div v-else>
+              <div>{{ body.description }}</div>
             </div>
           </div>
-          <div v-else>
-            <div>{{ body.description }}</div>
-          </div>
-        </v-card-text>
-      </v-card>
+        </div>
+      </div>
     </div>
     <div v-else>
-      <v-card @click="deviceSelectClick">
-        <v-card-title>{{ body.title }}</v-card-title>
-        <v-card-text>
-          <div v-if="value">
-            {{ devices[value.trim()] }}
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title">
+            <a href="#" class="stretched-link" @click="deviceSelectClick"></a
+            >{{ body.title }}
+          </h5>
+          <div class="card-text">
+            <div v-if="modelValue">
+              {{ devices[modelValue.trim()] }}
+            </div>
+            <div v-else>
+              <div>{{ body.description }}</div>
+            </div>
           </div>
-          <div v-else>
-            <div>{{ body.description }}</div>
-          </div>
-        </v-card-text>
-      </v-card>
+        </div>
+      </div>
     </div>
 
-    <v-row justify="center">
-      <v-dialog
-        v-model="dialog"
-        fullscreen
-        hide-overlay
-        transition="dialog-bottom-transition"
-      >
-        <v-card>
-          <v-toolbar dark color="primary">
-            <v-btn icon dark @click="closeDialog()">
-              <v-icon>mdi-close</v-icon>
-            </v-btn>
-            <v-toolbar-title>Device List</v-toolbar-title>
-            <v-spacer></v-spacer>
-            <v-toolbar-items>
-              <v-btn dark text @click="closeDialog()">
-                Save
-              </v-btn>
-            </v-toolbar-items>
-          </v-toolbar>
-          <div v-for="deviceItem in deviceList" :key="deviceItem.id">
-            <v-checkbox
-              v-model="value"
-              :value="deviceItem.id"
-              :label="deviceItem.displayName"
-            ></v-checkbox>
+    <div class="row" justify="center">
+      <div class="modal" tabindex="-1" ref="appDeviceSelectModal">
+        <div class="modal-dialog modal-fullscreen">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title">Device List</h5>
+              <button
+                type="button"
+                class="btn-close"
+                data-bs-dismiss="modal"
+                aria-label="Close"
+              ></button>
+            </div>
+            <div class="modal-body">
+              <div v-for="deviceItem in deviceList" :key="deviceItem.id">
+                <div class="form-check">
+                  <input
+                    v-model="selectedDevices"
+                    class="form-check-input"
+                    type="checkbox"
+                    :value="deviceItem.id"
+                  />
+                  <label class="form-check-label">
+                    {{ deviceItem.displayName }}
+                  </label>
+                </div>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button
+                type="button"
+                class="btn btn-secondary"
+                @click="modal.hide()"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                class="btn btn-primary"
+                @click="
+                  $emit('update:modelValue', selectedDevices);
+                  modal.hide();
+                "
+              >
+                Done
+              </button>
+            </div>
           </div>
-        </v-card>
-      </v-dialog>
-    </v-row>
-    <br />
-    <br />
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script>
+import { Modal } from "bootstrap";
+
 export default {
-  name: 'AppDeviceSelect',
-  props: ['value', 'body', 'devices'],
+  name: "AppDeviceSelect",
+  props: ["modelValue", "body", "devices"],
+  emits: ["update:modelValue"],
   data() {
     return {
+      modal: null,
       deviceList: {},
-      //selectedDevices: [],
-      dialog: false
+      selectedDevices: [],
+      modalVisible: false,
     };
   },
   methods: {
-    closeDialog: function() {
-      this.dialog = false;
-      this.$emit('input', this.value);
+    closeDialog: function () {
+      this.$emit("input", this.value);
     },
-    deviceSelectClick: function() {
+    deviceSelectClick: function () {
+      console.log("device select");
       fetch(`/api/devices?filter=${this.body.type}`)
-        .then(response => response.json())
-        .then(data => {
-          if (data != null) {
+        .then((response) => response.json())
+        .then((data) => {
+          if (typeof data !== "undefined" && data != null) {
             this.deviceList = data;
           }
         });
-
-      this.dialog = true;
-    }
-  }
+      this.selectedDevices = this.modelValue;
+      this.modal.show();
+    },
+  },
+  mounted: function () {
+    this.modal = new Modal(this.$refs.appDeviceSelectModal);
+  },
 };
 </script>
 

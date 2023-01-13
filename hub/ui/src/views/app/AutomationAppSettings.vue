@@ -1,123 +1,111 @@
 <template>
-  <v-container fluid>
-    <v-layout>
-      <v-row>
-        <v-col :cols="12">
-          <v-card>
-            <v-card-title>Definition</v-card-title>
-            <v-card-text>
-              <v-form>
-                <v-text-field
-                  label="Name"
-                  v-model="automationApp.name"
-                  disabled
-                ></v-text-field>
-                <v-text-field
-                  label="Namespace"
-                  v-model="automationApp.namespace"
-                  disabled
-                ></v-text-field>
-              </v-form>
-            </v-card-text>
-          </v-card>
-        </v-col>
-        <v-col :cols="12">
-          <v-card>
-            <v-card-title>Settings</v-card-title>
-            <v-card-text>
-              Add setting definitions in the source code and then set the values
-              here
-            </v-card-text>
-            <v-card-actions></v-card-actions>
-          </v-card>
-        </v-col>
-        <v-col :cols="12">
-          <v-card>
-            <v-card-title>OAuth</v-card-title>
-            <v-card-text>
-              <div v-if="!automationApp.oAuthEnabled">
-                <v-btn
-                  color="primary"
-                  outlined
-                  @click="automationApp.oAuthEnabled = true"
-                  mx-2
-                >
-                  Enable OAuth in Automation App
-                </v-btn>
-              </div>
-              <div v-else>
-                <v-text-field
-                  label="Client ID"
-                  v-model="automationApp.oAuthClientId"
-                  hint="Public client ID for accessing this SmartApp via its REST API"
-                  readonly
-                ></v-text-field>
+  <div class="container-fluid">
+    <h5>Definition</h5>
 
-                <v-text-field
-                  label="Client Secret"
-                  v-model="automationApp.oAuthClientSecret"
-                  hint="Confidential secret key for accessing this SmartApp via its REST API"
-                  readonly
-                ></v-text-field>
-              </div>
-            </v-card-text>
-            <v-card-actions></v-card-actions>
-          </v-card>
-        </v-col>
-        <v-col :cols="12">
-          <v-btn color="primary" @click="updateAutomationApp">
-            Update
-          </v-btn>
-        </v-col>
-      </v-row>
-    </v-layout>
-  </v-container>
+    <form>
+      <div class="mb-3">
+        <label class="form-label">Name</label>
+        <input
+          type="text"
+          class="form-control"
+          v-model="automationApp.name"
+          disabled
+        />
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Namespace</label>
+        <input
+          type="text"
+          class="form-control"
+          v-model="automationApp.namespace"
+          disabled
+        />
+      </div>
+    </form>
+
+    <div class="col-12">
+      <h5>Settings</h5>
+      Add setting definitions in the source code and then set the values here
+    </div>
+
+    <br />
+    <h5 class="card-title">OAuth</h5>
+
+    <div v-if="!automationApp.oAuthEnabled">
+      <br />
+      <button
+        class="btn btn-primary"
+        outlined
+        @click="automationApp.oAuthEnabled = true"
+        mx-2
+      >
+        Enable OAuth in Automation App
+      </button>
+    </div>
+    <div v-else>
+      <div class="mb-3">
+        <label class="form-label">Client ID</label>
+        <input
+          type="text"
+          class="form-control"
+          v-model="automationApp.oAuthClientId"
+          placeholder="Public client ID for accessing this SmartApp via its REST API"
+          readonly
+        />
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Client Secret</label>
+        <input
+          type="text"
+          class="form-control"
+          v-model="automationApp.oAuthClientSecret"
+          placeholder="Confidential secret key for accessing this SmartApp via its REST API"
+          readonly
+        />
+      </div>
+    </div>
+    <br />
+    <button class="btn btn-primary" @click="updateAutomationApp">Update</button>
+  </div>
 </template>
 <script>
-function handleErrors(response) {
-  if (!response.ok) {
-    throw Error(response.statusText);
-  }
-  return response;
-}
-
 export default {
-  name: 'AutomationAppSettings',
+  name: "AutomationAppSettings",
   data() {
     return {
-      aaId: '',
-      automationApp: { oAuthEnabled: false }
+      aaId: "",
+      automationApp: { oAuthEnabled: false },
     };
   },
   methods: {
-    updateAutomationApp: function() {
+    updateAutomationApp: function () {
       var body = this.automationApp;
       fetch(`/api/automation-apps/${this.aaId}`, {
-        method: 'PUT',
-        body: JSON.stringify(body)
+        method: "PUT",
+        body: JSON.stringify(body),
       })
-        .then(response => response.json())
-        .then(data => {
+        .then((response) => response.json())
+        .then((data) => {
           if (data.success) {
-            console.log('success');
+            console.log("success");
           } else {
-            console.log('problem saving automation app');
+            console.log("problem saving automation app");
           }
         });
-    }
+    },
   },
 
-  mounted: function() {
+  mounted: function () {
     this.aaId = this.$route.params.id;
 
     fetch(`/api/automation-apps/${this.aaId}`)
-      .then(response => response.json())
-      .then(data => {
-        if (data != null) {
+      .then((response) => response.json())
+      .then((data) => {
+        if (typeof data !== "undefined" && data != null) {
           this.automationApp = data;
         }
       });
-  }
+  },
 };
 </script>
 <style scoped></style>

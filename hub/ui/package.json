@@ -1,61 +1,30 @@
 {
-  "name": "ParrotHub",
-  "version": "0.1.0",
+  "name": "ui2",
+  "version": "0.0.0",
   "private": true,
   "scripts": {
-    "serve": "vue-cli-service serve",
-    "build": "vue-cli-service build",
-    "lint": "vue-cli-service lint"
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs --fix --ignore-path .gitignore"
   },
   "dependencies": {
     "ace-builds": "^1.14.0",
-    "core-js": "^3.15.2",
+    "bootstrap": "^5.2.3",
+    "bootstrap-icons": "^1.10.3",
     "leaflet": "^1.9.3",
-    "lodash": "^4.17.21",
-    "vue": "^2.7.14",
-    "vue-router": "^3.6.5",
-    "vuetify": "^2.6.12",
-    "vuex": "^3.6.2"
+    "path-to-regexp": "^6.2.1",
+    "pinia": "^2.0.28",
+    "vue": "^3.2.45",
+    "vue-router": "^4.1.6"
   },
   "devDependencies": {
-    "@mdi/font": "^5.9.55",
-    "@vue/cli-plugin-babel": "~4.5.19",
-    "@vue/cli-plugin-eslint": "^3.12.1",
-    "@vue/cli-plugin-router": "~4.5.19",
-    "@vue/cli-plugin-vuex": "~4.5.19",
-    "@vue/cli-service": "^4.5.19",
-    "@vue/eslint-config-prettier": "^6.0.0",
-    "babel-eslint": "^10.1.0",
-    "eslint": "^6.8.0",
-    "eslint-plugin-prettier": "^3.4.1",
-    "eslint-plugin-vue": "^6.2.2",
-    "prettier": "^1.19.1",
-    "sass": "^1.56.1",
-    "sass-loader": "^8.0.2",
-    "vue-cli-plugin-vuetify": "~2.0.9",
-    "vue-template-compiler": "^2.7.14",
-    "vuetify-loader": "^1.9.2"
-  },
-  "eslintConfig": {
-    "root": true,
-    "env": {
-      "node": true
-    },
-    "extends": [
-      "plugin:vue/essential",
-      "@vue/prettier"
-    ],
-    "parserOptions": {
-      "parser": "babel-eslint"
-    },
-    "rules": {}
-  },
-  "prettier": {
-    "singleQuote": true
-  },
-  "browserslist": [
-    "> 1%",
-    "last 2 versions",
-    "not dead"
-  ]
+    "@rushstack/eslint-patch": "^1.1.4",
+    "@vitejs/plugin-vue": "^4.0.0",
+    "@vue/eslint-config-prettier": "^7.0.0",
+    "eslint": "^8.22.0",
+    "eslint-plugin-vue": "^9.3.0",
+    "prettier": "^2.7.1",
+    "vite": "^4.0.0"
+  }
 }

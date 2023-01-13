@@ -222,8 +222,6 @@ public class DeviceApiHandler extends BaseApiHandler {
                         } catch (Exception e) {
                             //logger.warn("Exception running device method", e);
                         }
-                    } else {
-                        deviceAdded = false;
                     }
                 }
             }

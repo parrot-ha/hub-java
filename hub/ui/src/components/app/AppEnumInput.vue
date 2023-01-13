@@ -1,33 +1,32 @@
 <template>
-  <div>
-    <v-select
-      :label="body.title"
-      :id="body.name"
-      :name="body.name"
-      :hint="body.description"
-      :items="itemList"
+  <div class="mb-3">
+    <label class="form-label">{{ body.title }}</label>
+    <select
+      class="form-select"
+      :aria-label="body.title"
       :value="value"
-      item-value="key"
-      item-text="text"
-      v-on:change="$emit('input', $event)"
+      @input="$emit('update:modelValue', $event.target.value)"
       :multiple="body.multiple"
-      persistent-hint
-    ></v-select>
+    >
+      <option v-for="item in itemList" :key="item.key" :value="item.key">
+        {{ item.text }}
+      </option>
+    </select>
   </div>
 </template>
 
 <script>
 export default {
-  name: 'AppEnumInput',
-  props: ['value', 'options', 'body'],
+  name: "AppEnumInput",
+  props: ["modelValue", "options", "body"],
   data() {
     return {};
   },
   computed: {
-    itemList: function() {
+    itemList: function () {
       var tempItemList = [];
       if (Array.isArray(this.options)) {
-        this.options.forEach(element =>
+        this.options.forEach((element) =>
           tempItemList.push({ key: element, text: element })
         );
       } else {
@@ -36,10 +35,8 @@ export default {
         }
       }
       return tempItemList;
-    }
+    },
   },
-  methods: {}
+  methods: {},
 };
 </script>
-
-<style scoped></style>
