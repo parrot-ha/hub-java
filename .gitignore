@@ -48,6 +48,10 @@ cmake-build-*/
 # IntelliJ
 out/
 
+# Visual Studio Code
+/.vscode/
+bin/
+
 # mpeltonen/sbt-idea plugin
 .idea_modules/
 
@@ -116,3 +120,4 @@ gradle-app.setting
 /deviceHandlers/
 /.idea/
 /automationApps/
+
