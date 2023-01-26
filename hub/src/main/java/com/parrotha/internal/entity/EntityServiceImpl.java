@@ -544,7 +544,7 @@ public class EntityServiceImpl implements EntityService {
             return 97;
         }
 
-        int score = ((matchCount / fingerprintItemCount) * 100) + weight;
+        int score = Math.round((((float) matchCount / (float) fingerprintItemCount) * 100) + weight);
 
         return score;
     }

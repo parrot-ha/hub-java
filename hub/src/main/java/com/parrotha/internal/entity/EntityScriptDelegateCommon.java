@@ -25,6 +25,7 @@ import groovyx.net.http.HttpResponseDecorator;
 import groovyx.net.http.ParrotHubHTTPBuilder;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Map;
@@ -45,6 +46,10 @@ public class EntityScriptDelegateCommon {
         Map params = new HashMap();
         params.put("uri", uri);
         return httpGet(params, closure);
+    }
+
+    public BigDecimal celsiusToFahrenheit(BigDecimal value) {
+        return ((value.multiply(BigDecimal.valueOf(9))).divide(BigDecimal.valueOf(5))).add(BigDecimal.valueOf(32));
     }
 
     public Object httpGet(Map params, Closure closure) throws IOException, URISyntaxException {

@@ -312,4 +312,19 @@ public class ZigBeeTest {
         assertNotNull(zoneStatus);
         Assertions.assertTrue(zoneStatus.isAlarm1Set());
     }
+
+    @Test
+    public void testConfigureReporting() {
+        DeviceWrapper deviceWrapperMock = Mockito.mock(DeviceWrapper.class);
+        when(deviceWrapperMock.getDeviceNetworkId()).thenReturn("1234");
+        when(deviceWrapperMock.getEndpointId()).thenReturn(1);
+        when(deviceWrapperMock.getZigbeeId()).thenReturn("0123456789");
+
+        ZigBeeImpl zigbee = new ZigBeeImpl(deviceWrapperMock);
+        List<String> cmds = zigbee.configureReporting(0x0405, 0x0000, 0x29, 60, 3600, 200, new HashMap(), 53);
+        assertNotNull(cmds);
+        assertEquals(4, cmds.size());
+        assertEquals("zdo bind 0x1234 0x01 0x01 0x0405 {0123456789} {}", cmds.get(0));
+        assertEquals("ph cr 0x1234 0x01 0x0405 0x0000 0x29 0x003C 0x0E10 {C800} {}", cmds.get(2));
+    }
 }

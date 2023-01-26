@@ -115,6 +115,12 @@ public class DeviceScriptDelegateImpl extends EntityScriptDelegateCommon impleme
         }).start();
     }
 
+    public void sendHubCommand(HubMultiAction hubMultiAction) {
+        for(HubAction hubAction : hubMultiAction.getActions()) {
+            sendHubCommand(hubAction);
+        }
+    }
+
     public DeviceWrapper addChildDevice(String typeName, String deviceNetworkId) {
         return addChildDevice(null, typeName, deviceNetworkId, null, null);
     }
