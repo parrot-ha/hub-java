@@ -199,7 +199,7 @@ public class ZigBeeMessageTransformer {
             };
             return zclCommand;
         } else if (msg.startsWith("zdo bind")) {
-            IeeeAddress destAddress = networkManager.getNode(0).getIeeeAddress();
+            IeeeAddress destAddress = networkManager.getLocalIeeeAddress();
 
             // do a bind message
             msg = msg.substring("zdo bind ".length());
