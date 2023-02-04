@@ -29,8 +29,9 @@
 </template>
 <script>
 import ace from "ace-builds";
-import "ace-builds/src-noconflict/theme-monokai";
-import "ace-builds/src-noconflict/mode-groovy";
+import "ace-builds/src-min-noconflict/theme-monokai";
+import "ace-builds/src-min-noconflict/mode-groovy";
+import "ace-builds/src-min-noconflict/ext-searchbox";
 
 export default {
   name: "CodeEditor",
@@ -58,10 +59,12 @@ export default {
   },
   methods: {
     saveCode() {
-      this.$emit("saveCodeButtonClicked", this.editor.getValue());
+    console.log("save code!")
+      //this.$emit("saveCodeButtonClicked", this.editor.getValue());
     },
   },
   mounted: function () {
+    var vm = this;
     this.editor = ace.edit(this.$refs.ace, {
       minLines: 10,
       fontSize: 16,
@@ -74,6 +77,12 @@ export default {
     this.editor.renderer.setScrollMargin(0, 5, 0, 5);
     this.editor.session.setMode("ace/mode/groovy");
     this.editor.setTheme("ace/theme/monokai");
+    this.editor.commands.addCommand({
+      name: "save",
+      bindKey: { win: "Ctrl-s", mac: "Command-s" },
+      exec: vm.saveCode,
+      readOnly: true,
+    });
   },
 };
 </script>
