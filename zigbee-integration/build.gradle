@@ -12,8 +12,8 @@ dependencies {
     implementation group: 'org.apache.logging.log4j', name: 'log4j-api', version: "${log4jVersion}"
     implementation group: 'org.apache.logging.log4j', name: 'log4j-core', version: "${log4jVersion}"
 
-    implementation 'com.zsmartsystems.zigbee:com.zsmartsystems.zigbee.dongle.ember:1.4.7'
-    implementation 'com.zsmartsystems.zigbee:com.zsmartsystems.zigbee.serial:1.4.7'
+    implementation 'com.zsmartsystems.zigbee:com.zsmartsystems.zigbee.dongle.ember:1.4.10'
+    implementation 'com.zsmartsystems.zigbee:com.zsmartsystems.zigbee.serial:1.4.10'
 
     implementation 'org.yaml:snakeyaml:1.32'
     implementation "org.apache.commons:commons-lang3:${commonsLang3Version}"

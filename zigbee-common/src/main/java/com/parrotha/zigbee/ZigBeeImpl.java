@@ -417,10 +417,22 @@ public class ZigBeeImpl implements ZigBee {
 
 
     public List<String> readAttribute(Object cluster, Object attributeId) {
-        return readAttribute(ObjectUtils.objectToInt(cluster),
-                ObjectUtils.objectToInt(attributeId),
-                null,
-                DEFAULT_DELAY);
+        if (attributeId instanceof List) {
+            List attributeIdList = (List) attributeId;
+            List<String> readAttributeList = new ArrayList();
+            for (Object attributeListItem : attributeIdList) {
+                readAttributeList.addAll(readAttribute(ObjectUtils.objectToInt(cluster),
+                        ObjectUtils.objectToInt(attributeListItem),
+                        null,
+                        DEFAULT_DELAY));
+            }
+            return readAttributeList;
+        } else {
+            return readAttribute(ObjectUtils.objectToInt(cluster),
+                    ObjectUtils.objectToInt(attributeId),
+                    null,
+                    DEFAULT_DELAY);
+        }
     }
 
     public List<String> readAttribute(Object cluster, Object attributeId, Map additionalParams) {
@@ -511,12 +523,51 @@ public class ZigBeeImpl implements ZigBee {
         return arrayList;
     }
 
+    public List configureReporting(Integer clusterId, Integer attributeId, Integer dataType, Integer minReportTime, Integer maxReportTime) {
+        return configureReporting(clusterId, attributeId, dataType, minReportTime, maxReportTime, null, new HashMap(), DEFAULT_DELAY);
+    }
+
+    public List configureReporting(Integer clusterId, Integer attributeId, Integer dataType, Integer minReportTime, Integer maxReportTime,
+                                   Integer reportableChange) {
+        return configureReporting(clusterId, attributeId, dataType, minReportTime, maxReportTime, reportableChange, new HashMap(), DEFAULT_DELAY);
+    }
+
+    public List configureReporting(Integer clusterId, Integer attributeId, Integer dataType, Integer minReportTime, Integer maxReportTime,
+                                   Integer reportableChange, Map additionalParams) {
+        return configureReporting(clusterId, attributeId, dataType, minReportTime, maxReportTime, reportableChange, additionalParams, DEFAULT_DELAY);
+    }
+
+    public List configureReporting(Integer clusterId, Integer attributeId, Integer dataType, Integer minReportTime, Integer maxReportTime,
+                                   Integer reportableChange, Map additionalParams, int delay) {
+        int destEndpoint = 1;
+        ArrayList<String> arrayList = new ArrayList<>();
+        arrayList.add(
+                String.format("zdo bind 0x%s 0x%02X 0x%02X 0x%04X {%s} {}", device.getDeviceNetworkId(), device.getEndpointId(), destEndpoint,
+                        clusterId, device.getZigbeeId()));
+        if (delay > 0) {
+            arrayList.add("delay " + delay);
+        }
+        if (reportableChange < 1) {
+            reportableChange = 1;
+        }
+        arrayList.add(String.format("ph cr 0x%s 0x%02X 0x%04X 0x%04X 0x%02X 0x%04X 0x%04X {%s} {}", device.getDeviceNetworkId(), device.getEndpointId(),
+                clusterId, attributeId, dataType, minReportTime, maxReportTime, DataType.pack(reportableChange, dataType)));
+
+        if (delay > 0) {
+            arrayList.add("delay " + delay);
+        }
+
+        return arrayList;
+    }
+
+
     private int getMfgCode(Map additionalParams) {
         if (additionalParams != null && additionalParams.containsKey("mfgCode")) {
             return ObjectUtils.objectToInt(additionalParams.get("mfgCode"));
         }
         return -1;
     }
+
 
     //TODO: implement additional methods listed here: https://docs.smartthings.com/en/latest/ref-docs/zigbee-ref.html
 }

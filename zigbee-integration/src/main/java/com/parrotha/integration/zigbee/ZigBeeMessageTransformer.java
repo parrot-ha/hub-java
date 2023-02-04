@@ -44,8 +44,16 @@ public class ZigBeeMessageTransformer {
     private static final Logger logger = LoggerFactory.getLogger(ZigBeeHandler.class);
 
     private static int getIntegerValueForString(String valueStr) {
+        return getIntegerValueForString(valueStr, false);
+    }
+
+    private static int getIntegerValueForString(String valueStr, boolean littleEndian) {
         if (valueStr.startsWith("0x")) {
-            return HexUtils.hexStringToInt(valueStr);
+            if(littleEndian) {
+                return HexUtils.hexStringToInt(HexUtils.reverseHexString(valueStr.substring(2)));
+            } else {
+                return HexUtils.hexStringToInt(valueStr);
+            }
         } else {
             return Integer.parseInt(valueStr);
         }
@@ -191,7 +199,7 @@ public class ZigBeeMessageTransformer {
             };
             return zclCommand;
         } else if (msg.startsWith("zdo bind")) {
-            IeeeAddress destAddress = networkManager.getNode(0).getIeeeAddress();
+            IeeeAddress destAddress = networkManager.getLocalIeeeAddress();
 
             // do a bind message
             msg = msg.substring("zdo bind ".length());
@@ -232,7 +240,8 @@ public class ZigBeeMessageTransformer {
 
             String reportableChangeString = StringUtils.deleteWhitespace(msg.substring(msg.indexOf("{") + 1, msg.indexOf("}")));
             if (StringUtils.isNotEmpty(reportableChangeString)) {
-                record.setReportableChange(getIntegerValueForString(reportableChangeString));
+                //TODO: look at data type to determine if it is little endian
+                record.setReportableChange(getIntegerValueForString("0x" + reportableChangeString, true));
             }
 
             record.setTimeoutPeriod(0);

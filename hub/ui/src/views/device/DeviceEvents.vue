@@ -20,7 +20,7 @@
                   </tr>
                 </thead>
                 <tbody>
-                  <tr v-for="event in events" :key="event.id">
+                  <tr v-for="event in sortedEvents" :key="event.id">
                     <td>{{ new Date(event.date).toLocaleString() }}</td>
                     <td>{{ event.source }}</td>
                     <td>{{ event.type }}</td>
@@ -47,6 +47,23 @@ export default {
       deviceId: "",
       events: [],
     };
+  },
+  computed: {
+  sortedEvents() {
+      let sortedEventsTmp = [...this.events].sort((a, b) => {
+        const dateA = a.date.toUpperCase();
+        const dateB = b.date.toUpperCase();
+        if (dateA > dateB) {
+          return -1;
+        }
+        if (dateA < dateB) {
+          return 1;
+        }
+
+        return 0;
+      });
+      return sortedEventsTmp;
+    },
   },
   mounted: function () {
     this.deviceId = this.$route.params.id;

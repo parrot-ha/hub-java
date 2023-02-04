@@ -55,7 +55,7 @@
                       <select
                         class="form-select"
                         :aria-label="body.title"
-                        :value="settings[body.name].value"
+                        v-model="settings[body.name].value"
                         :multiple="body.multiple"
                       >
                         <option v-for="(item, i) in body.options" :key="i">

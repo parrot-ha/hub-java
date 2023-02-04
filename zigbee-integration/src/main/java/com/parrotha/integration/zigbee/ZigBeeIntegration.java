@@ -200,6 +200,14 @@ public class ZigBeeIntegration extends DeviceIntegration implements DeviceScanIn
                 Map<String, String> joinedDeviceMap = new HashMap<>();
                 joinedDeviceMap.put("Network Address", HexUtils.integerToHexString((Integer) entry.getValue().get("networkAddress"), 2));
                 joinedDeviceMap.put("IEEE Address", entry.getKey().toString());
+
+                Object fingerprint = entry.getValue().get("fingerprint");
+                if(fingerprint != null) {
+                    joinedDeviceMap.put("Fingerprint", fingerprint.toString());
+                    joinedDeviceMap.put("Join Status", "Done");
+                } else {
+                    joinedDeviceMap.put("Join Status", "Initializing");
+                }
                 joinedDevicesList.add(joinedDeviceMap);
             }
             scanStatus.put("foundDevices", joinedDevicesList);

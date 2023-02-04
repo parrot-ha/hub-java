@@ -236,4 +236,51 @@ public class EntityServiceTest {
         String[] foundDH = entityService.getDeviceHandlerByFingerprint(deviceInfo);
         assertNull(foundDH);
     }
+
+
+    @Test
+    public void testGetDeviceHandlerByFingerprintWithClustersProfileIDModelAndManufacturer() {
+        //profileId: '0104', endpointId: '01', inClusters: '0000,0001,0003,0402,0405', outClusters: '0003', model: 'TH01', manufacturer: 'eWeLink', application: '04'
+        DeviceService mockDeviceService = mock(DeviceService.class);
+        AutomationAppService mockAutomationAppService = mock(AutomationAppService.class);
+        EventService mockEventService = mock(EventService.class);
+        LocationService mockLocationService = mock(LocationService.class);
+        ScheduleService mockScheduleService = mock(ScheduleService.class);
+        IntegrationRegistry mockIntegrationRegistry = mock(IntegrationRegistry.class);
+        EntityService entityService = new EntityServiceImpl(mockDeviceService, mockAutomationAppService, mockEventService, mockLocationService,
+                mockScheduleService, mockIntegrationRegistry);
+        //profileId: '0104', endpointId: '01', inClusters: '', outClusters: '0003', model: 'TH01', manufacturer: 'eWeLink', application: '04'
+
+
+        Fingerprint fp = new Fingerprint();
+        fp.setProfileId("0104");
+        fp.setInClusters("0000,0001,0003,0402,0405");
+        fp.setOutClusters("0003");
+        fp.setModel("TH01");
+        fp.setManufacturer("eWeLink");
+        fp.setEndpointId("01");
+        fp.setApplication("04");
+        fp.setDeviceJoinName("Sonoff Temperature and Humidity Sensor");
+        String deviceHandlerId = "abc123";
+        DeviceHandler dh = new DeviceHandler();
+        dh.setId(deviceHandlerId);
+        dh.setFingerprints(Collections.singletonList(fp));
+        Collection<DeviceHandler> dhCollection = new ArrayList<>();
+        dhCollection.add(dh);
+
+        when(mockDeviceService.getAllDeviceHandlers()).thenReturn(dhCollection);
+        Map<String, String> deviceInfo = Stream.of(new String[][]{
+                {"profileId", "0104"},
+                {"inClusters", "0000,0001,0003,0402,0405"},
+                {"outClusters", "0003"},
+                {"model", "TH01"},
+                {"manufacturer", "eWeLink"},
+        }).collect(Collectors.toMap(data -> data[0], data -> data[1]));
+
+        String[] foundDH = entityService.getDeviceHandlerByFingerprint(deviceInfo);
+        assertNotNull(foundDH);
+        assertEquals(2, foundDH.length);
+        assertEquals(deviceHandlerId, foundDH[0]);
+        assertEquals("Sonoff Temperature and Humidity Sensor", foundDH[1]);
+    }
 }

@@ -182,7 +182,7 @@ public class DataType {
     }
 
     public static String pack(Long data, int type) {
-        return pack(data, type, false);
+        return pack(data, type, true);
     }
 
     public static String pack(Long data, int type, boolean littleEndian) {
@@ -194,7 +194,7 @@ public class DataType {
     }
 
     public static String pack(Integer data, int type) {
-        return pack(data, type, false);
+        return pack(data, type, true);
     }
 
     //log.debug DataType.pack(100, DataType.UINT16, false)

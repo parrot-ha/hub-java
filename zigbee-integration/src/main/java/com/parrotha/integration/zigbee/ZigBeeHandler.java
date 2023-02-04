@@ -164,6 +164,8 @@ public class ZigBeeHandler implements ZigBeeNetworkStateListener, ZigBeeAnnounce
         if (node != null) {
             networkManager.leave(node.getNetworkAddress(), node.getIeeeAddress());
             logger.warn("ZigBee device " + deviceNetworkId + " was removed!");
+            // wait for node left
+
             //TODO: we will get a node left message, need to process that and send a message back to device service to let it know to remove the device from config file
             return true;
         } else {
@@ -218,8 +220,9 @@ public class ZigBeeHandler implements ZigBeeNetworkStateListener, ZigBeeAnnounce
             logger.warn("New Device Joined!");
             processDeviceJoin(networkAddress, ieeeAddress);
         } else if (deviceStatus == ZigBeeNodeStatus.DEVICE_LEFT) {
-            // TODO: device left, remove it
-            logger.warn("Device Left");
+            // device left, remove it
+            logger.warn("ZigBee Device Left {}", ieeeAddress.toString());
+            networkManager.removeNode(networkManager.getNode(ieeeAddress));
         }
     }
 
@@ -315,6 +318,10 @@ public class ZigBeeHandler implements ZigBeeNetworkStateListener, ZigBeeAnnounce
             fingerprint.put("manufacturer", manufacturer);
             String model = getBasicAttributeValue(zigBeeEndpoint, 5);
             fingerprint.put("model", model);
+
+            // add fingerprint to joinedDevices
+            joinedDevices.get(node.getIeeeAddress()).put("fingerprint", fingerprint);
+
             String[] deviceHandlerInfo = zigBeeIntegration.getDeviceHandlerByFingerprint(fingerprint);
 
             if (deviceHandlerInfo != null) {

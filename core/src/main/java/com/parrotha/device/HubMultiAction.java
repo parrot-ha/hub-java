@@ -37,6 +37,10 @@ public class HubMultiAction {
         actions.add(new HubAction(action));
     }
 
+    public void add(HubAction action) {
+        actions.add(action);
+    }
+
     public List<HubAction> getActions() {
         return actions;
     }
