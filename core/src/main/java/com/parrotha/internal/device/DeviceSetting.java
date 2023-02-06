@@ -92,7 +92,9 @@ public class DeviceSetting implements Serializable {
     }
 
     public Object getValueAsType() {
-        if ("bool".equals(type)) {
+        if (getValue() == null) {
+            return null;
+        } else if ("bool".equals(type)) {
             return Boolean.parseBoolean(getValue());
         } else if ("boolean".equals(type) || "email".equals(type) || "text".equals(type) || "string".equals(type) || "enum".equals(type) ||
                 "time".equals(type)) {
@@ -100,16 +102,11 @@ public class DeviceSetting implements Serializable {
         } else if ("decimal".equals(type)) {
             return new BigDecimal(getValue());
         } else if ("number".equals(type)) {
-            if (getValue() != null) {
-                return Integer.valueOf(getValue());
-            }
+            return Integer.valueOf(getValue());
             //TODO; handle hub, icon, password, phone
         } else {
             return getValue();
         }
-
-
-        return null;
     }
 
     public void processValueTypeAndMultiple(Object valueObject, String type, boolean multiple) {
