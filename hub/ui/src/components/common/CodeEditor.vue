@@ -59,8 +59,7 @@ export default {
   },
   methods: {
     saveCode() {
-    console.log("save code!")
-      //this.$emit("saveCodeButtonClicked", this.editor.getValue());
+      this.$emit("saveCodeButtonClicked", this.editor.getValue());
     },
   },
   mounted: function () {
