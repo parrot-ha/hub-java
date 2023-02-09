@@ -372,7 +372,6 @@ export default {
         .then((response) => response.json())
         .then((data) => {
           if (data.success) {
-            console.log("success");
             this.updatePreferenceLayout();
           } else {
             console.log("problem saving device");
@@ -380,14 +379,10 @@ export default {
         });
     },
     deleteDevice: function () {
-      console.log("delete device!");
       fetch(`/api/devices/${this.deviceId}`, { method: "DELETE" })
         .then((response) => response.json())
         .then((data) => {
-          console.log(JSON.stringify(data));
-          console.log(`data ${data}`);
           if (data.success) {
-            console.log("device was deleted!");
             this.$router.push("/devices");
           } else {
             console.log("problem deleting device");
@@ -471,7 +466,6 @@ export default {
       `ws://${window.location.host}/api/devices/${this.deviceId}/events`
     );
     connection.onmessage = (event) => {
-      console.log("got message");
       var eventMap = JSON.parse(event.data);
 
       var matched = false;
