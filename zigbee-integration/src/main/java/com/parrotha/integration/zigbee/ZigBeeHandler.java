@@ -169,7 +169,7 @@ public class ZigBeeHandler implements ZigBeeNetworkStateListener, ZigBeeAnnounce
             //TODO: we will get a node left message, need to process that and send a message back to device service to let it know to remove the device from config file
             return true;
         } else {
-            // we don't have the node, so its already removed.
+            // we don't have the node, so it's already removed.
             return true;
         }
     }
@@ -222,7 +222,8 @@ public class ZigBeeHandler implements ZigBeeNetworkStateListener, ZigBeeAnnounce
         } else if (deviceStatus == ZigBeeNodeStatus.DEVICE_LEFT) {
             // device left, remove it
             logger.warn("ZigBee Device Left {}", ieeeAddress.toString());
-            networkManager.removeNode(networkManager.getNode(ieeeAddress));
+            //networkManager.removeNode(networkManager.getNode(ieeeAddress));
+            //TODO: remove node only if we are removing the device from the ui
         }
     }
 

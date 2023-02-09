@@ -29,8 +29,28 @@ import java.util.List;
 import java.util.Map;
 
 public abstract class DeviceIntegration extends AbstractIntegration {
+    /**
+     * Deprecated, override to provide system with a way to remove devices
+     *
+     * @param deviceNetworkId
+     * @return
+     * @Deprecated use removeIntegrationDevice(String, boolean)
+     */
+    @Deprecated
+    public boolean removeIntegrationDevice(String deviceNetworkId) {
+        return false;
+    }
 
-    public abstract boolean removeIntegrationDevice(String deviceNetworkId);
+    /**
+     * Override to provide system with a way to remove devices
+     *
+     * @param deviceNetworkId
+     * @param force
+     * @return
+     */
+    public boolean removeIntegrationDevice(String deviceNetworkId, boolean force) {
+        return removeIntegrationDevice(deviceNetworkId);
+    }
 
     public abstract HubResponse processAction(HubAction hubAction);
 
