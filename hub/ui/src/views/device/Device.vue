@@ -429,6 +429,7 @@ export default {
         .then((response) => response.json())
         .then((data) => {
           if (data.success) {
+            this.$refs.deleteDeviceModal.hideModal();
             this.$router.push("/devices");
           } else {
             this.displayForceDeleteDevice = true;
