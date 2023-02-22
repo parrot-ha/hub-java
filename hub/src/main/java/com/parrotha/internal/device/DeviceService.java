@@ -288,13 +288,15 @@ public class DeviceService implements ExtensionStateListener {
             DeviceSetting deviceSetting = device.getSettingByName(key);
             if (deviceSetting != null) {
                 // update existing setting
-                deviceSetting.processValueTypeAndMultiple(setting.get("valueAsType"), (String) setting.get("type"), (Boolean) setting.get("multiple"));
+                deviceSetting.processValueTypeAndMultiple(setting.get("valueAsType"), (String) setting.get("type"),
+                        (Boolean) setting.get("multiple"));
             } else {
                 // create new setting
                 deviceSetting = new DeviceSetting();
                 deviceSetting.setId(UUID.randomUUID().toString());
                 deviceSetting.setName(key);
-                deviceSetting.processValueTypeAndMultiple(setting.get("valueAsType"), (String) setting.get("type"), (Boolean) setting.get("multiple"));
+                deviceSetting.processValueTypeAndMultiple(setting.get("valueAsType"), (String) setting.get("type"),
+                        (Boolean) setting.get("multiple"));
                 device.addSetting(deviceSetting);
             }
         }
@@ -373,7 +375,7 @@ public class DeviceService implements ExtensionStateListener {
 
         boolean removedFromIntegration = false;
         if (integrationId != null) {
-            removedFromIntegration = integrationRegistry.removeDevice(integrationId, deviceNetworkId);
+            removedFromIntegration = integrationRegistry.removeDevice(integrationId, deviceNetworkId, force);
         } else {
             // there is no integration, so just mark it as successful.
             removedFromIntegration = true;
@@ -713,7 +715,8 @@ public class DeviceService implements ExtensionStateListener {
                     deviceHandlerInfo.put(deviceHandlerId, new DeviceHandler(deviceHandlerId, "class:" + className, dhi));
                 }
             }
-        } catch (IOException | ClassNotFoundException | IllegalAccessException | InstantiationException | NoSuchMethodException | InvocationTargetException e) {
+        } catch (IOException | ClassNotFoundException | IllegalAccessException | InstantiationException | NoSuchMethodException |
+                 InvocationTargetException e) {
             logger.warn("Exception in loading device handlers from resources", e);
         }
 

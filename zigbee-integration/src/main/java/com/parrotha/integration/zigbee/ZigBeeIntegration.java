@@ -145,8 +145,8 @@ public class ZigBeeIntegration extends DeviceIntegration implements DeviceScanIn
     }
 
     @Override
-    public boolean removeIntegrationDevice(String deviceNetworkId) {
-        return zigBeeHandler.removeDevice(deviceNetworkId);
+    public boolean removeIntegrationDevice(String deviceNetworkId, boolean force) {
+        return zigBeeHandler.removeDevice(deviceNetworkId, force);
     }
 
     @Override

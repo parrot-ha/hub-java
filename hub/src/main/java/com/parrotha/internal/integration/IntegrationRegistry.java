@@ -147,10 +147,10 @@ public class IntegrationRegistry {
         return null;
     }
 
-    public boolean removeDevice(String integrationId, String deviceNetworkId) {
+    public boolean removeDevice(String integrationId, String deviceNetworkId, boolean force) {
         DeviceIntegration deviceIntegration = getDeviceIntegrationById(integrationId);
         if (deviceIntegration != null) {
-            return deviceIntegration.removeIntegrationDevice(deviceNetworkId);
+            return deviceIntegration.removeIntegrationDevice(deviceNetworkId, force);
         } else {
             logger.warn("Unknown integration: " + integrationId);
         }

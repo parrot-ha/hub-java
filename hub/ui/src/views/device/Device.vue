@@ -2,6 +2,23 @@
   <div class="container-fluid">
     <div class="row gy-3">
       <div class="col-12">
+        <div
+          ref="alertBox"
+          class="alert alert-danger alert-dismissible"
+          role="alert"
+          v-if="alertMessage"
+        >
+          {{ alertMessage }}
+          <button
+            type="button"
+            class="btn-close"
+            aria-label="Close"
+            @click="alertMessage = null"
+          ></button>
+        </div>
+      </div>
+
+      <div class="col-12">
         <div class="card">
           <div class="card-body">
             <h5 class="card-title">Information</h5>
@@ -274,12 +291,34 @@
         </div>
       </div>
     </div>
+    <generic-modal
+      ref="deleteDeviceModal"
+      title="Delete Device"
+      :displayModal="deleteDeviceDisplayModal"
+      ><template #content
+        ><div v-if="displayForceDeleteDevice">
+          The device does not appear to be responding
+        </div>
+        <div v-else>Deleting device, please wait...</div></template
+      >
+      <template #buttonSlot
+        ><button
+          type="button"
+          class="btn btn-danger"
+          @click="forceDeleteDevice()"
+          :disabled="!displayForceDeleteDevice"
+        >
+          Force Delete
+        </button></template
+      >
+    </generic-modal>
   </div>
 </template>
 <script>
 import DeviceCommand from "@/components/device/DeviceCommand.vue";
 import EnumInput from "@/components/device/DeviceEnumInput.vue";
 import AreYouSureDialog from "@/components/common/AreYouSureDialog.vue";
+import GenericModal from "@/components/common/GenericModal.vue";
 
 export default {
   name: "DeviceView",
@@ -295,13 +334,18 @@ export default {
       commands: [],
       currentStates: {},
       information: {},
-      deviceDeleteDialog: false,
+      deleteModal: null,
+      deleteAreYouSure: true,
+      deleteDeviceDisplayModal: false,
+      displayForceDeleteDevice: false,
+      alertMessage: null,
     };
   },
   components: {
     DeviceCommand,
     EnumInput,
     AreYouSureDialog,
+    GenericModal,
   },
   computed: {
     filteredDevices: function () {
@@ -379,19 +423,36 @@ export default {
         });
     },
     deleteDevice: function () {
+      this.$refs.deleteDeviceModal.displayModal();
+      this.displayForceDeleteDevice = false;
       fetch(`/api/devices/${this.deviceId}`, { method: "DELETE" })
         .then((response) => response.json())
         .then((data) => {
           if (data.success) {
             this.$router.push("/devices");
           } else {
-            console.log("problem deleting device");
-            //$('#deletModal').modal('hide');
+            this.displayForceDeleteDevice = true;
+          }
+        });
+    },
+    forceDeleteDevice: function () {
+      this.displayForceDeleteDevice = false;
+      fetch(`/api/devices/${this.deviceId}?force=true`, { method: "DELETE" })
+        .then((response) => response.json())
+        .then((data) => {
+          if (data.success) {
+            this.$refs.deleteDeviceModal.hideModal();
+            this.$router.push("/devices");
+          } else {
+            this.$refs.deleteDeviceModal.hideModal();
+            this.alertMessage = "Unable to delete device";
+            window.scrollTo(0, 0);
           }
         });
     },
   },
   mounted: function () {
+    //this.deleteModal = new Modal(this.$refs.deviceDeleteModal);
     this.deviceId = this.$route.params.id;
 
     fetch(
