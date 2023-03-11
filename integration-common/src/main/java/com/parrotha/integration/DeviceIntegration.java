@@ -38,19 +38,17 @@ public abstract class DeviceIntegration extends AbstractIntegration {
      */
     @Deprecated
     public boolean removeIntegrationDevice(String deviceNetworkId) {
-        return false;
+        return removeIntegrationDevice(deviceNetworkId, false);
     }
 
     /**
-     * Override to provide system with a way to remove devices
+     * Implement to provide system with a way to remove devices
      *
      * @param deviceNetworkId
      * @param force
      * @return
      */
-    public boolean removeIntegrationDevice(String deviceNetworkId, boolean force) {
-        return removeIntegrationDevice(deviceNetworkId);
-    }
+    public abstract boolean removeIntegrationDevice(String deviceNetworkId, boolean force);
 
     public abstract HubResponse processAction(HubAction hubAction);
 

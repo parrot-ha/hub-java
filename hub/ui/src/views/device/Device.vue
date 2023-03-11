@@ -423,18 +423,19 @@ export default {
         });
     },
     deleteDevice: function () {
-      this.$refs.deleteDeviceModal.displayModal();
-      this.displayForceDeleteDevice = false;
-      fetch(`/api/devices/${this.deviceId}`, { method: "DELETE" })
-        .then((response) => response.json())
-        .then((data) => {
-          if (data.success) {
-            this.$refs.deleteDeviceModal.hideModal();
-            this.$router.push("/devices");
-          } else {
-            this.displayForceDeleteDevice = true;
-          }
-        });
+      this.$refs.deleteDeviceModal.displayModal().then(() => {
+        this.displayForceDeleteDevice = false;
+        fetch(`/api/devices/${this.deviceId}`, { method: "DELETE" })
+          .then((response) => response.json())
+          .then((data) => {
+            if (data.success) {
+              this.$refs.deleteDeviceModal.hideModal();
+              this.$router.push("/devices");
+            } else {
+              this.displayForceDeleteDevice = true;
+            }
+          });
+      });
     },
     forceDeleteDevice: function () {
       this.displayForceDeleteDevice = false;

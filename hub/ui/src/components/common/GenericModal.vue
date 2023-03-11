@@ -1,5 +1,14 @@
 <template>
-  <div class="modal fade" tabindex="-1" ref="genericModal" aria-hidden="true">
+  <div
+    class="modal fade"
+    tabindex="-1"
+    ref="genericModal"
+    aria-hidden="true"
+    v-on="{
+      'shown.bs.modal': handleShownModal,
+      'hidden.bs.modal': handleHiddenModal,
+    }"
+  >
     <div class="modal-dialog">
       <div class="modal-content">
         <div class="modal-header">
@@ -32,12 +41,35 @@ export default {
   name: "genericModal",
   props: ["title"],
   data() {
-    return { modal: null };
+    return { modal: null, shown: false };
   },
   watch: {},
   methods: {
+    handleShownModal() {
+      this.shown = true;
+    },
+    handleHiddenModal() {
+      this.shown = false;
+    },
+    isModalShown() {
+      return this.shown;
+    },
     displayModal() {
       this.modal.show();
+      // wait for modal to show
+      return new Promise((resolve) => this.waitForModalShown(resolve));
+    },
+    waitForModalShown(resolve) {
+      if (!this.shown) {
+        this.sleep(50).then(() => {
+          this.waitForModalShown(resolve);
+        });
+      } else {
+        resolve();
+      }
+    },
+    sleep(ms) {
+      return new Promise((resolve) => setTimeout(resolve, ms));
     },
     hideModal() {
       this.modal.hide();

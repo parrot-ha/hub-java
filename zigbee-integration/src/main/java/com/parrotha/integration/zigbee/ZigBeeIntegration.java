@@ -202,7 +202,7 @@ public class ZigBeeIntegration extends DeviceIntegration implements DeviceScanIn
                 joinedDeviceMap.put("IEEE Address", entry.getKey().toString());
 
                 Object fingerprint = entry.getValue().get("fingerprint");
-                if(fingerprint != null) {
+                if (fingerprint != null) {
                     joinedDeviceMap.put("Fingerprint", fingerprint.toString());
                     joinedDeviceMap.put("Join Status", "Done");
                 } else {
