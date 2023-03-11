@@ -142,7 +142,7 @@ public class LanIntegration extends DeviceIntegration {
     }
 
     @Override
-    public boolean removeIntegrationDevice(String deviceNetworkId) {
+    public boolean removeIntegrationDevice(String deviceNetworkId, boolean force) {
         return true;
     }
 

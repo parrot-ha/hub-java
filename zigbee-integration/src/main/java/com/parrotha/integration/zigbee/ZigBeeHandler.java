@@ -56,6 +56,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.Timer;
@@ -108,6 +109,7 @@ public class ZigBeeHandler implements ZigBeeNetworkStateListener, ZigBeeAnnounce
                 timer = null;
             }
         } else {
+            joinedDevices = new HashMap<>();
             joinMode = true;
             TimerTask task = new TimerTask() {
                 public void run() {
@@ -159,19 +161,36 @@ public class ZigBeeHandler implements ZigBeeNetworkStateListener, ZigBeeAnnounce
         return networkManager.getNode(networkAddress);
     }
 
-    public boolean removeDevice(String deviceNetworkId) {
+    private Set<String> deviceToRemoveList = new HashSet<>();
+
+    public boolean removeDevice(String deviceNetworkId, boolean force) {
         ZigBeeNode node = getNode(HexUtils.hexStringToInt(deviceNetworkId));
         if (node != null) {
             networkManager.leave(node.getNetworkAddress(), node.getIeeeAddress());
-            logger.warn("ZigBee device " + deviceNetworkId + " was removed!");
-            // wait for node left
 
-            //TODO: we will get a node left message, need to process that and send a message back to device service to let it know to remove the device from config file
-            return true;
-        } else {
-            // we don't have the node, so its already removed.
-            return true;
+            if (force) {
+                networkManager.removeNode(node);
+                logger.warn("ZigBee device " + deviceNetworkId + " was removed!");
+            } else {
+                deviceToRemoveList.add(node.getIeeeAddress().toString());
+
+                // wait for node left
+                boolean nodeLeft = false;
+                int waitTime = 0;
+                while (!nodeLeft && waitTime < 10000) {
+                    waitTime += 500;
+                    try {
+                        Thread.sleep(500);
+                    } catch (InterruptedException e) {
+                        throw new RuntimeException(e);
+                    }
+                    nodeLeft = (networkManager.getNode(node.getIeeeAddress()) == null);
+                }
+                return nodeLeft;
+            }
         }
+        // if we don't have the node it's already removed so also return true.
+        return true;
     }
 
     public void startWithReset(boolean resetNetwork) {
@@ -222,7 +241,10 @@ public class ZigBeeHandler implements ZigBeeNetworkStateListener, ZigBeeAnnounce
         } else if (deviceStatus == ZigBeeNodeStatus.DEVICE_LEFT) {
             // device left, remove it
             logger.warn("ZigBee Device Left {}", ieeeAddress.toString());
-            networkManager.removeNode(networkManager.getNode(ieeeAddress));
+            //remove node only if we are removing the device from the ui
+            if (deviceToRemoveList.contains(ieeeAddress.toString())) {
+                networkManager.removeNode(networkManager.getNode(ieeeAddress));
+            }
         }
     }
 

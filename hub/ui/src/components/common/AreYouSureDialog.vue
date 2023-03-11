@@ -7,7 +7,12 @@
     >
       <slot>Delete</slot>
     </button>
-    <div class="modal fade" tabindex="-1" ref="deleteModal" aria-hidden="true">
+    <div
+      class="modal fade"
+      tabindex="-1"
+      ref="areYoutSureModal"
+      aria-hidden="true"
+    >
       <div class="modal-dialog">
         <div class="modal-content">
           <div class="modal-header">
@@ -65,7 +70,7 @@ export default {
     },
   },
   mounted: function () {
-    this.modal = new Modal(this.$refs.deleteModal);
+    this.modal = new Modal(this.$refs.areYoutSureModal);
   },
 };
 </script>

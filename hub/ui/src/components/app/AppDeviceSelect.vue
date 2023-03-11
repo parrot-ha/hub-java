@@ -113,7 +113,6 @@ export default {
       this.$emit("input", this.value);
     },
     deviceSelectClick: function () {
-      console.log("device select");
       fetch(`/api/devices?filter=${this.body.type}`)
         .then((response) => response.json())
         .then((data) => {

@@ -158,7 +158,8 @@ public class DeviceApiHandler extends BaseApiHandler {
         // remove a device
         app.delete("/api/devices/:id", ctx -> {
             String id = ctx.pathParam("id");
-            boolean deviceRemoved = deviceService.removeDevice(id);
+            boolean force = "true".equals(ctx.queryParam("force"));
+            boolean deviceRemoved = deviceService.removeDevice(id, force);
             Map<String, Object> model = new HashMap<>();
             model.put("success", deviceRemoved);
             ctx.status(200);
