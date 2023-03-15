@@ -1,161 +1,207 @@
 <template>
   <div class="container-fluid">
-    <h5>Extensions</h5>
-
-    <ul class="nav nav-tabs">
-      <li class="nav-item">
-        <a
-          :class="'nav-link' + (tab == 'INT' ? ' active' : '')"
-          :aria-current="tab == 'INT'"
-          href="#"
-          @click="tab = 'INT'"
-          >Installed</a
-        >
-      </li>
-      <li class="nav-item">
-        <a
-          :class="'nav-link' + (tab == 'AVL' ? ' active' : '')"
-          :aria-current="tab == 'AVL'"
-          href="#"
-          @click="tab = 'AVL'"
-          >Available</a
-        >
-      </li>
-      <li class="nav-item">
-        <a
-          :class="'nav-link' + (tab == 'LOC' ? ' active' : '')"
-          :aria-current="tab == 'LOC'"
-          href="#"
-          @click="tab = 'LOC'"
-          >Locations</a
-        >
-      </li>
-    </ul>
-    <br />
-    <div class="tab-content">
-      <div v-if="tab == 'INT'">
-        <table class="table">
-          <thead>
-            <tr>
-              <th scope="col" style="width: 15%">Actions</th>
-              <th scope="col" style="width: 20%">Name</th>
-              <th scope="col" style="width: 55%">Description</th>
-              <th scope="col" style="width: 10%">Version</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="extension in installedExtensions" :key="extension.id">
-              <td>
-                <div>
-                  <div class="btn-group">
-                    <are-you-sure-dialog
-                      button-class="btn-sm btn-outline-primary"
-                      title="Delete Extension"
-                      body="Are you sure you want to delete this extension?"
-                      confirm-button="Delete"
-                      @confirm-action="deleteExtension(extension.id)"
-                      ><i class="bi bi-trash"></i
-                    ></are-you-sure-dialog>
-                    <button
-                      v-if="extension.updateAvailable"
-                      type="button"
-                      class="btn btn-sm btn-outline-primary css-tooltip"
-                      @click="updateExtension(extension.id)"
-                      :data-tooltip="
-                        'Update to version ' + extension.updateInfo?.version
-                      "
-                    >
-                      <i class="bi bi-cloud-download"></i>
-                    </button>
-                  </div>
-                </div>
-              </td>
-              <td>
-                {{ extension.name }}
-              </td>
-              <td>{{ extension.description }}</td>
-              <td>{{ extension.version }}</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-      <div v-else-if="tab == 'AVL'">
-        <table class="table">
-          <thead>
-            <tr>
-              <th scope="col" style="width: 5%">Actions</th>
-              <th scope="col" style="width: 20%">Name</th>
-              <th scope="col" style="width: 65%">Description</th>
-              <th scope="col" stype="width: 10%">Version</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="extension in availableExtensions" :key="extension.id">
-              <td>
+    <div class="row">
+      <div class="col">
+        <div class="card">
+          <div class="card-body">
+            <div
+              class="card-title d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3"
+            >
+              <h5>Extensions</h5>
+              <div class="btn-toolbar mb-2 mb-md-0">
                 <button
                   type="button"
-                  class="btn btn-sm btn-outline-primary"
-                  @click="downloadExtension(extension.id)"
+                  class="btn btn-sm btn-outline-secondary css-tooltip"
+                  @click="loadExtensions(true)"
                 >
-                  <i class="bi bi-cloud-download"></i>
+                  Check For Updates
                 </button>
-              </td>
-              <td>{{ extension.name }}</td>
-              <td>{{ extension.description }}</td>
-              <td>{{ extension.version }}</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-      <div v-else-if="tab == 'LOC'">
-        <div class="row g-3">
-          <div class="col-auto me-auto"></div>
-          <div class="col-auto">
-            <extension-location-edit
-              @location-saved="locationsUpdated"
-            ></extension-location-edit>
+              </div>
+            </div>
+
+            <div class="card-text">
+              <div
+                class="alert alert-warning alert-dismissible fade show"
+                role="alert"
+                v-for="(value, key) in extensionStatus"
+                :key="key"
+              >
+                {{ value }}
+                <button
+                  type="button"
+                  class="btn-close"
+                  data-bs-dismiss="alert"
+                  aria-label="Close"
+                ></button>
+              </div>
+              <ul class="nav nav-tabs">
+                <li class="nav-item">
+                  <a
+                    :class="'nav-link' + (tab == 'INT' ? ' active' : '')"
+                    :aria-current="tab == 'INT'"
+                    href="#"
+                    @click="tab = 'INT'"
+                    >Installed</a
+                  >
+                </li>
+                <li class="nav-item">
+                  <a
+                    :class="'nav-link' + (tab == 'AVL' ? ' active' : '')"
+                    :aria-current="tab == 'AVL'"
+                    href="#"
+                    @click="tab = 'AVL'"
+                    >Available</a
+                  >
+                </li>
+                <li class="nav-item">
+                  <a
+                    :class="'nav-link' + (tab == 'LOC' ? ' active' : '')"
+                    :aria-current="tab == 'LOC'"
+                    href="#"
+                    @click="tab = 'LOC'"
+                    >Locations</a
+                  >
+                </li>
+              </ul>
+              <br />
+              <div class="tab-content">
+                <div v-if="tab == 'INT'">
+                  <table class="table">
+                    <thead>
+                      <tr>
+                        <th scope="col" style="width: 15%">Actions</th>
+                        <th scope="col" style="width: 20%">Name</th>
+                        <th scope="col" style="width: 55%">Description</th>
+                        <th scope="col" style="width: 10%">Version</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr
+                        v-for="extension in installedExtensions"
+                        :key="extension.id"
+                      >
+                        <td>
+                          <div>
+                            <div class="btn-group">
+                              <are-you-sure-dialog
+                                button-class="btn-sm btn-outline-primary"
+                                title="Delete Extension"
+                                body="Are you sure you want to delete this extension?"
+                                confirm-button="Delete"
+                                @confirm-action="deleteExtension(extension.id)"
+                                ><i class="bi bi-trash"></i
+                              ></are-you-sure-dialog>
+                              <button
+                                v-if="extension.updateAvailable"
+                                type="button"
+                                class="btn btn-sm btn-outline-primary css-tooltip"
+                                @click="updateExtension(extension.id)"
+                                :data-tooltip="
+                                  'Update to version ' +
+                                  extension.updateInfo?.version
+                                "
+                              >
+                                <i class="bi bi-cloud-download"></i>
+                              </button>
+                            </div>
+                          </div>
+                        </td>
+                        <td>
+                          {{ extension.name }}
+                        </td>
+                        <td>{{ extension.description }}</td>
+                        <td>{{ extension.version }}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+                <div v-else-if="tab == 'AVL'">
+                  <table class="table">
+                    <thead>
+                      <tr>
+                        <th scope="col" style="width: 5%">Actions</th>
+                        <th scope="col" style="width: 20%">Name</th>
+                        <th scope="col" style="width: 65%">Description</th>
+                        <th scope="col" stype="width: 10%">Version</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr
+                        v-for="extension in availableExtensions"
+                        :key="extension.id"
+                      >
+                        <td>
+                          <button
+                            type="button"
+                            class="btn btn-sm btn-outline-primary"
+                            @click="downloadExtension(extension.id)"
+                          >
+                            <i class="bi bi-cloud-download"></i>
+                          </button>
+                        </td>
+                        <td>{{ extension.name }}</td>
+                        <td>{{ extension.description }}</td>
+                        <td>{{ extension.version }}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+                <div v-else-if="tab == 'LOC'">
+                  <div class="row g-3">
+                    <div class="col-auto me-auto"></div>
+                    <div class="col-auto">
+                      <extension-location-edit
+                        @location-saved="locationsUpdated"
+                      ></extension-location-edit>
+                    </div>
+                  </div>
+                  <table class="table">
+                    <thead>
+                      <tr>
+                        <th>Name</th>
+                        <th>Type</th>
+                        <th>Location</th>
+                        <th>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr v-for="location in locations" :key="location.id">
+                        <td>
+                          {{ location.name }}
+                        </td>
+                        <td>{{ location.type }}</td>
+                        <td>{{ location.location }}</td>
+                        <td>
+                          <div class="btn-group">
+                            <are-you-sure-dialog
+                              button-class="btn-sm btn-outline-primary"
+                              title="Delete Extension Location"
+                              body="Are you sure you want to delete this extension location?"
+                              confirm-button="Delete"
+                              @confirm-action="
+                                deleteExtensionLocation(location.id)
+                              "
+                              ><i class="bi bi-trash"></i
+                            ></are-you-sure-dialog>
+                            <extension-location-edit
+                              button-class="btn-sm btn-outline-primary"
+                              :id="location.id"
+                              :name="location.name"
+                              :type="location.type"
+                              :location="location.location"
+                              @location-saved="locationsUpdated"
+                              ><i class="bi bi-pencil"></i
+                            ></extension-location-edit>
+                          </div>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
-        <table class="table">
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Type</th>
-              <th>Location</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="location in locations" :key="location.id">
-              <td>
-                {{ location.name }}
-              </td>
-              <td>{{ location.type }}</td>
-              <td>{{ location.location }}</td>
-              <td>
-                <div class="btn-group">
-                  <are-you-sure-dialog
-                    button-class="btn-sm btn-outline-primary"
-                    title="Delete Extension Location"
-                    body="Are you sure you want to delete this extension location?"
-                    confirm-button="Delete"
-                    @confirm-action="deleteExtensionLocation(location.id)"
-                    ><i class="bi bi-trash"></i
-                  ></are-you-sure-dialog>
-                  <extension-location-edit
-                    button-class="btn-sm btn-outline-primary"
-                    :id="location.id"
-                    :name="location.name"
-                    :type="location.type"
-                    :location="location.location"
-                    @location-saved="locationsUpdated"
-                    ><i class="bi bi-pencil"></i
-                  ></extension-location-edit>
-                </div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
       </div>
     </div>
   </div>
@@ -178,6 +224,7 @@ export default {
       tab: "INT",
       extensions: [],
       locations: [],
+      extensionStatus: {},
     };
   },
   components: {
@@ -221,26 +268,50 @@ export default {
 
     updateExtension: function (extensionId) {
       var url = `/api/extensions/${extensionId}?action=update`;
-      //TODO: handle response
+      var extension = this.extensions?.filter(
+        (extension) => extension.id == extensionId
+      );
+      this.extensionStatus.extensionId =
+        "Updating extension " + extension[0].name;
       fetch(url, {
         method: "POST",
         body: null,
       })
         .then(handleErrors)
-        .then(() => {
+        .then((response) => response.json())
+        .then((data) => {
+          if (data.success) {
+            this.extensionStatus.extensionId =
+              "Done updating extension " + extension[0].name;
+          } else {
+            this.extensionStatus.extensionId =
+              "Error while updating extension " + extension[0].name;
+          }
           this.loadExtensions(true);
         });
     },
 
     downloadExtension: function (extensionId) {
       var url = `/api/extensions/${extensionId}?action=download`;
-      //TODO: handle response
+      var extension = this.extensions?.filter(
+        (extension) => extension.id == extensionId
+      );
+      this.extensionStatus.extensionId =
+        "Installing extension " + extension[0].name;
       fetch(url, {
         method: "POST",
         body: null,
       })
         .then(handleErrors)
-        .then(() => {
+        .then((response) => response.json())
+        .then((data) => {
+          if (data.success) {
+            this.extensionStatus.extensionId =
+              "Done installing extension " + extension[0].name;
+          } else {
+            this.extensionStatus.extensionId =
+              "Error while installing extension " + extension[0].name;
+          }
           this.loadExtensions(true);
         });
     },
