@@ -18,9 +18,12 @@
  */
 package com.parrotha.internal.app;
 
+import com.parrotha.exception.AutomationAppInUseException;
+import com.parrotha.exception.DeviceHandlerInUseException;
 import com.parrotha.exception.NotFoundException;
 import com.parrotha.internal.ChangeTrackingMap;
 import com.parrotha.internal.Main;
+import com.parrotha.internal.device.Device;
 import com.parrotha.internal.extension.ExtensionService;
 import com.parrotha.internal.extension.ExtensionState;
 import com.parrotha.internal.extension.ExtensionStateListener;
@@ -254,6 +257,10 @@ public class AutomationAppService implements ExtensionStateListener {
 
     public AutomationApp getAutomationAppById(String id) {
         return automationAppDataStore.getAutomationAppById(id);
+    }
+
+    public Collection<InstalledAutomationApp> getInstalledAutomationAppsByAutomationApp(String automationAppId) {
+        return automationAppDataStore.getInstalledAutomationAppsByAutomationApp(automationAppId);
     }
 
     /**
@@ -532,6 +539,14 @@ public class AutomationAppService implements ExtensionStateListener {
         return automationAppDataStore.updateAutomationAppSourceCode(id, sourceCode);
     }
 
+    public boolean removeAutomationApp(String id) {
+        Collection<InstalledAutomationApp> automationAppsInUse = getInstalledAutomationAppsByAutomationApp(id);
+        if(automationAppsInUse.size() > 0) {
+            throw new AutomationAppInUseException("Automation App in use", automationAppsInUse);
+        } else {
+            return automationAppDataStore.deleteAutomationApp(id);
+        }
+    }
     public String addAutomationAppSourceCode(String sourceCode) {
         Map definition = extractAutomationAppDefinition(sourceCode);
         if (definition == null) {

@@ -23,7 +23,7 @@
         <code-editor
           :source="automationApp.sourceCode"
           title="Edit"
-          :savePending="savePending"
+          :savePending="updatePending"
           :editorHeight="editorHeight"
           @saveCodeButtonClicked="saveCode"
         >
@@ -38,6 +38,13 @@
           >
             App Settings
           </router-link>
+          <are-you-sure-dialog
+            title="Are you sure?"
+            body="Are you sure you want to delete this automation app code?"
+            confirm-button="Delete"
+            :buttonDisabled="updatePending"
+            @confirm-action="deleteCode"
+          ></are-you-sure-dialog>
         </code-editor>
       </div>
     </div>
@@ -53,15 +60,17 @@ function handleErrors(response) {
 
 import CodeEditor from "@/components/common/CodeEditor.vue";
 import _debounce from "lodash/debounce";
+import AreYouSureDialog from "@/components/common/AreYouSureDialog.vue";
 
 export default {
   name: "AutomationAppCodeEdit",
   components: {
     CodeEditor,
+    AreYouSureDialog,
   },
   data() {
     return {
-      savePending: false,
+      updatePending: false,
       alertMessage: null,
       aaId: "0",
       automationApp: { sourceCode: "" },
@@ -75,7 +84,7 @@ export default {
   },
   methods: {
     saveCode(updatedCode) {
-      this.savePending = true;
+      this.updatePending = true;
       this.alertMessage = null;
       this.automationApp.sourceCode = updatedCode;
 
@@ -88,13 +97,37 @@ export default {
           return response.json();
         })
         .then((data) => {
-          this.savePending = false;
+          this.updatePending = false;
           if (!data.success) {
             this.alertMessage = data.message;
           }
         })
         .catch((error) => {
-          this.savePending = false;
+          this.updatePending = false;
+          console.log(error);
+        });
+    },
+    deleteCode() {
+      this.updatePending = true;
+      this.alertMessage = null;
+
+      fetch(`/api/automation-apps/${this.aaId}`, {
+        method: "DELETE",
+      })
+        .then(handleErrors)
+        .then((response) => {
+          return response.json();
+        })
+        .then((data) => {
+          this.updatePending = false;
+          if (!data.success) {
+            this.alertMessage = data.message;
+          } else {
+            this.$router.push("/aa-code");
+          }
+        })
+        .catch((error) => {
+          this.updatePending = false;
           console.log(error);
         });
     },

@@ -18,6 +18,8 @@
  */
 package com.parrotha.internal.app;
 
+import com.parrotha.internal.device.Device;
+
 import java.io.InputStream;
 import java.util.Collection;
 import java.util.List;
@@ -43,6 +45,8 @@ public interface AutomationAppDataStore {
     AutomationApp getAutomationAppById(String id);
 
     String getAutomationAppIdByClientId(String clientId);
+
+    Collection<InstalledAutomationApp> getInstalledAutomationAppsByAutomationApp(String automationAppId);
 
     boolean updateAutomationApp(AutomationApp automationApp);
 

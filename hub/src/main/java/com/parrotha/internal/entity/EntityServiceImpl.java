@@ -1247,6 +1247,14 @@ public class EntityServiceImpl implements EntityService {
         return false;
     }
 
+    public boolean removeAutomationApp(String id) {
+        if(automationAppService.removeAutomationApp(id)) {
+            clearAutomationAppScript(id);
+            return true;
+        }
+        return false;
+    }
+
     public boolean updateDeviceHandlerSourceCode(String id, String sourceCode) {
         if (deviceService.updateDeviceHandlerSourceCode(id, sourceCode)) {
             reprocessDeviceHandler(id);
