@@ -19,6 +19,7 @@
 package com.parrotha.internal.device;
 
 import com.parrotha.app.EventWrapper;
+import com.parrotha.exception.DeviceHandlerInUseException;
 import com.parrotha.internal.BaseApiHandler;
 import com.parrotha.internal.entity.EntityService;
 import groovy.json.JsonBuilder;
@@ -424,14 +425,18 @@ public class DeviceApiHandler extends BaseApiHandler {
         app.get("/api/device-handlers/:id/source", ctx -> {
             String id = ctx.pathParam("id");
             String sourceCode = deviceService.getDeviceHandlerSourceCode(id);
-            Map<String, String> response = new HashMap<>();
-            response.put("id", id);
-            response.put("version", "1");
-            response.put("status", "published");
-            response.put("sourceCode", sourceCode);
-            ctx.status(200);
-            ctx.contentType("application/json");
-            ctx.result(new JsonBuilder(response).toString());
+            if (sourceCode == null) {
+                ctx.status(404);
+            } else {
+                Map<String, String> response = new HashMap<>();
+                response.put("id", id);
+                response.put("version", "1");
+                response.put("status", "published");
+                response.put("sourceCode", sourceCode);
+                ctx.status(200);
+                ctx.contentType("application/json");
+                ctx.result(new JsonBuilder(response).toString());
+            }
         });
 
         app.put("/api/device-handlers/:id/source", ctx -> {
@@ -448,6 +453,25 @@ public class DeviceApiHandler extends BaseApiHandler {
                 ctx.status(200);
                 ctx.contentType("application/json");
                 ctx.result(new JsonBuilder(response).toString());
+            }
+        });
+
+        app.delete("/api/device-handlers/:id/source", ctx -> {
+            String id = ctx.pathParam("id");
+            try {
+                boolean response = entityService.removeDeviceHandler(id);
+                buildStandardJsonResponse(ctx, response);
+            } catch (RuntimeException e) {
+                if (e instanceof DeviceHandlerInUseException) {
+                    DeviceHandlerInUseException dhiue = (DeviceHandlerInUseException) e;
+                    StringBuilder sb = new StringBuilder("Cannot delete device handler, it is in use by the following devices: ");
+                    for (Device device : dhiue.getDevices()) {
+                        sb.append(device.getDisplayName()).append(", ");
+                    }
+                    buildStandardJsonResponse(ctx, 200, false, sb.toString().substring(0, sb.length() - 2));
+                } else {
+                    buildStandardJsonResponse(ctx, 200, false, e.getMessage());
+                }
             }
         });
 

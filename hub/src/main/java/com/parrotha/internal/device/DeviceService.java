@@ -24,6 +24,7 @@ import com.parrotha.device.HubAction;
 import com.parrotha.device.HubMultiAction;
 import com.parrotha.device.HubResponse;
 import com.parrotha.device.Protocol;
+import com.parrotha.exception.DeviceHandlerInUseException;
 import com.parrotha.internal.ChangeTrackingMap;
 import com.parrotha.internal.Main;
 import com.parrotha.internal.extension.ExtensionService;
@@ -408,6 +409,10 @@ public class DeviceService implements ExtensionStateListener {
         return deviceDataStore.getDevicesByCapability(capability);
     }
 
+    public Collection<Device> getDevicesByDeviceHandler(String deviceHandlerId) {
+        return deviceDataStore.getDevicesByDeviceHandler(deviceHandlerId);
+    }
+
     public Device getDeviceById(String id) {
         return deviceDataStore.getDeviceById(id);
     }
@@ -753,6 +758,15 @@ public class DeviceService implements ExtensionStateListener {
     public boolean updateDeviceHandlerSourceCode(String id, String sourceCode) {
         extractDeviceHandlerMetadata(sourceCode);
         return deviceDataStore.updateDeviceHandlerSourceCode(id, sourceCode);
+    }
+
+    public boolean removeDeviceHandler(String id) {
+        Collection<Device> devicesInUse = getDevicesByDeviceHandler(id);
+        if(devicesInUse.size() > 0) {
+            throw new DeviceHandlerInUseException("Device Handler in use", devicesInUse);
+        } else {
+            return deviceDataStore.deleteDeviceHandler(id);
+        }
     }
 
     public String addDeviceHandlerSourceCode(String sourceCode) {

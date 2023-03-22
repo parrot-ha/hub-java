@@ -24,10 +24,18 @@
           :source="deviceHandler.sourceCode"
           title="Edit"
           buttonName="Save"
-          :savePending="savePending"
+          :savePending="updatePending"
           :editorHeight="editorHeight"
           @saveCodeButtonClicked="saveCode"
-        ></code-editor>
+        >
+          <are-you-sure-dialog
+            title="Are you sure?"
+            body="Are you sure you want to delete this device handler?"
+            confirm-button="Delete"
+            :buttonDisabled="updatePending"
+            @confirm-action="deleteCode"
+          ></are-you-sure-dialog>
+        </code-editor>
       </div>
     </div>
   </div>
@@ -35,6 +43,7 @@
 <script>
 import CodeEditor from "@/components/common/CodeEditor.vue";
 import _debounce from "lodash/debounce";
+import AreYouSureDialog from "@/components/common/AreYouSureDialog.vue";
 
 function handleErrors(response) {
   if (!response.ok) {
@@ -47,10 +56,11 @@ export default {
   name: "DeviceHandlerCodeEdit",
   components: {
     CodeEditor,
+    AreYouSureDialog,
   },
   data() {
     return {
-      savePending: false,
+      updatePending: false,
       alertMessage: null,
       dhId: "",
       deviceHandler: { sourceCode: "" },
@@ -64,7 +74,7 @@ export default {
   },
   methods: {
     saveCode(updatedCode) {
-      this.savePending = true;
+      this.updatePending = true;
       this.alertMessage = null;
       this.deviceHandler.sourceCode = updatedCode;
 
@@ -77,13 +87,37 @@ export default {
           return response.json();
         })
         .then((data) => {
-          this.savePending = false;
+          this.updatePending = false;
           if (!data.success) {
             this.alertMessage = data.message;
           }
         })
         .catch((error) => {
-          this.savePending = false;
+          this.updatePending = false;
+          console.log(error);
+        });
+    },
+    deleteCode() {
+      this.updatePending = true;
+      this.alertMessage = null;
+
+      fetch(`/api/device-handlers/${this.dhId}/source`, {
+        method: "DELETE",
+      })
+        .then(handleErrors)
+        .then((response) => {
+          return response.json();
+        })
+        .then((data) => {
+          this.updatePending = false;
+          if (!data.success) {
+            this.alertMessage = data.message;
+          } else {
+            this.$router.push("/dh-code");
+          }
+        })
+        .catch((error) => {
+          this.updatePending = false;
           console.log(error);
         });
     },

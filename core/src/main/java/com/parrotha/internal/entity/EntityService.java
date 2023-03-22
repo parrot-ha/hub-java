@@ -18,7 +18,6 @@
  */
 package com.parrotha.internal.entity;
 
-import groovy.lang.Script;
 import com.parrotha.api.Response;
 import com.parrotha.app.DeviceWrapper;
 import com.parrotha.app.EventWrapper;
@@ -26,6 +25,7 @@ import com.parrotha.exception.NotFoundException;
 import com.parrotha.internal.app.InstalledAutomationApp;
 import com.parrotha.internal.device.Device;
 import com.parrotha.internal.system.OAuthToken;
+import groovy.lang.Script;
 
 import java.util.Collection;
 import java.util.Date;
@@ -121,4 +121,6 @@ public interface EntityService {
     boolean updateAutomationAppSourceCode(String id, String sourceCode);
 
     boolean updateDeviceHandlerSourceCode(String id, String sourceCode);
+
+    boolean removeDeviceHandler(String id);
 }

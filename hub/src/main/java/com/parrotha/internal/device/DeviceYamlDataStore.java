@@ -49,6 +49,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 public class DeviceYamlDataStore implements DeviceDataStore {
     private static final Logger logger = LoggerFactory.getLogger(DeviceYamlDataStore.class);
@@ -83,6 +84,14 @@ public class DeviceYamlDataStore implements DeviceDataStore {
             }
         }
         return devices;
+    }
+
+    @Override
+    public Collection<Device> getDevicesByDeviceHandler(String deviceHandlerId) {
+        if (StringUtils.isBlank(deviceHandlerId)) {
+            return new ArrayList<>();
+        }
+        return getAllDevices().stream().filter(device -> deviceHandlerId.equals(device.getDeviceHandlerId())).collect(Collectors.toSet());
     }
 
     @Override

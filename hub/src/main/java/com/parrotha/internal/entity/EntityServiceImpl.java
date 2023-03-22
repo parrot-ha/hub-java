@@ -1255,4 +1255,13 @@ public class EntityServiceImpl implements EntityService {
         }
         return false;
     }
+
+    @Override
+    public boolean removeDeviceHandler(String id) {
+        if(deviceService.removeDeviceHandler(id)) {
+            clearDeviceHandlerScript(id);
+            return true;
+        }
+        return false;
+    }
 }
