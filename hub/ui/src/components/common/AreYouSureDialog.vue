@@ -3,6 +3,7 @@
     <button
       type="button"
       :class="'btn ' + buttonClassComputed"
+      :disabled="buttonDisabled"
       @click="modal.show()"
     >
       <slot>Delete</slot>
@@ -58,7 +59,7 @@
 import { Modal } from "bootstrap";
 export default {
   name: "AreYouSureDialog",
-  props: ["buttonClass", "title", "body", "confirmButton"],
+  props: ["buttonClass", "buttonDisabled", "title", "body", "confirmButton"],
   emits: ["confirmAction"],
   data() {
     return {};
