@@ -120,6 +120,8 @@ public interface EntityService {
 
     boolean updateAutomationAppSourceCode(String id, String sourceCode);
 
+    boolean removeAutomationApp(String id);
+
     boolean updateDeviceHandlerSourceCode(String id, String sourceCode);
 
     boolean removeDeviceHandler(String id);

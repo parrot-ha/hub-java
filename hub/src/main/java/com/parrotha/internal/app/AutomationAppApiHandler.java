@@ -19,7 +19,10 @@
 package com.parrotha.internal.app;
 
 import com.parrotha.api.Response;
+import com.parrotha.exception.AutomationAppInUseException;
+import com.parrotha.exception.DeviceHandlerInUseException;
 import com.parrotha.internal.BaseApiHandler;
+import com.parrotha.internal.device.Device;
 import com.parrotha.internal.entity.EntityService;
 import com.parrotha.internal.hub.ScheduleService;
 import groovy.json.JsonBuilder;
@@ -173,6 +176,25 @@ public class AutomationAppApiHandler extends BaseApiHandler {
                 ctx.status(200);
                 ctx.contentType("application/json");
                 ctx.result(new JsonBuilder(response).toString());
+            }
+        });
+
+        app.delete("/api/automation-apps/:id", ctx -> {
+            String id = ctx.pathParam("id");
+            try {
+                boolean response = entityService.removeAutomationApp(id);
+                buildStandardJsonResponse(ctx, response);
+            } catch (RuntimeException e) {
+                if (e instanceof AutomationAppInUseException) {
+                    AutomationAppInUseException automationAppInUseException = (AutomationAppInUseException) e;
+                    StringBuilder sb = new StringBuilder("Cannot delete automation app, it is in use by the following installed automation apps: ");
+                    for (InstalledAutomationApp iaa : automationAppInUseException.getInstalledAutomationApps()) {
+                        sb.append(iaa.getDisplayName()).append(", ");
+                    }
+                    buildStandardJsonResponse(ctx, 200, false, sb.toString().substring(0, sb.length() - 2));
+                } else {
+                    buildStandardJsonResponse(ctx, 200, false, e.getMessage());
+                }
             }
         });
 

@@ -456,7 +456,7 @@ public class DeviceApiHandler extends BaseApiHandler {
             }
         });
 
-        app.delete("/api/device-handlers/:id/source", ctx -> {
+        app.delete("/api/device-handlers/:id", ctx -> {
             String id = ctx.pathParam("id");
             try {
                 boolean response = entityService.removeDeviceHandler(id);

@@ -101,7 +101,7 @@ export default {
       this.updatePending = true;
       this.alertMessage = null;
 
-      fetch(`/api/device-handlers/${this.dhId}/source`, {
+      fetch(`/api/device-handlers/${this.dhId}`, {
         method: "DELETE",
       })
         .then(handleErrors)

@@ -304,6 +304,14 @@ public class AutomationAppYamlDataStore implements AutomationAppDataStore {
     }
 
     @Override
+    public Collection<InstalledAutomationApp> getInstalledAutomationAppsByAutomationApp(String automationAppId) {
+        if (StringUtils.isBlank(automationAppId)) {
+            return new ArrayList<>();
+        }
+        return getAllInstalledAutomationApps().stream().filter(iaa -> automationAppId.equals(iaa.getAutomationAppId())).collect(Collectors.toSet());
+    }
+
+    @Override
     public boolean updateAutomationApp(AutomationApp automationApp) {
         getAutomationAppMap().put(automationApp.getId(), automationApp);
         saveAutomationApps();
