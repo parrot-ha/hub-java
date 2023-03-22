@@ -53,7 +53,7 @@
               ></button>
             </div>
             <div class="modal-body">
-              <div v-for="deviceItem in deviceList" :key="deviceItem.id">
+              <div v-for="deviceItem in sortedDeviceList" :key="deviceItem.id">
                 <div class="form-check">
                   <input
                     v-model="selectedDevices"
@@ -107,6 +107,27 @@ export default {
       selectedDevices: [],
       modalVisible: false,
     };
+  },
+  computed: {
+    sortedDeviceList: function () {
+      if (this.deviceList != null && this.deviceList.length > 0) {
+        let sortedDevices = [...this.deviceList].sort((a, b) => {
+          const nameA = a.displayName.toUpperCase();
+          const nameB = b.displayName.toUpperCase();
+          if (nameA < nameB) {
+            return -1;
+          }
+          if (nameA > nameB) {
+            return 1;
+          }
+
+          return 0;
+        });
+        return sortedDevices;
+      } else {
+        return this.deviceList;
+      }
+    },
   },
   methods: {
     closeDialog: function () {
