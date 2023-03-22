@@ -184,6 +184,11 @@
                   Add
                 </button>
               </div>
+              <div class="col-auto">
+                <router-link class="btn btn-danger" :to="{ name: 'Devices' }"
+                  >Cancel</router-link
+                >
+              </div>
             </div>
           </div>
         </div>
@@ -217,26 +222,44 @@ export default {
   computed: {
     filteredDevices: function () {
       if (this.dhFiltering && this.device.integrationId != null) {
-        console.log("filtering");
         var integration = this.integrations.find(
           (i) => i.id == this.device.integrationId
         );
         if (integration.tags != null) {
-          return this.deviceHandlers.filter(
+          return this.sortDeviceHandlers(this.deviceHandlers).filter(
             (dh) =>
               (dh.tags != null &&
                 integration.tags.some((t) => dh.tags.indexOf(t) >= 0)) ||
               this.device.deviceHandlerId == dh.id
           );
         } else {
-          return this.deviceHandlers;
+          return this.sortDeviceHandlers(this.deviceHandlers);
         }
       } else {
-        return this.deviceHandlers;
+        return this.sortDeviceHandlers(this.deviceHandlers);
       }
     },
   },
   methods: {
+    sortDeviceHandlers: function (unsortedDeviceHandlers) {
+      if (unsortedDeviceHandlers != null && unsortedDeviceHandlers.length > 0) {
+        let sortedDeviceHandlers = [...unsortedDeviceHandlers].sort((a, b) => {
+          const nameA = a.name.toUpperCase();
+          const nameB = b.name.toUpperCase();
+          if (nameA < nameB) {
+            return -1;
+          }
+          if (nameA > nameB) {
+            return 1;
+          }
+
+          return 0;
+        });
+        return sortedDeviceHandlers;
+      } else {
+        return unsortedDeviceHandlers;
+      }
+    },
     updatePreferenceLayout: function () {
       // TODO: validate the deviceHandlerId value is valid before calling
       fetch(

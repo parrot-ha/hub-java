@@ -354,21 +354,40 @@ export default {
           (i) => i.id == this.device.integrationId
         );
         if (integration.tags != null) {
-          return this.deviceHandlers.filter(
+          return this.sortDeviceHandlers(this.deviceHandlers).filter(
             (dh) =>
               (dh.tags != null &&
                 integration.tags.some((t) => dh.tags.indexOf(t) >= 0)) ||
               this.device.deviceHandlerId == dh.id
           );
         } else {
-          return this.deviceHandlers;
+          return this.sortDeviceHandlers(this.deviceHandlers);
         }
       } else {
-        return this.deviceHandlers;
+        return this.sortDeviceHandlers(this.deviceHandlers);
       }
     },
   },
   methods: {
+    sortDeviceHandlers: function (unsortedDeviceHandlers) {
+      if (unsortedDeviceHandlers != null && unsortedDeviceHandlers.length > 0) {
+        let sortedDeviceHandlers = [...unsortedDeviceHandlers].sort((a, b) => {
+          const nameA = a.name.toUpperCase();
+          const nameB = b.name.toUpperCase();
+          if (nameA < nameB) {
+            return -1;
+          }
+          if (nameA > nameB) {
+            return 1;
+          }
+
+          return 0;
+        });
+        return sortedDeviceHandlers;
+      } else {
+        return unsortedDeviceHandlers;
+      }
+    },
     updatePreferenceLayout: function () {
       fetch(`/api/devices/${this.deviceId}/preferences-layout`)
         .then((response) => {
