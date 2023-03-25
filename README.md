@@ -1,14 +1,15 @@
 # hub
 Smart home hub that implements the same api as SmartThings
 
-This is a very rough first pass, more details need to be implemented, and the UI needs to be fully built, it is just a POC at this point.
+The project started out as a POC but it is now functional and has an extension system for adding additional functionality.
+It could use some help with documentation and testing at this point as well as any missing functionality requests or implementations.
 
-This project is under active development and will most likely see multiple breaking changes as it matures.
+This project is under active development and will possibly see breaking changes as it matures, however every care will be taken to avoid this and perform safe updates.
 
 Requirements:
 - Java 11
 - Ember based zigbee stick (ie Nortek HUSBZB-1) if you want to control zigbee devices
-- Z/IP Gateway and Z-Wave Bridge Controller stick (ie UZB-7) if you want to control z-wave devices
+- Z/IP Gateway and Z-Wave Bridge Controller stick (ie UZB-7) or ZWave JS Server and any ZWave controller stick (ie the above mentioned HUSBZB-1) if you want to control z-wave devices
 
 ## Installing on a Raspberry Pi (or another compatible linux system)
 https://github.com/parrot-ha/scripts/blob/main/rpi/README.md
@@ -19,7 +20,7 @@ https://github.com/parrot-ha/scripts/blob/main/rpi/README.md
 3. run ```./gradlew build``` in root directory
 4. Distribution file will be in hub/build/distributions
 
-## Running:
+## Running from sourcecode:
 
 1. Compile code (see above)
 2. Create a directory called deviceHandlers and place your device handler groovy code there.  See the devicehandlers repository for examples.
