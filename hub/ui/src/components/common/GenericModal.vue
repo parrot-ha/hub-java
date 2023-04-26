@@ -15,20 +15,28 @@
           <h1 class="modal-title fs-5">
             {{ title }}
           </h1>
-          <button
-            type="button"
-            class="btn-close"
-            @click="modal.hide()"
-            aria-label="Close"
-          ></button>
+          <slot name="closeSlot">
+            <button
+              type="button"
+              class="btn-close"
+              @click="modal.hide()"
+              aria-label="Close"
+            ></button>
+          </slot>
         </div>
         <div class="modal-body">
           <slot name="content"></slot>
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" @click="modal.hide()">
-            Cancel
-          </button>
+          <slot name="cancelSlot"
+            ><button
+              type="button"
+              class="btn btn-secondary"
+              @click="modal.hide()"
+            >
+              Cancel
+            </button></slot
+          >
           <slot name="buttonSlot"></slot>
         </div>
       </div>

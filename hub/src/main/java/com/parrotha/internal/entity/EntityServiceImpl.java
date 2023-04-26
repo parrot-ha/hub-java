@@ -96,20 +96,6 @@ public class EntityServiceImpl implements EntityService {
         this.integrationRegistry = integrationRegistry;
     }
 
-    public boolean removeDevice(String id) {
-        runDeviceMethod(id, "uninstalled");
-        boolean deviceRemoved = deviceService.removeDevice(id);
-        if (deviceRemoved) {
-            // remove device from subscriptions
-            eventService.removeSubscriptionsForDevice(id);
-            // TODO: remove device from automation apps
-
-            return true;
-        }
-
-        return false;
-    }
-
     @Override
     public void clearDeviceHandlerScripts() {
         deviceHandlerScripts.clear();
@@ -1248,7 +1234,7 @@ public class EntityServiceImpl implements EntityService {
     }
 
     public boolean removeAutomationApp(String id) {
-        if(automationAppService.removeAutomationApp(id)) {
+        if (automationAppService.removeAutomationApp(id)) {
             clearAutomationAppScript(id);
             return true;
         }
@@ -1266,7 +1252,7 @@ public class EntityServiceImpl implements EntityService {
 
     @Override
     public boolean removeDeviceHandler(String id) {
-        if(deviceService.removeDeviceHandler(id)) {
+        if (deviceService.removeDeviceHandler(id)) {
             clearDeviceHandlerScript(id);
             return true;
         }

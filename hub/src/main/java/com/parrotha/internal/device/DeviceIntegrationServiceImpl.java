@@ -33,8 +33,10 @@ public class DeviceIntegrationServiceImpl implements DeviceIntegrationService {
     }
 
     @Override
-    public String addDevice(String integrationId, String deviceHandlerId, String deviceName, String deviceNetworkId, Map<String, Object> deviceData, Map<String, String> additionalIntegrationParameters) {
-        String deviceId = deviceService.addDevice(integrationId, deviceHandlerId, deviceName, deviceNetworkId, deviceData, additionalIntegrationParameters);
+    public String addDevice(String integrationId, String deviceHandlerId, String deviceName, String deviceNetworkId, Map<String, Object> deviceData,
+                            Map<String, String> additionalIntegrationParameters) {
+        String deviceId = deviceService.addDevice(integrationId, deviceHandlerId, deviceName, deviceNetworkId, deviceData,
+                additionalIntegrationParameters);
         entityService.runDeviceMethod(deviceId, "installed");
         return deviceId;
     }
@@ -53,11 +55,6 @@ public class DeviceIntegrationServiceImpl implements DeviceIntegrationService {
                 existingDeviceNetworkId,
                 existingIntegrationParameters,
                 updatedDeviceNetworkId);
-    }
-
-    @Override
-    public void runDeviceMethodByDNI(String integrationId, String deviceNetworkId, String methodName, Object... args) {
-        entityService.runDeviceMethodByDNI(integrationId, deviceNetworkId, methodName, args);
     }
 
     @Override

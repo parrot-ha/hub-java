@@ -30,6 +30,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Future;
 
 public class IntegrationRegistry {
     private static final Logger logger = LoggerFactory.getLogger(IntegrationRegistry.class);
@@ -157,9 +159,23 @@ public class IntegrationRegistry {
             }
         } else {
             logger.warn("Unknown integration: " + integrationId);
+            return true;
         }
-        return false;
     }
 
-
+    public Future<Boolean> removeDeviceAsync(String integrationId, String deviceNetworkId, boolean force) {
+        DeviceIntegration deviceIntegration = getDeviceIntegrationById(integrationId);
+        if (deviceIntegration != null) {
+            try {
+                return deviceIntegration.removeIntegrationDeviceAsync(deviceNetworkId, force);
+            } catch (AbstractMethodError ame) {
+                boolean removeDeviceResult = removeDevice(integrationId, deviceNetworkId, force);
+                return CompletableFuture.completedFuture(removeDeviceResult);
+            }
+        } else {
+            logger.warn("Unknown integration: " + integrationId);
+            // if integration does not exist, then device is "removed"
+            return CompletableFuture.completedFuture(true);
+        }
+    }
 }

@@ -18,6 +18,8 @@
  */
 package com.parrotha.internal.integration;
 
+import com.parrotha.integration.IntegrationEvent;
+import com.parrotha.integration.IntegrationEventListener;
 import com.parrotha.service.IntegrationConfigurationService;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
@@ -34,7 +36,8 @@ public abstract class AbstractIntegration {
         DEVICE,
         LAN,
         ZIGBEE,
-        ZWAVE
+        ZWAVE,
+        MATTER
     }
 
     private String id = null;
@@ -45,6 +48,19 @@ public abstract class AbstractIntegration {
 
     public String getId() {
         return id;
+    }
+
+    private IntegrationEventListener integrationEventListener;
+
+    public void setIntegrationEventListener(IntegrationEventListener integrationEventListener) {
+        this.integrationEventListener = integrationEventListener;
+    }
+
+    public void sendEvent(IntegrationEvent integrationEvent) {
+        if (this.integrationEventListener != null) {
+            integrationEvent.setIntegrationId(getId());
+            this.integrationEventListener.messageReceived(integrationEvent);
+        }
     }
 
     public String getLabel() {

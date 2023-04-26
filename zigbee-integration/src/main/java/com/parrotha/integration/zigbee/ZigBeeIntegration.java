@@ -40,6 +40,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.ResourceBundle;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Future;
 
 public class ZigBeeIntegration extends DeviceIntegration implements DeviceScanIntegrationExtension, ResetIntegrationExtension {
     private static final Logger logger = LoggerFactory.getLogger(ZigBeeIntegration.class);
@@ -145,8 +147,9 @@ public class ZigBeeIntegration extends DeviceIntegration implements DeviceScanIn
     }
 
     @Override
-    public boolean removeIntegrationDevice(String deviceNetworkId, boolean force) {
-        return zigBeeHandler.removeDevice(deviceNetworkId, force);
+    public Future<Boolean> removeIntegrationDeviceAsync(String deviceNetworkId, boolean force) {
+        //TODO: update zigbee handler to return future
+        return CompletableFuture.completedFuture(zigBeeHandler.removeDevice(deviceNetworkId, force));
     }
 
     @Override

@@ -60,6 +60,11 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
 public class DeviceService implements ExtensionStateListener {
@@ -365,28 +370,63 @@ public class DeviceService implements ExtensionStateListener {
         return false;
     }
 
-    public boolean removeDevice(String id) {
-        return removeDevice(id, false);
-    }
+    Map<String, Future<Boolean>> devicesToRemove = new HashMap<>();
 
-    public boolean removeDevice(String id, boolean force) {
+    public Future<Boolean> removeDeviceAsync(String id, boolean force) {
+        Future<Boolean> deviceToRemoveFuture = devicesToRemove.get(id);
+        if (deviceToRemoveFuture != null) {
+            if (deviceToRemoveFuture.isDone() || deviceToRemoveFuture.isCancelled()) {
+                devicesToRemove.remove(id);
+            }
+            return deviceToRemoveFuture;
+        }
         Device device = deviceDataStore.getDeviceById(id);
         String integrationId = device.getIntegration().getId();
         String deviceNetworkId = device.getDeviceNetworkId();
 
-        boolean removedFromIntegration = false;
         if (integrationId != null) {
-            removedFromIntegration = integrationRegistry.removeDevice(integrationId, deviceNetworkId, force);
+            Future<Boolean> removeDeviceFuture = integrationRegistry.removeDeviceAsync(integrationId, deviceNetworkId, force);
+            if (removeDeviceFuture.isDone()) {
+                deviceDataStore.deleteDevice(id);
+            } else {
+                devicesToRemove.put(id, removeDeviceFuture);
+                //wait for future to resolve then remove device from db
+                new Thread(() -> {
+                    while (!removeDeviceFuture.isDone() && !removeDeviceFuture.isCancelled()) {
+                        try {
+                            Thread.sleep(100);
+                        } catch (InterruptedException e) {
+                            logger.info("Interrupted while waiting for remove device future to complete", e);
+                        }
+                    }
+                    if (removeDeviceFuture.isDone() && !removeDeviceFuture.isCancelled()) {
+                        try {
+                            Boolean result = removeDeviceFuture.get(5, TimeUnit.SECONDS);
+                            if (result != null && result.booleanValue()) {
+                                deviceDataStore.deleteDevice(id);
+                            }
+                        } catch (InterruptedException | ExecutionException | TimeoutException e) {
+                            logger.warn("Exception while getting device future", e);
+                        }
+                    }
+                    devicesToRemove.remove(id);
+                }).start();
+            }
+            return removeDeviceFuture;
         } else {
-            // there is no integration, so just mark it as successful.
-            removedFromIntegration = true;
+            // there is no integration, so just remove device.
+            boolean removedDeviceStatus = deviceDataStore.deleteDevice(id);
+            return CompletableFuture.completedFuture(removedDeviceStatus);
         }
+    }
 
-        if (!removedFromIntegration && !force) {
-            return false;
+    public void cancelRemoveDeviceAsync(String id) {
+        Future deviceToRemoveFuture = devicesToRemove.remove(id);
+        if (deviceToRemoveFuture != null) {
+            if (!deviceToRemoveFuture.isCancelled() && !deviceToRemoveFuture.isDone()) {
+                deviceToRemoveFuture.cancel(true);
+            }
         }
-
-        return deviceDataStore.deleteDevice(id);
     }
 
     public boolean deleteDevice(String integrationId, String deviceNetworkId) {
@@ -762,7 +802,7 @@ public class DeviceService implements ExtensionStateListener {
 
     public boolean removeDeviceHandler(String id) {
         Collection<Device> devicesInUse = getDevicesByDeviceHandler(id);
-        if(devicesInUse.size() > 0) {
+        if (devicesInUse.size() > 0) {
             throw new DeviceHandlerInUseException("Device Handler in use", devicesInUse);
         } else {
             return deviceDataStore.deleteDeviceHandler(id);

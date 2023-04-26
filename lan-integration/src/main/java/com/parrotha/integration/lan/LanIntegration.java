@@ -49,6 +49,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Future;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -142,8 +144,8 @@ public class LanIntegration extends DeviceIntegration {
     }
 
     @Override
-    public boolean removeIntegrationDevice(String deviceNetworkId, boolean force) {
-        return true;
+    public Future<Boolean> removeIntegrationDeviceAsync(String deviceNetworkId, boolean force) {
+        return CompletableFuture.completedFuture(true);
     }
 
     private void processUpnpResponse(String response) {

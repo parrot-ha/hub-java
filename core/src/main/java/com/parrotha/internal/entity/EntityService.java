@@ -34,8 +34,6 @@ import java.util.Map;
 
 //This is a service that provides access to run methods and interact with devices and automation apps
 public interface EntityService {
-    boolean removeDevice(String id);
-
     void sendEvent(Map properties, DeviceWrapper deviceWrapper);
 
     void sendEvent(Map properties, InstalledAutomationApp installedAutomationApp);

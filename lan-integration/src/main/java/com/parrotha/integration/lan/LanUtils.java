@@ -19,6 +19,7 @@
 package com.parrotha.integration.lan;
 
 import com.parrotha.integration.DeviceIntegration;
+import com.parrotha.integration.device.LanDeviceMessageEvent;
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,12 +28,9 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Stream;
 
 public class LanUtils {
     private static final Logger logger = LoggerFactory.getLogger(LanUtils.class);
@@ -88,52 +86,6 @@ public class LanUtils {
             logger.debug("Message received: " + deviceDescription);
         }
 
-        // look for device based on mac address first
-        if (integration.deviceExists(macAddress)) {
-            integration.sendDeviceMessage(macAddress, deviceDescription);
-            return;
-        }
-
-        String portHexString = String.format("%04x", remotePort);
-        String ipAddressHexString = Stream.of(remoteAddress.split("\\."))
-                .reduce("", (partialString, element) ->
-                        partialString + String.format("%02x", Integer.parseInt(element)));
-
-        // next look for device based on ip address : port
-        String ipAddressAndPortHexString = ipAddressHexString + ":" + portHexString;
-        if (integration.deviceExists(ipAddressAndPortHexString)) {
-            integration.sendDeviceMessage(ipAddressAndPortHexString, deviceDescription);
-            return;
-        }
-
-        // look for device based on ip address
-        if (integration.deviceExists(ipAddressHexString)) {
-            integration.sendDeviceMessage(ipAddressHexString, deviceDescription);
-            return;
-        }
-
-        // look for device without integration id
-
-        // look for device based on mac address first
-        if (integration.deviceExists(macAddress, true)) {
-            integration.sendDeviceMessage(macAddress, deviceDescription, true);
-            return;
-        }
-
-        // next look for device based on ip address : port
-        if (integration.deviceExists(ipAddressAndPortHexString, true)) {
-            integration.sendDeviceMessage(ipAddressAndPortHexString, deviceDescription, true);
-            return;
-        }
-
-        // look for device based on ip address
-        if (integration.deviceExists(ipAddressHexString, true)) {
-            integration.sendDeviceMessage(ipAddressHexString, deviceDescription, true);
-            return;
-        }
-
-        // Finally, send message as hub event if no match above, it appears that Smartthings used to do this.
-        // TODO: is lanMessage the right name of the event?  Can't find documentation about it.
-        integration.sendHubEvent(new HashMap<>(Map.of("name", "lanMessage", "value", macAddress, "description", deviceDescription)));
+        integration.sendEvent(new LanDeviceMessageEvent(macAddress, remoteAddress, remotePort, deviceDescription));
     }
 }

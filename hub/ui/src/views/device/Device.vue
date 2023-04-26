@@ -311,6 +311,16 @@
           Force Delete
         </button></template
       >
+      <template #cancelSlot
+        ><button
+          type="button"
+          class="btn btn-secondary"
+          @click="cancelDeleteDevice()"
+        >
+          Cancel
+        </button></template
+      >
+      <template #closeSlot></template>
     </generic-modal>
   </div>
 </template>
@@ -442,9 +452,16 @@ export default {
         });
     },
     deleteDevice: function () {
+      var vm = this;
       this.$refs.deleteDeviceModal.displayModal().then(() => {
         this.displayForceDeleteDevice = false;
-        fetch(`/api/devices/${this.deviceId}`, { method: "DELETE" })
+        setTimeout(
+          function () {
+            vm.displayForceDeleteDevice = true;
+          }.bind(this),
+          20000
+        );
+        fetch(`/api/devices/${this.deviceId}?poll=true`, { method: "DELETE" })
           .then((response) => response.json())
           .then((data) => {
             if (data.success) {
@@ -458,7 +475,9 @@ export default {
     },
     forceDeleteDevice: function () {
       this.displayForceDeleteDevice = false;
-      fetch(`/api/devices/${this.deviceId}?force=true`, { method: "DELETE" })
+      fetch(`/api/devices/${this.deviceId}?poll=true&force=true`, {
+        method: "DELETE",
+      })
         .then((response) => response.json())
         .then((data) => {
           if (data.success) {
@@ -470,6 +489,13 @@ export default {
             window.scrollTo(0, 0);
           }
         });
+    },
+    cancelDeleteDevice: function () {
+      this.$refs.deleteDeviceModal.hideModal();
+      this.displayForceDeleteDevice = false;
+      fetch(`/api/devices/${this.deviceId}?cancel=true`, {
+        method: "DELETE",
+      });
     },
   },
   mounted: function () {

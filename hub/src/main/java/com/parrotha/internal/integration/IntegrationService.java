@@ -21,7 +21,13 @@ package com.parrotha.internal.integration;
 import com.parrotha.device.Protocol;
 import com.parrotha.integration.CloudIntegration;
 import com.parrotha.integration.DeviceIntegration;
+import com.parrotha.integration.IntegrationEvent;
+import com.parrotha.integration.IntegrationEventListener;
+import com.parrotha.integration.device.DeviceEvent;
+import com.parrotha.integration.device.DeviceMessageEvent;
+import com.parrotha.integration.device.LanDeviceMessageEvent;
 import com.parrotha.internal.Main;
+import com.parrotha.internal.device.DeviceService;
 import com.parrotha.internal.entity.CloudIntegrationServiceImpl;
 import com.parrotha.internal.entity.EntityService;
 import com.parrotha.internal.extension.ExtensionService;
@@ -47,13 +53,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Stream;
 
-public class IntegrationService implements ExtensionStateListener {
+public class IntegrationService implements ExtensionStateListener, IntegrationEventListener {
     private static final Logger logger = LoggerFactory.getLogger(IntegrationService.class);
     IntegrationRegistry integrationRegistry;
     ExtensionService extensionService;
     ConfigurationService configurationService;
     DeviceIntegrationService deviceIntegrationService;
+    DeviceService deviceService;
     EntityService entityService;
     LocationService locationService;
     private Map<String, AbstractIntegration> integrationMap;
@@ -62,12 +70,13 @@ public class IntegrationService implements ExtensionStateListener {
     private Map<String, Map<String, Object>> integrationTypeMap;
 
     public IntegrationService(IntegrationRegistry integrationRegistry, ConfigurationService configurationService,
-                              ExtensionService extensionService, DeviceIntegrationService deviceIntegrationService,
+                              ExtensionService extensionService, DeviceIntegrationService deviceIntegrationService, DeviceService deviceService,
                               EntityService entityService, LocationService locationService) {
         this.integrationRegistry = integrationRegistry;
         this.configurationService = configurationService;
         this.extensionService = extensionService;
         this.deviceIntegrationService = deviceIntegrationService;
+        this.deviceService = deviceService;
         this.entityService = entityService;
         this.locationService = locationService;
 
@@ -125,7 +134,8 @@ public class IntegrationService implements ExtensionStateListener {
                     integration.put("description", abstractIntegration.getDescription());
                     integration.put("classLoader", classLoader);
                     availableIntegrations.add(integration);
-                } catch (ClassNotFoundException | InvocationTargetException | NoSuchMethodException | InstantiationException | IllegalAccessException exception) {
+                } catch (ClassNotFoundException | InvocationTargetException | NoSuchMethodException | InstantiationException |
+                         IllegalAccessException exception) {
                     logger.warn("Exception occurred while processing integration {} with className {}", id, className, exception);
                 }
             }
@@ -240,6 +250,7 @@ public class IntegrationService implements ExtensionStateListener {
     }
 
     private void initializeIntegration(AbstractIntegration abstractIntegration) {
+        abstractIntegration.setIntegrationEventListener(this);
         if (abstractIntegration instanceof DeviceIntegration) {
             ((DeviceIntegration) abstractIntegration)
                     .setDeviceIntegrationService(deviceIntegrationService);
@@ -449,5 +460,91 @@ public class IntegrationService implements ExtensionStateListener {
         }
 
         return new ImmutablePair<>(inUse, sb.toString());
+    }
+
+    private Map<String, List<String>> devicesToRemove = new HashMap<>();
+
+    public boolean removeIntegrationDevice(String integrationId, String deviceNetworkId, boolean force) {
+        if (devicesToRemove.get(integrationId) == null) {
+            devicesToRemove.put(integrationId, new ArrayList<>());
+        }
+        devicesToRemove.get(integrationId).add(deviceNetworkId);
+        DeviceIntegration deviceIntegration = integrationRegistry.getDeviceIntegrationById(integrationId);
+        boolean removedFromIntegration = false;
+        if (deviceIntegration != null) {
+            try {
+                removedFromIntegration = deviceIntegration.removeIntegrationDevice(deviceNetworkId, force);
+            } catch (AbstractMethodError ame) {
+                removedFromIntegration = deviceIntegration.removeIntegrationDevice(deviceNetworkId);
+            }
+        } else {
+            logger.warn("Unknown integration: " + integrationId);
+        }
+        return removedFromIntegration;
+    }
+
+    @Override
+    public void messageReceived(IntegrationEvent integrationEvent) {
+        if (integrationEvent instanceof DeviceEvent) {
+            if (integrationEvent instanceof DeviceMessageEvent) {
+                if (integrationEvent instanceof LanDeviceMessageEvent) {
+                    lanDeviceMessageReceived((LanDeviceMessageEvent) integrationEvent);
+                } else {
+                    entityService.runDeviceMethodByDNI(integrationEvent.getIntegrationId(),
+                            ((DeviceMessageEvent) integrationEvent).getDeviceNetworkId(),
+                            "parse", ((DeviceMessageEvent) integrationEvent).getMessage());
+                }
+            }
+        }
+    }
+
+    private void lanDeviceMessageReceived(LanDeviceMessageEvent event) {
+        // look for device based on mac address first
+        if (deviceService.deviceExists(event.getIntegrationId(), event.getMacAddress(), false)) {
+            entityService.runDeviceMethodByDNI(event.getIntegrationId(), event.getMacAddress(), "parse", event.getMessage());
+            return;
+        }
+
+        String portHexString = String.format("%04x", event.getRemotePort());
+        String ipAddressHexString = Stream.of(event.getRemoteAddress().split("\\."))
+                .reduce("", (partialString, element) ->
+                        partialString + String.format("%02x", Integer.parseInt(element)));
+
+        // next look for device based on ip address : port
+        String ipAddressAndPortHexString = ipAddressHexString + ":" + portHexString;
+        if (deviceService.deviceExists(event.getIntegrationId(), ipAddressAndPortHexString, false)) {
+            entityService.runDeviceMethodByDNI(event.getIntegrationId(), ipAddressAndPortHexString, "parse", event.getMessage());
+            return;
+        }
+
+        // look for device based on ip address
+        if (deviceService.deviceExists(event.getIntegrationId(), ipAddressHexString, false)) {
+            entityService.runDeviceMethodByDNI(event.getIntegrationId(), ipAddressHexString, "parse", event.getMessage());
+            return;
+        }
+
+        // look for device without integration id
+
+        // look for device based on mac address first
+        if (deviceService.deviceExists(event.getIntegrationId(), event.getMacAddress(), true)) {
+            entityService.runDeviceMethodByDNI(null, event.getMacAddress(), "parse", event.getMessage());
+            return;
+        }
+
+        // next look for device based on ip address : port
+        if (deviceService.deviceExists(event.getIntegrationId(), ipAddressAndPortHexString, true)) {
+            entityService.runDeviceMethodByDNI(null, ipAddressAndPortHexString, "parse", event.getMessage());
+            return;
+        }
+
+        // look for device based on ip address
+        if (deviceService.deviceExists(event.getIntegrationId(), ipAddressHexString, true)) {
+            entityService.runDeviceMethodByDNI(null, ipAddressHexString, "parse", event.getMessage());
+            return;
+        }
+
+        // Finally, send message as hub event if no match above, it appears that Smartthings used to do this.
+        // TODO: is lanMessage the right name of the event?  Can't find documentation about it.
+        entityService.sendHubEvent(new HashMap<>(Map.of("name", "lanMessage", "value", event.getMacAddress(), "description", event.getMessage())));
     }
 }

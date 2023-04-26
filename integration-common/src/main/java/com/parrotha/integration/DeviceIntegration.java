@@ -21,12 +21,14 @@ package com.parrotha.integration;
 import com.parrotha.device.HubAction;
 import com.parrotha.device.HubResponse;
 import com.parrotha.device.Protocol;
+import com.parrotha.integration.device.DeviceMessageEvent;
 import com.parrotha.internal.integration.AbstractIntegration;
 import com.parrotha.service.DeviceIntegrationService;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Future;
 
 public abstract class DeviceIntegration extends AbstractIntegration {
     /**
@@ -47,8 +49,13 @@ public abstract class DeviceIntegration extends AbstractIntegration {
      * @param deviceNetworkId
      * @param force
      * @return
+     * @Deprecated use removeIntegrationDeviceAsync(String, boolean)
      */
-    public abstract boolean removeIntegrationDevice(String deviceNetworkId, boolean force);
+    public boolean removeIntegrationDevice(String deviceNetworkId, boolean force) {
+        return false;
+    }
+
+    public abstract Future<Boolean> removeIntegrationDeviceAsync(String deviceNetworkId, boolean force);
 
     public abstract HubResponse processAction(HubAction hubAction);
 
@@ -66,27 +73,33 @@ public abstract class DeviceIntegration extends AbstractIntegration {
 
     private DeviceIntegrationService deviceIntegrationService;
 
+    @Deprecated
     public void setDeviceIntegrationService(DeviceIntegrationService deviceIntegrationService) {
         this.deviceIntegrationService = deviceIntegrationService;
     }
 
     public void sendDeviceMessage(String deviceNetworkId, String message) {
-        sendDeviceMessage(deviceNetworkId, message, false);
+        sendEvent(new DeviceMessageEvent(deviceNetworkId, message));
     }
 
+    @Deprecated
     public void sendDeviceMessage(String deviceNetworkId, String message, boolean unaffiliated) {
+        sendEvent(new DeviceMessageEvent(deviceNetworkId, message));
         //invoke parse method on device handler
-        deviceIntegrationService.runDeviceMethodByDNI((unaffiliated ? null : getId()), deviceNetworkId, "parse", message);
+        //deviceIntegrationService.runDeviceMethodByDNI((unaffiliated ? null : getId()), deviceNetworkId, "parse", message);
     }
 
+    @Deprecated
     public boolean deviceExists(String deviceNetworkId) {
         return deviceExists(deviceNetworkId, false);
     }
 
+    @Deprecated
     public boolean deviceExists(String deviceNetworkId, boolean includeUnaffiliated) {
         return deviceIntegrationService.deviceExists(getId(), deviceNetworkId, includeUnaffiliated);
     }
 
+    @Deprecated
     public boolean deviceExists(String deviceNetworkId, Map<String, String> integrationParameters) {
         return deviceIntegrationService.deviceExists(getId(), deviceNetworkId, integrationParameters);
     }
@@ -97,21 +110,30 @@ public abstract class DeviceIntegration extends AbstractIntegration {
      * @param updatedDeviceNetworkId        New device network id to assign to device
      * @return status of update
      */
+    @Deprecated
     public boolean updateExistingDevice(String existingDeviceNetworkId,
                                         Map<String, String> existingIntegrationParameters,
                                         String updatedDeviceNetworkId) {
         return deviceIntegrationService.updateExistingDevice(getId(), existingDeviceNetworkId, existingIntegrationParameters, updatedDeviceNetworkId);
     }
 
+    @Deprecated
     public String[] getDeviceHandlerByFingerprint(Map<String, String> fingerprint) {
         return deviceIntegrationService.getDeviceHandlerByFingerprint(fingerprint);
     }
 
     public void addDevice(String deviceHandlerId, String deviceName, String deviceNetworkId, Map<String, Object> deviceData,
                           Map<String, String> additionalIntegrationParameters) {
+        //TODO: use event instead
         deviceIntegrationService.addDevice(getId(), deviceHandlerId, deviceName, deviceNetworkId, deviceData, additionalIntegrationParameters);
     }
 
+    /**
+     * @param deviceNetworkId
+     * @return
+     * @Deprecated Use removeSystemDevice
+     */
+    @Deprecated
     public boolean deleteItem(String deviceNetworkId) {
         return deviceIntegrationService.deleteDevice(getId(), deviceNetworkId);
     }
