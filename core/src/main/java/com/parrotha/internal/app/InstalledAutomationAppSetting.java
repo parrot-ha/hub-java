@@ -174,7 +174,11 @@ public class InstalledAutomationAppSetting implements Serializable, Cloneable {
             } else if ("enum".equals(type)) {
                 if (isMultiple()) {
                     if (StringUtils.isNotBlank(getValue())) {
-                        return new JsonSlurperClassic().parseText(getValue());
+                        if(getValue().startsWith("[") || getValue().startsWith("{")) {
+                            return new JsonSlurperClassic().parseText(getValue());
+                        } else {
+                            return new ArrayList<>(List.of(getValue()));
+                        }
                     } else {
                         return new ArrayList<>();
                     }

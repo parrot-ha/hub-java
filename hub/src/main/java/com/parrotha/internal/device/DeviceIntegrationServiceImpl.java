@@ -33,10 +33,29 @@ public class DeviceIntegrationServiceImpl implements DeviceIntegrationService {
     }
 
     @Override
-    public String addDevice(String integrationId, String deviceHandlerId, String deviceName, String deviceNetworkId, Map<String, Object> deviceData, Map<String, String> additionalIntegrationParameters) {
-        String deviceId = deviceService.addDevice(integrationId, deviceHandlerId, deviceName, deviceNetworkId, deviceData, additionalIntegrationParameters);
+    @Deprecated
+    public String addDevice(String integrationId, String deviceHandlerId, String deviceName, String deviceNetworkId, Map<String, Object> deviceData,
+                            Map<String, String> additionalIntegrationParameters) {
+        String deviceId = deviceService.addDevice(integrationId, deviceHandlerId, deviceName, deviceNetworkId, deviceData,
+                additionalIntegrationParameters);
         entityService.runDeviceMethod(deviceId, "installed");
         return deviceId;
+    }
+
+    @Override
+    public String addDevice(String integrationId, String deviceNetworkId, Map<String, String> fingerprint, Map<String, Object> deviceData,
+                            Map<String, String> additionalIntegrationParameters) {
+        String[] deviceHandlerInfo = entityService.getDeviceHandlerByFingerprint(fingerprint);
+        if (deviceHandlerInfo != null) {
+            String deviceHandlerId = deviceHandlerInfo[0];
+            String deviceName = deviceHandlerInfo[1];
+            String deviceId = deviceService.addDevice(integrationId, deviceHandlerId, deviceName, deviceNetworkId, deviceData,
+                    additionalIntegrationParameters);
+            entityService.runDeviceMethod(deviceId, "installed");
+            return deviceId;
+        }
+
+        return null;
     }
 
     @Override
@@ -45,14 +64,9 @@ public class DeviceIntegrationServiceImpl implements DeviceIntegrationService {
     }
 
     @Override
-    public boolean updateExistingDevice(String integrationId,
-                                        String existingDeviceNetworkId,
-                                        Map<String, String> existingIntegrationParameters,
+    public boolean updateExistingDevice(String integrationId, String existingDeviceNetworkId, Map<String, String> existingIntegrationParameters,
                                         String updatedDeviceNetworkId) {
-        return deviceService.updateExistingDevice(integrationId,
-                existingDeviceNetworkId,
-                existingIntegrationParameters,
-                updatedDeviceNetworkId);
+        return deviceService.updateExistingDevice(integrationId, existingDeviceNetworkId, existingIntegrationParameters, updatedDeviceNetworkId);
     }
 
     @Override

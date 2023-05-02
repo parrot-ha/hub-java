@@ -38,6 +38,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.Future;
 
 public class DeviceApiHandler extends BaseApiHandler {
     DeviceService deviceService;
@@ -133,6 +134,10 @@ public class DeviceApiHandler extends BaseApiHandler {
         app.get("/api/devices/:id", ctx -> {
             String id = ctx.pathParam("id");
             Device device = deviceService.getDeviceById(id);
+            if (device == null) {
+                ctx.status(404);
+                return;
+            }
 
             Map<String, Object> model = new HashMap<>();
             model.put("id", device.getId());
@@ -143,13 +148,17 @@ public class DeviceApiHandler extends BaseApiHandler {
                 integrationId = device.getIntegration().getId();
             }
             model.put("integrationId", integrationId);
-            DeviceHandler dh = deviceService.getDeviceHandler(device.getDeviceHandlerId());
-            if (dh != null) {
-                model.put("type", dh.getName());
+
+            boolean basicResponse = "true".equals(ctx.queryParam("basic"));
+            if (!basicResponse) {
+                DeviceHandler dh = deviceService.getDeviceHandler(device.getDeviceHandlerId());
+                if (dh != null) {
+                    model.put("type", dh.getName());
+                }
+                model.put("deviceHandlerId", device.getDeviceHandlerId());
+                model.put("deviceNetworkId", device.getDeviceNetworkId());
+                //TODO: get rest of data (created, updated, data, current states, in use by)
             }
-            model.put("deviceHandlerId", device.getDeviceHandlerId());
-            model.put("deviceNetworkId", device.getDeviceNetworkId());
-            //TODO: get rest of data (created, updated, data, current states, in use by)
 
             ctx.status(200);
             ctx.contentType("application/json");
@@ -160,12 +169,31 @@ public class DeviceApiHandler extends BaseApiHandler {
         app.delete("/api/devices/:id", ctx -> {
             String id = ctx.pathParam("id");
             boolean force = "true".equals(ctx.queryParam("force"));
-            boolean deviceRemoved = deviceService.removeDevice(id, force);
-            Map<String, Object> model = new HashMap<>();
-            model.put("success", deviceRemoved);
-            ctx.status(200);
-            ctx.contentType("application/json");
-            ctx.result(new JsonBuilder(model).toString());
+            boolean cancel = "true".equals(ctx.queryParam("cancel"));
+            boolean longPoll = "true".equals(ctx.queryParam("poll"));
+            if (cancel) {
+                deviceService.cancelRemoveDeviceAsync(id);
+                ctx.status(202);
+            } else {
+                Future<Boolean> deviceRemovedFuture = deviceService.removeDeviceAsync(id, force);
+                // wait for future to resolve if we are long polling
+                while (longPoll && !deviceRemovedFuture.isCancelled() && !deviceRemovedFuture.isDone()) {
+                    Thread.sleep(100);
+                }
+                if (deviceRemovedFuture.isDone()) {
+                    Boolean deviceRemovedStatus = Boolean.FALSE;
+                    if(!deviceRemovedFuture.isCancelled()) {
+                        deviceRemovedStatus = deviceRemovedFuture.get();
+                    }
+                    Map<String, Object> model = new HashMap<>();
+                    model.put("success", deviceRemovedStatus);
+                    ctx.status(200);
+                    ctx.contentType("application/json");
+                    ctx.result(new JsonBuilder(model).toString());
+                } else {
+                    ctx.status(202);
+                }
+            }
         });
 
         // Create a device

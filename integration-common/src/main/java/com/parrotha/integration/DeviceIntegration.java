@@ -27,6 +27,7 @@ import com.parrotha.service.DeviceIntegrationService;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Future;
 
 public abstract class DeviceIntegration extends AbstractIntegration {
     /**
@@ -47,8 +48,13 @@ public abstract class DeviceIntegration extends AbstractIntegration {
      * @param deviceNetworkId
      * @param force
      * @return
+     * @Deprecated use removeIntegrationDeviceAsync(String, boolean)
      */
-    public abstract boolean removeIntegrationDevice(String deviceNetworkId, boolean force);
+    public boolean removeIntegrationDevice(String deviceNetworkId, boolean force) {
+        return false;
+    }
+
+    public abstract Future<Boolean> removeIntegrationDeviceAsync(String deviceNetworkId, boolean force);
 
     public abstract HubResponse processAction(HubAction hubAction);
 
@@ -96,6 +102,7 @@ public abstract class DeviceIntegration extends AbstractIntegration {
      * @param existingIntegrationParameters If null, device will only be matched with device network id
      * @param updatedDeviceNetworkId        New device network id to assign to device
      * @return status of update
+     * @Deprecated
      */
     public boolean updateExistingDevice(String existingDeviceNetworkId,
                                         Map<String, String> existingIntegrationParameters,
@@ -103,15 +110,29 @@ public abstract class DeviceIntegration extends AbstractIntegration {
         return deviceIntegrationService.updateExistingDevice(getId(), existingDeviceNetworkId, existingIntegrationParameters, updatedDeviceNetworkId);
     }
 
+    @Deprecated
     public String[] getDeviceHandlerByFingerprint(Map<String, String> fingerprint) {
         return deviceIntegrationService.getDeviceHandlerByFingerprint(fingerprint);
     }
 
+    @Deprecated
     public void addDevice(String deviceHandlerId, String deviceName, String deviceNetworkId, Map<String, Object> deviceData,
                           Map<String, String> additionalIntegrationParameters) {
         deviceIntegrationService.addDevice(getId(), deviceHandlerId, deviceName, deviceNetworkId, deviceData, additionalIntegrationParameters);
     }
 
+
+    public void addDevice(String deviceNetworkId, Map<String, String> fingerprint, Map<String, Object> deviceData,
+                          Map<String, String> additionalIntegrationParameters) {
+        deviceIntegrationService.addDevice(getId(), deviceNetworkId, fingerprint, deviceData, additionalIntegrationParameters);
+    }
+
+    /**
+     * @param deviceNetworkId
+     * @return
+     * @Deprecated Use removeSystemDevice
+     */
+    @Deprecated
     public boolean deleteItem(String deviceNetworkId) {
         return deviceIntegrationService.deleteDevice(getId(), deviceNetworkId);
     }

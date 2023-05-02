@@ -94,7 +94,7 @@ public class ServiceFactory {
     public static IntegrationService getIntegrationService() {
         if (integrationService == null) {
             integrationService = new IntegrationService(getIntegrationRegistry(), getConfigurationService(), getExtensionService(),
-                    getDeviceIntegrationService(), getEntityService(), getLocationService());
+                    getDeviceIntegrationService(), getDeviceService(), getEntityService(), getLocationService());
         }
         return integrationService;
     }
