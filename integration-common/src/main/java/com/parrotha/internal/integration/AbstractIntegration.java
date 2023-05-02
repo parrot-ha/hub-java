@@ -59,7 +59,7 @@ public abstract class AbstractIntegration {
     public void sendEvent(IntegrationEvent integrationEvent) {
         if (this.integrationEventListener != null) {
             integrationEvent.setIntegrationId(getId());
-            this.integrationEventListener.messageReceived(integrationEvent);
+            this.integrationEventListener.eventReceived(integrationEvent);
         }
     }
 

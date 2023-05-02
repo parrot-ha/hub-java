@@ -18,6 +18,7 @@
  */
 package com.parrotha.integration.zigbee;
 
+import com.parrotha.integration.device.DeviceAddingEvent;
 import com.parrotha.internal.utils.HexUtils;
 import com.zsmartsystems.zigbee.*;
 import com.zsmartsystems.zigbee.app.basic.ZigBeeBasicServerExtension;
@@ -64,6 +65,7 @@ import java.util.TimerTask;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
 
 public class ZigBeeHandler implements ZigBeeNetworkStateListener, ZigBeeAnnounceListener, ZigBeeNetworkNodeListener, ZigBeeCommandListener {
     private static final Logger logger = LoggerFactory.getLogger(ZigBeeHandler.class);
@@ -254,17 +256,13 @@ public class ZigBeeHandler implements ZigBeeNetworkStateListener, ZigBeeAnnounce
         // check for existing device.
         Map<String, String> additionalParams = new HashMap<>();
         additionalParams.put("zigbeeId", ieeeAddress.toString());
-        if (zigBeeIntegration.deviceExists(null, additionalParams)) {
-            // we have an existing device, update dni in case it changed
-            zigBeeIntegration.updateExistingDevice(null, additionalParams, HexUtils.integerToHexString(networkAddress, 2));
+        zigBeeIntegration.sendEvent(new DeviceAddingEvent(HexUtils.integerToHexString(networkAddress, 2), additionalParams));
+        // place device into list to be initialized once we get the node added message
+        if (joinedDevices.containsKey(ieeeAddress) && !networkAddress.equals(joinedDevices.get(ieeeAddress).get("networkAddress"))) {
+            // network address changed, update it
+            joinedDevices.get(ieeeAddress).put("networkAddress", networkAddress);
         } else {
-            // place device into list to be initialized once we get the node added message
-            if (joinedDevices.containsKey(ieeeAddress) && !networkAddress.equals(joinedDevices.get(ieeeAddress).get("networkAddress"))) {
-                // network address changed, update it
-                joinedDevices.get(ieeeAddress).put("networkAddress", networkAddress);
-            } else {
-                joinedDevices.put(ieeeAddress, new HashMap<>(Map.of("networkAddress", networkAddress, "initializing", false)));
-            }
+            joinedDevices.put(ieeeAddress, new HashMap<>(Map.of("networkAddress", networkAddress, "initializing", false)));
         }
     }
 
@@ -344,25 +342,20 @@ public class ZigBeeHandler implements ZigBeeNetworkStateListener, ZigBeeAnnounce
             // add fingerprint to joinedDevices
             joinedDevices.get(node.getIeeeAddress()).put("fingerprint", fingerprint);
 
-            String[] deviceHandlerInfo = zigBeeIntegration.getDeviceHandlerByFingerprint(fingerprint);
-
-            if (deviceHandlerInfo != null) {
-                logger.debug("DeviceHandlerId: " + deviceHandlerInfo[0] + " name: " + deviceHandlerInfo[1]);
-                Map<String, String> additionalParams = new HashMap<>();
-                additionalParams.put("endpointId", HexUtils.integerToHexString(zigBeeEndpoint.getEndpointId(), 1));
-                additionalParams.put("zigbeeId", node.getIeeeAddress().toString());
-                Map<String, Object> deviceData = new HashMap<>();
-                deviceData.put("endpointId", "01");
-                if (StringUtils.isNotBlank(manufacturer)) {
-                    deviceData.put("manufacturer", manufacturer);
-                }
-                if (StringUtils.isNotBlank(model)) {
-                    deviceData.put("model", model);
-                }
-                zigBeeIntegration.addDevice(deviceHandlerInfo[0], deviceHandlerInfo[1], HexUtils.integerToHexString(node.getNetworkAddress(), 2),
-                        deviceData, additionalParams);
-                return;
+            Map<String, String> additionalParams = new HashMap<>();
+            additionalParams.put("endpointId", HexUtils.integerToHexString(zigBeeEndpoint.getEndpointId(), 1));
+            additionalParams.put("zigbeeId", node.getIeeeAddress().toString());
+            Map<String, Object> deviceData = new HashMap<>();
+            deviceData.put("endpointId", "01");
+            if (StringUtils.isNotBlank(manufacturer)) {
+                deviceData.put("manufacturer", manufacturer);
             }
+            if (StringUtils.isNotBlank(model)) {
+                deviceData.put("model", model);
+            }
+            zigBeeIntegration.addDevice(HexUtils.integerToHexString(node.getNetworkAddress(), 2), fingerprint, deviceData, additionalParams);
+
+            return;
         }
     }
 
@@ -403,19 +396,14 @@ public class ZigBeeHandler implements ZigBeeNetworkStateListener, ZigBeeAnnounce
         final TransportConfig transportOptions = new TransportConfig();
 
         final Set<Integer> supportedClientClusters = new TreeSet<>();
-        supportedClientClusters.addAll(Stream
-                .of(ZclBasicCluster.CLUSTER_ID, ZclOnOffCluster.CLUSTER_ID, ZclLevelControlCluster.CLUSTER_ID,
-                        ZclColorControlCluster.CLUSTER_ID, ZclPressureMeasurementCluster.CLUSTER_ID,
-                        ZclThermostatCluster.CLUSTER_ID, ZclWindowCoveringCluster.CLUSTER_ID,
-                        ZclIasZoneCluster.CLUSTER_ID)
-                .collect(Collectors.toSet()));
+        supportedClientClusters.addAll(Stream.of(ZclBasicCluster.CLUSTER_ID, ZclOnOffCluster.CLUSTER_ID, ZclLevelControlCluster.CLUSTER_ID,
+                ZclColorControlCluster.CLUSTER_ID, ZclPressureMeasurementCluster.CLUSTER_ID, ZclThermostatCluster.CLUSTER_ID,
+                ZclWindowCoveringCluster.CLUSTER_ID, ZclIasZoneCluster.CLUSTER_ID).collect(Collectors.toSet()));
 
         final Set<Integer> supportedServerClusters = new TreeSet<>();
-        supportedServerClusters.addAll(Stream
-                .of(ZclBasicCluster.CLUSTER_ID, ZclOnOffCluster.CLUSTER_ID, ZclLevelControlCluster.CLUSTER_ID,
-                        ZclColorControlCluster.CLUSTER_ID, ZclPressureMeasurementCluster.CLUSTER_ID,
-                        ZclWindowCoveringCluster.CLUSTER_ID, ZclIasZoneCluster.CLUSTER_ID)
-                .collect(Collectors.toSet()));
+        supportedServerClusters.addAll(Stream.of(ZclBasicCluster.CLUSTER_ID, ZclOnOffCluster.CLUSTER_ID, ZclLevelControlCluster.CLUSTER_ID,
+                ZclColorControlCluster.CLUSTER_ID, ZclPressureMeasurementCluster.CLUSTER_ID, ZclWindowCoveringCluster.CLUSTER_ID,
+                ZclIasZoneCluster.CLUSTER_ID).collect(Collectors.toSet()));
 
 
         ZigBeeDongleEzsp emberDongle = new ParrotHubZigBeeDongleEzsp(serialPort);
@@ -475,8 +463,7 @@ public class ZigBeeHandler implements ZigBeeNetworkStateListener, ZigBeeAnnounce
             pan = 1;
             extendedPan = new ExtendedPanId();
             nwkKey = ZigBeeKey.createRandom();
-            linkKey = new ZigBeeKey(new int[]{0x5A, 0x69, 0x67, 0x42, 0x65, 0x65, 0x41, 0x6C, 0x6C, 0x69, 0x61,
-                    0x6E, 0x63, 0x65, 0x30, 0x39});
+            linkKey = new ZigBeeKey(new int[]{0x5A, 0x69, 0x67, 0x42, 0x65, 0x65, 0x41, 0x6C, 0x6C, 0x69, 0x61, 0x6E, 0x63, 0x65, 0x30, 0x39});
 
             logger.debug("*** Resetting network");
             logger.debug("  * Channel                = " + channel);
@@ -504,8 +491,8 @@ public class ZigBeeHandler implements ZigBeeNetworkStateListener, ZigBeeAnnounce
 
         // Add the default ZigBeeAlliance09 HA link key
 
-        transportOptions.addOption(TransportConfigOption.TRUST_CENTRE_LINK_KEY, new ZigBeeKey(new int[]{0x5A, 0x69,
-                0x67, 0x42, 0x65, 0x65, 0x41, 0x6C, 0x6C, 0x69, 0x61, 0x6E, 0x63, 0x65, 0x30, 0x39}));
+        transportOptions.addOption(TransportConfigOption.TRUST_CENTRE_LINK_KEY,
+                new ZigBeeKey(new int[]{0x5A, 0x69, 0x67, 0x42, 0x65, 0x65, 0x41, 0x6C, 0x6C, 0x69, 0x61, 0x6E, 0x63, 0x65, 0x30, 0x39}));
         // transportOptions.addOption(TransportConfigOption.TRUST_CENTRE_LINK_KEY, new ZigBeeKey(new int[] { 0x41, 0x61,
         // 0x8F, 0xC0, 0xC8, 0x3B, 0x0E, 0x14, 0xA5, 0x89, 0x95, 0x4B, 0x16, 0xE3, 0x14, 0x66 }));
 

@@ -21,7 +21,6 @@ package com.parrotha.integration;
 import com.parrotha.device.HubAction;
 import com.parrotha.device.HubResponse;
 import com.parrotha.device.Protocol;
-import com.parrotha.integration.device.DeviceMessageEvent;
 import com.parrotha.internal.integration.AbstractIntegration;
 import com.parrotha.service.DeviceIntegrationService;
 
@@ -73,33 +72,27 @@ public abstract class DeviceIntegration extends AbstractIntegration {
 
     private DeviceIntegrationService deviceIntegrationService;
 
-    @Deprecated
     public void setDeviceIntegrationService(DeviceIntegrationService deviceIntegrationService) {
         this.deviceIntegrationService = deviceIntegrationService;
     }
 
     public void sendDeviceMessage(String deviceNetworkId, String message) {
-        sendEvent(new DeviceMessageEvent(deviceNetworkId, message));
+        sendDeviceMessage(deviceNetworkId, message, false);
     }
 
-    @Deprecated
     public void sendDeviceMessage(String deviceNetworkId, String message, boolean unaffiliated) {
-        sendEvent(new DeviceMessageEvent(deviceNetworkId, message));
         //invoke parse method on device handler
-        //deviceIntegrationService.runDeviceMethodByDNI((unaffiliated ? null : getId()), deviceNetworkId, "parse", message);
+        deviceIntegrationService.runDeviceMethodByDNI((unaffiliated ? null : getId()), deviceNetworkId, "parse", message);
     }
 
-    @Deprecated
     public boolean deviceExists(String deviceNetworkId) {
         return deviceExists(deviceNetworkId, false);
     }
 
-    @Deprecated
     public boolean deviceExists(String deviceNetworkId, boolean includeUnaffiliated) {
         return deviceIntegrationService.deviceExists(getId(), deviceNetworkId, includeUnaffiliated);
     }
 
-    @Deprecated
     public boolean deviceExists(String deviceNetworkId, Map<String, String> integrationParameters) {
         return deviceIntegrationService.deviceExists(getId(), deviceNetworkId, integrationParameters);
     }
@@ -109,8 +102,8 @@ public abstract class DeviceIntegration extends AbstractIntegration {
      * @param existingIntegrationParameters If null, device will only be matched with device network id
      * @param updatedDeviceNetworkId        New device network id to assign to device
      * @return status of update
+     * @Deprecated
      */
-    @Deprecated
     public boolean updateExistingDevice(String existingDeviceNetworkId,
                                         Map<String, String> existingIntegrationParameters,
                                         String updatedDeviceNetworkId) {
@@ -122,10 +115,16 @@ public abstract class DeviceIntegration extends AbstractIntegration {
         return deviceIntegrationService.getDeviceHandlerByFingerprint(fingerprint);
     }
 
+    @Deprecated
     public void addDevice(String deviceHandlerId, String deviceName, String deviceNetworkId, Map<String, Object> deviceData,
                           Map<String, String> additionalIntegrationParameters) {
-        //TODO: use event instead
         deviceIntegrationService.addDevice(getId(), deviceHandlerId, deviceName, deviceNetworkId, deviceData, additionalIntegrationParameters);
+    }
+
+
+    public void addDevice(String deviceNetworkId, Map<String, String> fingerprint, Map<String, Object> deviceData,
+                          Map<String, String> additionalIntegrationParameters) {
+        deviceIntegrationService.addDevice(getId(), deviceNetworkId, fingerprint, deviceData, additionalIntegrationParameters);
     }
 
     /**

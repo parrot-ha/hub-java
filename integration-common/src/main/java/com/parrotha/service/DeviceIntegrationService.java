@@ -21,10 +21,16 @@ package com.parrotha.service;
 import java.util.Map;
 
 public interface DeviceIntegrationService {
+    @Deprecated
     String addDevice(String integrationId, String deviceHandlerId, String deviceName, String deviceNetworkId, Map<String, Object> deviceData,
                      Map<String, String> additionalIntegrationParameters);
 
+    String addDevice(String integrationId, String deviceNetworkId, Map<String, String> fingerprint, Map<String, Object> deviceData,
+                     Map<String, String> additionalIntegrationParameters);
+
     boolean deleteDevice(String integrationId, String deviceNetworkId);
+
+    void runDeviceMethodByDNI(String integrationId, String deviceNetworkId, String methodName, Object... args);
 
     boolean deviceExists(String integrationId, String deviceNetworkId, boolean includeUnaffiliated);
 

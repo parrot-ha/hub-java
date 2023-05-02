@@ -23,6 +23,8 @@ import com.parrotha.integration.CloudIntegration;
 import com.parrotha.integration.DeviceIntegration;
 import com.parrotha.integration.IntegrationEvent;
 import com.parrotha.integration.IntegrationEventListener;
+import com.parrotha.integration.device.DeviceAddedEvent;
+import com.parrotha.integration.device.DeviceAddingEvent;
 import com.parrotha.integration.device.DeviceEvent;
 import com.parrotha.integration.device.DeviceMessageEvent;
 import com.parrotha.integration.device.LanDeviceMessageEvent;
@@ -69,9 +71,9 @@ public class IntegrationService implements ExtensionStateListener, IntegrationEv
 
     private Map<String, Map<String, Object>> integrationTypeMap;
 
-    public IntegrationService(IntegrationRegistry integrationRegistry, ConfigurationService configurationService,
-                              ExtensionService extensionService, DeviceIntegrationService deviceIntegrationService, DeviceService deviceService,
-                              EntityService entityService, LocationService locationService) {
+    public IntegrationService(IntegrationRegistry integrationRegistry, ConfigurationService configurationService, ExtensionService extensionService,
+                              DeviceIntegrationService deviceIntegrationService, DeviceService deviceService, EntityService entityService,
+                              LocationService locationService) {
         this.integrationRegistry = integrationRegistry;
         this.configurationService = configurationService;
         this.extensionService = extensionService;
@@ -224,8 +226,7 @@ public class IntegrationService implements ExtensionStateListener, IntegrationEv
 
         Map<String, AbstractIntegration> integrationMap = getIntegrationMap();
         if (integrationMap != null) {
-            IntegrationConfigurationServiceImpl integrationConfigurationService = new IntegrationConfigurationServiceImpl(
-                    configurationService);
+            IntegrationConfigurationServiceImpl integrationConfigurationService = new IntegrationConfigurationServiceImpl(configurationService);
             for (String integrationId : integrationMap.keySet()) {
                 AbstractIntegration abstractIntegration = integrationMap.get(integrationId);
                 if (abstractIntegration != null) {
@@ -252,12 +253,10 @@ public class IntegrationService implements ExtensionStateListener, IntegrationEv
     private void initializeIntegration(AbstractIntegration abstractIntegration) {
         abstractIntegration.setIntegrationEventListener(this);
         if (abstractIntegration instanceof DeviceIntegration) {
-            ((DeviceIntegration) abstractIntegration)
-                    .setDeviceIntegrationService(deviceIntegrationService);
+            ((DeviceIntegration) abstractIntegration).setDeviceIntegrationService(deviceIntegrationService);
         }
         if (abstractIntegration instanceof CloudIntegration) {
-            ((CloudIntegration) abstractIntegration).setCloudIntegrationService(
-                    new CloudIntegrationServiceImpl(entityService, locationService));
+            ((CloudIntegration) abstractIntegration).setCloudIntegrationService(new CloudIntegrationServiceImpl(entityService, locationService));
         }
     }
 
@@ -291,13 +290,11 @@ public class IntegrationService implements ExtensionStateListener, IntegrationEv
         Collection<IntegrationConfiguration> integrationConfigurations = configurationService.getIntegrations();
         if (integrationConfigurations != null) {
             for (IntegrationConfiguration integrationConfiguration : integrationConfigurations) {
-                AbstractIntegration abstractIntegration = getAbstractIntegrationFromConfiguration(
-                        integrationConfiguration);
+                AbstractIntegration abstractIntegration = getAbstractIntegrationFromConfiguration(integrationConfiguration);
                 if (abstractIntegration != null) {
                     temporaryIntegrationMap.put(integrationConfiguration.getId(), abstractIntegration);
-                    temporaryProtocolListMap
-                            .computeIfAbsent(integrationConfiguration.getProtocol(),
-                                    k -> new ArrayList<>()).add(integrationConfiguration.getId());
+                    temporaryProtocolListMap.computeIfAbsent(integrationConfiguration.getProtocol(), k -> new ArrayList<>())
+                            .add(integrationConfiguration.getId());
                 }
             }
         }
@@ -324,8 +321,7 @@ public class IntegrationService implements ExtensionStateListener, IntegrationEv
         if (integrationClassLoader != null) {
             Class<? extends AbstractIntegration> integrationClass = null;
             try {
-                integrationClass = Class
-                        .forName((String) integrationTypeMap.get(integrationTypeId).get("className"), true, integrationClassLoader)
+                integrationClass = Class.forName((String) integrationTypeMap.get(integrationTypeId).get("className"), true, integrationClassLoader)
                         .asSubclass(AbstractIntegration.class);
                 abstractIntegration = integrationClass.getDeclaredConstructor().newInstance();
             } catch (Exception e) {
@@ -373,12 +369,10 @@ public class IntegrationService implements ExtensionStateListener, IntegrationEv
         AbstractIntegration integration = getIntegrationClass(integrationTypeId);
         String integrationId;
         if (integration instanceof DeviceIntegration) {
-            integrationId = configurationService
-                    .addIntegration(((DeviceIntegration) integration).getProtocol(), integrationTypeId,
-                            integration.getDefaultSettings());
+            integrationId = configurationService.addIntegration(((DeviceIntegration) integration).getProtocol(), integrationTypeId,
+                    integration.getDefaultSettings());
         } else {
-            integrationId = configurationService
-                    .addIntegration(null, integrationTypeId, integration.getDefaultSettings());
+            integrationId = configurationService.addIntegration(null, integrationTypeId, integration.getDefaultSettings());
         }
 
         IntegrationConfiguration integrationConfiguration = configurationService.getIntegrationById(integrationId);
@@ -391,9 +385,7 @@ public class IntegrationService implements ExtensionStateListener, IntegrationEv
         if (protocolListMap == null) {
             protocolListMap = new HashMap<>();
         }
-        protocolListMap
-                .computeIfAbsent(integrationConfiguration.getProtocol(),
-                        k -> new ArrayList<>()).add(integrationConfiguration.getId());
+        protocolListMap.computeIfAbsent(integrationConfiguration.getProtocol(), k -> new ArrayList<>()).add(integrationConfiguration.getId());
 
         abstractIntegration.setConfigurationService(new IntegrationConfigurationServiceImpl(configurationService));
 
@@ -484,15 +476,37 @@ public class IntegrationService implements ExtensionStateListener, IntegrationEv
     }
 
     @Override
-    public void messageReceived(IntegrationEvent integrationEvent) {
+    public void eventReceived(IntegrationEvent integrationEvent) {
         if (integrationEvent instanceof DeviceEvent) {
             if (integrationEvent instanceof DeviceMessageEvent) {
                 if (integrationEvent instanceof LanDeviceMessageEvent) {
                     lanDeviceMessageReceived((LanDeviceMessageEvent) integrationEvent);
                 } else {
                     entityService.runDeviceMethodByDNI(integrationEvent.getIntegrationId(),
-                            ((DeviceMessageEvent) integrationEvent).getDeviceNetworkId(),
-                            "parse", ((DeviceMessageEvent) integrationEvent).getMessage());
+                            ((DeviceMessageEvent) integrationEvent).getDeviceNetworkId(), "parse",
+                            ((DeviceMessageEvent) integrationEvent).getMessage());
+                }
+            } else if (integrationEvent instanceof DeviceAddingEvent) {
+                // check if this is an update to an existing device, ie zigbee device has changed address.
+                if (((DeviceAddingEvent) integrationEvent).getAdditionalParameters() != null &&
+                        deviceService.deviceExists(integrationEvent.getIntegrationId(), null,
+                                ((DeviceAddingEvent) integrationEvent).getAdditionalParameters())) {
+                    // we have an existing device, update dni in case it changed
+                    deviceService.updateExistingDevice(integrationEvent.getIntegrationId(), null,
+                            ((DeviceAddingEvent) integrationEvent).getAdditionalParameters(),
+                            ((DeviceAddingEvent) integrationEvent).getDeviceNetworkId());
+                }
+            } else if (integrationEvent instanceof DeviceAddedEvent) {
+                DeviceAddedEvent deviceAddedEvent = (DeviceAddedEvent) integrationEvent;
+                Map fingerprint = deviceAddedEvent.getFingerprint();
+                String[] deviceHandlerInfo = entityService.getDeviceHandlerByFingerprint(fingerprint);
+
+                if (deviceHandlerInfo != null) {
+                    String deviceHandlerId = deviceHandlerInfo[0];
+                    String deviceName = deviceHandlerInfo[1];
+                    String deviceId = deviceService.addDevice(integrationEvent.getIntegrationId(), deviceHandlerId, deviceName,
+                            deviceAddedEvent.getDeviceNetworkId(), deviceAddedEvent.getData(), deviceAddedEvent.getAdditionalParameters());
+                    entityService.runDeviceMethod(deviceId, "installed");
                 }
             }
         }
@@ -507,8 +521,7 @@ public class IntegrationService implements ExtensionStateListener, IntegrationEv
 
         String portHexString = String.format("%04x", event.getRemotePort());
         String ipAddressHexString = Stream.of(event.getRemoteAddress().split("\\."))
-                .reduce("", (partialString, element) ->
-                        partialString + String.format("%02x", Integer.parseInt(element)));
+                .reduce("", (partialString, element) -> partialString + String.format("%02x", Integer.parseInt(element)));
 
         // next look for device based on ip address : port
         String ipAddressAndPortHexString = ipAddressHexString + ":" + portHexString;
@@ -545,6 +558,7 @@ public class IntegrationService implements ExtensionStateListener, IntegrationEv
 
         // Finally, send message as hub event if no match above, it appears that Smartthings used to do this.
         // TODO: is lanMessage the right name of the event?  Can't find documentation about it.
-        entityService.sendHubEvent(new HashMap<>(Map.of("name", "lanMessage", "value", event.getMacAddress(), "description", event.getMessage())));
+        entityService.sendHubEvent(
+                new HashMap<>(Map.of("name", "lanMessage", "value", event.getMacAddress(), "description", event.getMessage())));
     }
 }
