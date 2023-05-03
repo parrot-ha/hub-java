@@ -18,6 +18,7 @@
  */
 package com.parrotha.integration.zigbee;
 
+import com.parrotha.integration.device.DeviceMessageEvent;
 import com.parrotha.internal.utils.HexUtils;
 import com.zsmartsystems.zigbee.ZigBeeNetworkManager;
 import com.zsmartsystems.zigbee.aps.ZigBeeApsFrame;
@@ -59,7 +60,7 @@ public class ParrotHubZigBeeNetworkManager extends ZigBeeNetworkManager {
                 String description = ApsFrameTransformer.transformApsFrame(incomingApsFrame);
                 if (description != null) {
                     // send message to user code
-                    zigBeeIntegration.sendDeviceMessage(HexUtils.integerToHexString(incomingApsFrame.getSourceAddress(), 2), description);
+                    zigBeeIntegration.sendEvent(new DeviceMessageEvent(HexUtils.integerToHexString(incomingApsFrame.getSourceAddress(), 2), description));
                 }
             } catch (Exception e) {
                 logger.warn(String.format("Caught exception while processing zigbee message: {%s}", incomingApsFrame.toString()), e);

@@ -16,32 +16,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.parrotha.integration.device;
+package com.parrotha.integration;
 
-public class LanDeviceMessageEvent extends DeviceMessageEvent {
-    public LanDeviceMessageEvent(String deviceNetworkId, String message) {
-        super(deviceNetworkId, message);
+public class IntegrationHubEvent extends IntegrationEvent {
+    private String name;
+    private String value;
+    private String description;
+    private boolean isStateChange;
+
+    public IntegrationHubEvent(String name, String value, String description, boolean isStateChange) {
+        this.name = name;
+        this.value = value;
+        this.description = description;
+        this.isStateChange = isStateChange;
+
     }
 
-    public LanDeviceMessageEvent(String macAddress, String remoteAddress, int remotePort, String message) {
-        super(macAddress, message);
-        this.remoteAddress = remoteAddress;
-        this.remotePort = remotePort;
-    }
-
-    private String remoteAddress;
-    private int remotePort;
-
-
-    public String getRemoteAddress() {
-        return remoteAddress;
-    }
-
-    public int getRemotePort() {
-        return remotePort;
-    }
-
-    public String getMacAddress() {
-        return getDeviceNetworkId();
+    @Override
+    public EventType getEventType() {
+        return EventType.HUB;
     }
 }

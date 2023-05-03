@@ -18,6 +18,7 @@
  */
 package com.parrotha.integration.zigbee;
 
+import com.parrotha.integration.device.DeviceAddedEvent;
 import com.parrotha.integration.device.DeviceAddingEvent;
 import com.parrotha.internal.utils.HexUtils;
 import com.zsmartsystems.zigbee.*;
@@ -82,7 +83,6 @@ public class ZigBeeHandler implements ZigBeeNetworkStateListener, ZigBeeAnnounce
 
     public Map<IeeeAddress, Map<String, Object>> joinedDevices = new HashMap<>();
 
-
     public ZigBeeHandler(String serialPortName, int serialBaud, ZigBeePort.FlowControl flowControl, ZigBeeIntegration zigBeeIntegration) {
         if (serialPortName != null) {
             this.serialPortName = serialPortName;
@@ -101,6 +101,7 @@ public class ZigBeeHandler implements ZigBeeNetworkStateListener, ZigBeeAnnounce
     }
 
     public boolean joinMode = false;
+    private long joinStart = 0;
     Timer timer;
 
     public ZigBeeStatus permitJoin(int duration) {
@@ -113,6 +114,7 @@ public class ZigBeeHandler implements ZigBeeNetworkStateListener, ZigBeeAnnounce
         } else {
             joinedDevices = new HashMap<>();
             joinMode = true;
+            joinStart = System.currentTimeMillis();
             TimerTask task = new TimerTask() {
                 public void run() {
                     joinMode = false;
@@ -353,7 +355,11 @@ public class ZigBeeHandler implements ZigBeeNetworkStateListener, ZigBeeAnnounce
             if (StringUtils.isNotBlank(model)) {
                 deviceData.put("model", model);
             }
-            zigBeeIntegration.addDevice(HexUtils.integerToHexString(node.getNetworkAddress(), 2), fingerprint, deviceData, additionalParams);
+            // if in join mode or join mode was started in the past 5 minutes, consider it a user initiated add.
+            boolean userInitiatedAdd = joinMode || ((System.currentTimeMillis() - joinStart) > 1000 * 60 * 5);
+            zigBeeIntegration.sendEvent(
+                    new DeviceAddedEvent(HexUtils.integerToHexString(node.getNetworkAddress(), 2), userInitiatedAdd, fingerprint, deviceData,
+                            additionalParams));
 
             return;
         }

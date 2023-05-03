@@ -21,6 +21,8 @@ package com.parrotha.integration;
 import com.parrotha.device.HubAction;
 import com.parrotha.device.HubResponse;
 import com.parrotha.device.Protocol;
+import com.parrotha.integration.device.DeviceAddedEvent;
+import com.parrotha.integration.device.DeviceMessageEvent;
 import com.parrotha.internal.integration.AbstractIntegration;
 import com.parrotha.service.DeviceIntegrationService;
 
@@ -35,7 +37,7 @@ public abstract class DeviceIntegration extends AbstractIntegration {
      *
      * @param deviceNetworkId
      * @return
-     * @Deprecated use removeIntegrationDevice(String, boolean)
+     * @Deprecated use removeIntegrationDeviceAsync(String, boolean)
      */
     @Deprecated
     public boolean removeIntegrationDevice(String deviceNetworkId) {
@@ -59,7 +61,7 @@ public abstract class DeviceIntegration extends AbstractIntegration {
     public abstract HubResponse processAction(HubAction hubAction);
 
     // override if you want to specify the protocol that this integration supports
-    // in general, it should be other, but if you want a specific system wide handling of
+    // in general, it should be other, but if you want a specific system-wide handling of
     // a protocol, this is where it is specified.
     public Protocol getProtocol() {
         return Protocol.OTHER;
@@ -76,23 +78,27 @@ public abstract class DeviceIntegration extends AbstractIntegration {
         this.deviceIntegrationService = deviceIntegrationService;
     }
 
+    @Deprecated
     public void sendDeviceMessage(String deviceNetworkId, String message) {
-        sendDeviceMessage(deviceNetworkId, message, false);
+        sendEvent(new DeviceMessageEvent(deviceNetworkId, message));
     }
 
+    @Deprecated
     public void sendDeviceMessage(String deviceNetworkId, String message, boolean unaffiliated) {
-        //invoke parse method on device handler
-        deviceIntegrationService.runDeviceMethodByDNI((unaffiliated ? null : getId()), deviceNetworkId, "parse", message);
+        sendEvent(new DeviceMessageEvent(deviceNetworkId, message));
     }
 
+    @Deprecated
     public boolean deviceExists(String deviceNetworkId) {
         return deviceExists(deviceNetworkId, false);
     }
 
+    @Deprecated
     public boolean deviceExists(String deviceNetworkId, boolean includeUnaffiliated) {
         return deviceIntegrationService.deviceExists(getId(), deviceNetworkId, includeUnaffiliated);
     }
 
+    @Deprecated
     public boolean deviceExists(String deviceNetworkId, Map<String, String> integrationParameters) {
         return deviceIntegrationService.deviceExists(getId(), deviceNetworkId, integrationParameters);
     }
@@ -104,6 +110,7 @@ public abstract class DeviceIntegration extends AbstractIntegration {
      * @return status of update
      * @Deprecated
      */
+    @Deprecated
     public boolean updateExistingDevice(String existingDeviceNetworkId,
                                         Map<String, String> existingIntegrationParameters,
                                         String updatedDeviceNetworkId) {
@@ -121,22 +128,23 @@ public abstract class DeviceIntegration extends AbstractIntegration {
         deviceIntegrationService.addDevice(getId(), deviceHandlerId, deviceName, deviceNetworkId, deviceData, additionalIntegrationParameters);
     }
 
-
+    @Deprecated
     public void addDevice(String deviceNetworkId, Map<String, String> fingerprint, Map<String, Object> deviceData,
                           Map<String, String> additionalIntegrationParameters) {
-        deviceIntegrationService.addDevice(getId(), deviceNetworkId, fingerprint, deviceData, additionalIntegrationParameters);
+        sendEvent(new DeviceAddedEvent(deviceNetworkId, true, fingerprint, deviceData, additionalIntegrationParameters));
     }
 
     /**
      * @param deviceNetworkId
      * @return
-     * @Deprecated Use removeSystemDevice
+     * @Deprecated send device removed event
      */
     @Deprecated
     public boolean deleteItem(String deviceNetworkId) {
         return deviceIntegrationService.deleteDevice(getId(), deviceNetworkId);
     }
 
+    @Deprecated
     public void sendHubEvent(Map properties) {
         deviceIntegrationService.sendHubEvent(properties);
     }
