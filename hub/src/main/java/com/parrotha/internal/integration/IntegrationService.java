@@ -487,16 +487,16 @@ public class IntegrationService implements ExtensionStateListener, IntegrationEv
                             ((DeviceMessageEvent) integrationEvent).getMessage());
                 }
             } else if (integrationEvent instanceof DeviceAddingEvent) {
+                DeviceAddingEvent deviceAddingEvent = (DeviceAddingEvent) integrationEvent;
                 // check if this is an update to an existing device, ie zigbee device has changed address.
-                if (((DeviceAddingEvent) integrationEvent).getAdditionalParameters() != null &&
-                        deviceService.deviceExists(integrationEvent.getIntegrationId(), null,
-                                ((DeviceAddingEvent) integrationEvent).getAdditionalParameters())) {
+                if (deviceAddingEvent.getAdditionalParameters() != null &&
+                        deviceService.deviceExists(integrationEvent.getIntegrationId(), null, deviceAddingEvent.getAdditionalParameters())) {
                     // we have an existing device, update dni in case it changed
-                    deviceService.updateExistingDevice(integrationEvent.getIntegrationId(), null,
-                            ((DeviceAddingEvent) integrationEvent).getAdditionalParameters(),
-                            ((DeviceAddingEvent) integrationEvent).getDeviceNetworkId());
+                    deviceService.updateExistingDevice(integrationEvent.getIntegrationId(), null, deviceAddingEvent.getAdditionalParameters(),
+                            deviceAddingEvent.getDeviceNetworkId());
                 }
-            } else if (integrationEvent instanceof DeviceAddedEvent) {
+            } else if (integrationEvent instanceof DeviceAddedEvent && ((DeviceAddedEvent) integrationEvent).isUserInitiatedAdd()) {
+                // only add device if user initiated the addition, this could also mean that the user allowed the integration to automatically add devices
                 DeviceAddedEvent deviceAddedEvent = (DeviceAddedEvent) integrationEvent;
                 Map fingerprint = deviceAddedEvent.getFingerprint();
                 String[] deviceHandlerInfo = entityService.getDeviceHandlerByFingerprint(fingerprint);
@@ -558,7 +558,6 @@ public class IntegrationService implements ExtensionStateListener, IntegrationEv
 
         // Finally, send message as hub event if no match above, it appears that Smartthings used to do this.
         // TODO: is lanMessage the right name of the event?  Can't find documentation about it.
-        entityService.sendHubEvent(
-                new HashMap<>(Map.of("name", "lanMessage", "value", event.getMacAddress(), "description", event.getMessage())));
+        entityService.sendHubEvent(new HashMap<>(Map.of("name", "lanMessage", "value", event.getMacAddress(), "description", event.getMessage())));
     }
 }

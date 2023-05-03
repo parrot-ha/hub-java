@@ -22,6 +22,7 @@ import com.parrotha.device.HubAction;
 import com.parrotha.device.HubResponse;
 import com.parrotha.device.Protocol;
 import com.parrotha.integration.DeviceIntegration;
+import com.parrotha.integration.IntegrationHubEvent;
 import com.parrotha.internal.utils.HexUtils;
 import com.parrotha.ui.PreferencesBuilder;
 import org.apache.commons.collections4.map.CaseInsensitiveMap;
@@ -168,12 +169,7 @@ public class LanIntegration extends DeviceIntegration {
         String description = String.format(
                 "devicetype:04, mac:%s, networkAddress:%s, deviceAddress:%s, stringCount:04, ssdpPath:%s, ssdpUSN:%s, ssdpTerm:%s, ssdpNTS:%s", mac,
                 networkAddress, deviceAddress, ssdpPath, ssdpUSN, ssdpTerm, ssdpNTS);
-        Map<String, Object> properties = new HashMap<>();
-        properties.put("name", "ssdpTerm");
-        properties.put("value", ssdpTerm);
-        properties.put("description", description);
-        properties.put("isStateChange", true);
-        sendHubEvent(properties);
+        sendEvent(new IntegrationHubEvent("ssdpTerm", ssdpTerm, description, true));
     }
 
     @Override
