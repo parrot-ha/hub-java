@@ -72,13 +72,14 @@ public class IntegrationApiHandler extends BaseApiHandler {
                                     integrationMap.put("name", integration.getName());
                                     break;
                                 case "label":
-                                    integrationMap.put("label",
-                                            integration.getLabel() != null ? integration.getLabel() : integration.getName());
+                                    integrationMap.put("label", integration.getLabel() != null ? integration.getLabel() : integration.getName());
                                     break;
                                 case "tags":
-                                    integrationMap.put("tags", ((DeviceIntegration) abstractIntegration).getTags());
+                                    integrationMap.put("tags",
+                                            abstractIntegration != null ? ((DeviceIntegration) abstractIntegration).getTags() : new ArrayList<>());
                                 case "description":
-                                    integrationMap.put("description", abstractIntegration.getDescription());
+                                    integrationMap.put("description",
+                                            abstractIntegration != null ? abstractIntegration.getDescription() : "Not Found");
                             }
                         }
 
@@ -167,8 +168,7 @@ public class IntegrationApiHandler extends BaseApiHandler {
             if (abstractIntegration != null) {
                 List<IntegrationSetting> settings = abstractIntegration.getSettings();
                 if (settings != null) {
-                    settingsMap = settings.stream().
-                            collect(Collectors.toMap(data -> data.getName(), data -> data.toMap(true)));
+                    settingsMap = settings.stream().collect(Collectors.toMap(IntegrationSetting::getName, data -> data.toMap(true)));
                 }
             }
             ctx.status(200);
@@ -264,14 +264,18 @@ public class IntegrationApiHandler extends BaseApiHandler {
 
             Map response = null;
             boolean success = false;
-            if ("deviceScan".equals(feature)) {
-                response = handleDeviceScanFeature(id, action, options);
-                success = true;
-            } else if ("deviceExclude".equals(feature)) {
-                response = handleDeviceExcludeFeature(id, action, options);
-                success = true;
-            } else if ("reset".equals(feature)) {
-                success = handleResetFeature(id, action, options);
+            switch (feature) {
+                case "deviceScan":
+                    response = handleDeviceScanFeature(id, action, options);
+                    success = true;
+                    break;
+                case "deviceExclude":
+                    response = handleDeviceExcludeFeature(id, action, options);
+                    success = true;
+                    break;
+                case "reset":
+                    success = handleResetFeature(id, action, options);
+                    break;
             }
 
             ctx.status(200);
