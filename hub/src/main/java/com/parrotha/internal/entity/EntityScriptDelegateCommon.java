@@ -55,6 +55,13 @@ public class EntityScriptDelegateCommon {
     public Object httpGet(Map params, Closure closure) throws IOException, URISyntaxException {
         ParrotHubHTTPBuilder httpBuilder = new ParrotHubHTTPBuilder();
         Map paramsCopy = Maps.newHashMap(params);
+        if(paramsCopy.containsKey("timeout")) {
+            Object timeoutObj = paramsCopy.remove("timeout");
+            if(timeoutObj instanceof Number) {
+                int timeout = ((Number) timeoutObj).intValue();
+                //TODO: process timeout, set it on httpBuilder somehow.
+            }
+        }
         Object response = httpBuilder.get(paramsCopy);
         if (response != null && response instanceof HttpResponseDecorator) {
             return closure.call(response);

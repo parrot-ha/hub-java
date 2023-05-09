@@ -46,7 +46,7 @@
           <bool-input
             v-if="settings[body.name]"
             v-bind:body="body"
-            v-model="settings[body.name].value"
+            v-model:checked="settings[body.name].value"
           ></bool-input>
         </div>
         <div v-if="body.type === 'email'">
@@ -308,6 +308,31 @@ export default {
               }
               //TODO: handle multiple going from true to false
             }
+          }
+          // watch any settings that have submit on change
+          if (input.submitOnChange) {
+            this.$watch(`settings.${input.name}.value`, (newValue) => {
+              fetch(`/api/iaas/${this.iaaId}/cfg/settings`, {
+                method: "PATCH",
+                body: JSON.stringify(this.settings),
+              })
+                .then((response) => response.json())
+                .then((data) => {
+                  if (data.success) {
+                    fetch(`/api/iaas/${this.iaaId}/cfg/settings`)
+                      .then((response) => response.json())
+                      .then((data) => {
+                        if (typeof data !== "undefined" && data != null) {
+                          this.savedSettings = data;
+                          this.loadPage();
+                        }
+                      });
+                  } else {
+                    //TODO: popup for user
+                    console.log("problem saving automation app");
+                  }
+                });
+            });
           }
         }
       }

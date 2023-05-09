@@ -233,6 +233,10 @@ public class AutomationAppScriptDelegateImpl extends EntityScriptDelegateCommon 
         return new LocationWrapper(locationService.getLocation());
     }
 
+    public String getHubUID() {
+        return locationService.getHub().getId();
+    }
+
     private Map<String, Object> settings;
 
     @Override
@@ -371,6 +375,9 @@ public class AutomationAppScriptDelegateImpl extends EntityScriptDelegateCommon 
         return null;
     }
 
+    List<InstalledAutomationAppWrapper> getAllChildApps() {
+        return getChildApps();
+    }
     List<InstalledAutomationAppWrapper> getChildApps() {
         return automationAppService.getChildInstalledAutomationApps(this.installedAutomationApp.getId(), null, null).stream()
                 .map(ca -> new InstalledAutomationAppWrapperImpl(ca, entityService, automationAppService)).collect(Collectors.toList());
@@ -537,6 +544,13 @@ public class AutomationAppScriptDelegateImpl extends EntityScriptDelegateCommon 
         runEvery30Minutes(handlerMethod.getName());
     }
 
+    public void runEvery3Hours(String handlerMethod) {
+        scheduleEveryTimeOfHours(3, handlerMethod);
+    }
+
+    public void runEvery3Hours(MetaMethod handlerMethod) {
+        runEvery3Hours(handlerMethod.getName());
+    }
     /**
      * Creates a recurring schedule that executes the specified handlerMethod every thirty minutes.
      * Using this method will pick a random start time in the next thirty minutes, and run every thirty minutes after that.
@@ -555,6 +569,19 @@ public class AutomationAppScriptDelegateImpl extends EntityScriptDelegateCommon 
             minutes = minutes - 60;
         }
         String cronExpression = String.format("%d %d/%d * * * ?", seconds, minutes, minutesParam);
+        scheduleService.schedule(ScheduleService.INSTALLED_AUTOMATION_APP_TYPE, getApp().getId(), cronExpression, handlerMethod, null);
+    }
+
+    private void scheduleEveryTimeOfHours(int hourParam, String handlerMethod) {
+        // create a cron schedule that starts randomly in the next minutes
+        Random rand = new Random();
+        int seconds = rand.nextInt(60);
+        // pick a random time to start
+        int minutes = LocalTime.now().getMinute() + rand.nextInt(60);
+        if (minutes > 59) {
+            minutes = minutes - 60;
+        }
+        String cronExpression = String.format("%d %d */%d * * ?", seconds, minutes, hourParam);
         scheduleService.schedule(ScheduleService.INSTALLED_AUTOMATION_APP_TYPE, getApp().getId(), cronExpression, handlerMethod, null);
     }
 

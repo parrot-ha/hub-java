@@ -4,7 +4,7 @@
     <select
       class="form-select"
       :aria-label="body.title"
-      :value="value"
+      :value="modelValue"
       @input="$emit('update:modelValue', $event.target.value)"
       :multiple="body.multiple"
     >
