@@ -16,27 +16,36 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package groovyx.net.http;
+package com.parrotha.entity;
 
-import groovy.json.JsonBuilder;
-import org.apache.http.HttpEntity;
+import groovy.xml.slurpersupport.GPathResult;
 
-import java.io.UnsupportedEncodingException;
 import java.util.List;
 import java.util.Map;
 
-public class ParrotHubEncoderRegistry extends EncoderRegistry {
-    @Override
-    public HttpEntity encodeJSON(Object model, Object contentType) throws UnsupportedEncodingException {
-        if (model instanceof Map || model instanceof List) {
-            JsonBuilder json = new JsonBuilder(model);
+public interface AsyncResponse {
 
-            if (contentType == null) {
-                contentType = ContentType.JSON;
-            }
-            return this.createEntity(contentType, json.toString());
-        } else {
-            return this.createEntity(contentType, model.toString());
-        }
-    }
+    String getData();
+
+    String getErrorData();
+
+    Object getErrorJson();
+
+    String getErrorMessage();
+
+    GPathResult getErrorXml();
+
+    Map<String, String> getHeaders();
+
+    Object getJson();
+
+    int getStatus();
+
+    List<String> getWarningMessages();
+
+    GPathResult getXml();
+
+    boolean hasError();
+
+
 }

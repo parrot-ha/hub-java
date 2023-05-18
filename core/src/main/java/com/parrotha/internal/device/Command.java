@@ -20,6 +20,7 @@ package com.parrotha.internal.device;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 
@@ -80,12 +81,23 @@ public class Command {
             return false;
         }
         Command command = (Command) o;
-        return Objects.equals(name, command.name) &&
-                Objects.equals(arguments, command.arguments);
+        return Objects.equals(name, command.name) && Objects.equals(arguments, command.arguments);
     }
 
     @Override
     public int hashCode() {
         return Objects.hash(name, arguments);
+    }
+
+    public static boolean listsAreEqual(List<Command> commandListLeft, List<Command> commandListRight) {
+        if (commandListLeft != null) {
+            if (commandListRight == null) {
+                return false;
+            } else {
+                return new HashSet<>(commandListLeft).containsAll(commandListRight) && new HashSet<>(commandListRight).containsAll(commandListLeft);
+            }
+        } else {
+            return commandListRight == null;
+        }
     }
 }

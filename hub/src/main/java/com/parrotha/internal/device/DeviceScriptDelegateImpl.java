@@ -28,10 +28,10 @@ import com.parrotha.app.ParentDeviceWrapperImpl;
 import com.parrotha.device.HubAction;
 import com.parrotha.device.HubMultiAction;
 import com.parrotha.device.Protocol;
+import com.parrotha.entity.EntityScriptDelegateCommon;
 import com.parrotha.internal.ChangeTrackingMap;
 import com.parrotha.internal.app.AutomationAppService;
 import com.parrotha.internal.app.InstalledAutomationApp;
-import com.parrotha.internal.entity.EntityScriptDelegateCommon;
 import com.parrotha.internal.entity.EntityService;
 import com.parrotha.internal.entity.LiveLogger;
 import com.parrotha.internal.hub.LocationService;
@@ -116,7 +116,7 @@ public class DeviceScriptDelegateImpl extends EntityScriptDelegateCommon impleme
     }
 
     public void sendHubCommand(HubMultiAction hubMultiAction) {
-        for(HubAction hubAction : hubMultiAction.getActions()) {
+        for (HubAction hubAction : hubMultiAction.getActions()) {
             sendHubCommand(hubAction);
         }
     }
@@ -674,5 +674,10 @@ public class DeviceScriptDelegateImpl extends EntityScriptDelegateCommon impleme
             closure.run();
         }
         this.tiles = dtd.getTiles();
+    }
+
+    @Override
+    protected void runEntityMethod(String methodName, Object... args) {
+        entityService.runDeviceMethod(this.device.getId(), methodName, args);
     }
 }

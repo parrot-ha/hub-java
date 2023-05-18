@@ -33,12 +33,12 @@ import com.parrotha.app.InstalledAutomationAppWrapperImpl;
 import com.parrotha.app.LocationWrapper;
 import com.parrotha.device.HubAction;
 import com.parrotha.device.HubResponse;
+import com.parrotha.entity.EntityScriptDelegateCommon;
 import com.parrotha.integration.CloudIntegration;
 import com.parrotha.internal.ChangeTrackingMap;
 import com.parrotha.internal.device.Device;
 import com.parrotha.internal.device.DeviceService;
 import com.parrotha.internal.entity.EntityPreferencesHelper;
-import com.parrotha.internal.entity.EntityScriptDelegateCommon;
 import com.parrotha.internal.entity.EntityService;
 import com.parrotha.internal.entity.LiveLogger;
 import com.parrotha.internal.hub.EventService;
@@ -171,6 +171,7 @@ public class AutomationAppScriptDelegateImpl extends EntityScriptDelegateCommon 
     public InstalledAutomationAppWrapper getApp() {
         return new InstalledAutomationAppWrapperImpl(installedAutomationApp, entityService, automationAppService);
     }
+
 
     // TODO: ST has some other interesting methods:
     // getTarget() - appears to be the executing app, ie returns: script_app_b6...e5@2e9ccf7f, maybe for grails Converter interface
@@ -378,6 +379,7 @@ public class AutomationAppScriptDelegateImpl extends EntityScriptDelegateCommon 
     List<InstalledAutomationAppWrapper> getAllChildApps() {
         return getChildApps();
     }
+
     List<InstalledAutomationAppWrapper> getChildApps() {
         return automationAppService.getChildInstalledAutomationApps(this.installedAutomationApp.getId(), null, null).stream()
                 .map(ca -> new InstalledAutomationAppWrapperImpl(ca, entityService, automationAppService)).collect(Collectors.toList());
@@ -551,6 +553,7 @@ public class AutomationAppScriptDelegateImpl extends EntityScriptDelegateCommon 
     public void runEvery3Hours(MetaMethod handlerMethod) {
         runEvery3Hours(handlerMethod.getName());
     }
+
     /**
      * Creates a recurring schedule that executes the specified handlerMethod every thirty minutes.
      * Using this method will pick a random start time in the next thirty minutes, and run every thirty minutes after that.
@@ -637,6 +640,10 @@ public class AutomationAppScriptDelegateImpl extends EntityScriptDelegateCommon 
 
     public void unschedule() {
         scheduleService.unschedule(ScheduleService.INSTALLED_AUTOMATION_APP_TYPE, installedAutomationApp.getId());
+    }
+
+    public void unschedule(String method) {
+        scheduleService.unschedule(ScheduleService.INSTALLED_AUTOMATION_APP_TYPE, installedAutomationApp.getId(), method);
     }
 
     public void schedule(Date dateTime, MetaMethod handlerMethod) {
@@ -1036,5 +1043,10 @@ public class AutomationAppScriptDelegateImpl extends EntityScriptDelegateCommon 
         if (o instanceof Map) {
             pathMappings.put(path, (Map<String, String>) o);
         }
+    }
+
+    @Override
+    protected void runEntityMethod(String methodName, Object... args) {
+        entityService.runInstalledAutomationAppMethod(this.installedAutomationApp.getId(), methodName, args);
     }
 }

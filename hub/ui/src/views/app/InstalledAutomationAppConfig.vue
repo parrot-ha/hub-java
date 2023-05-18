@@ -166,6 +166,7 @@ export default {
       devices: {},
       breadcrumb: [],
       refreshFunction: null,
+      watchers: false,
     };
   },
   computed: {
@@ -311,31 +312,34 @@ export default {
           }
           // watch any settings that have submit on change
           if (input.submitOnChange) {
-            this.$watch(`settings.${input.name}.value`, (newValue) => {
-              fetch(`/api/iaas/${this.iaaId}/cfg/settings`, {
-                method: "PATCH",
-                body: JSON.stringify(this.settings),
-              })
-                .then((response) => response.json())
-                .then((data) => {
-                  if (data.success) {
-                    fetch(`/api/iaas/${this.iaaId}/cfg/settings`)
-                      .then((response) => response.json())
-                      .then((data) => {
-                        if (typeof data !== "undefined" && data != null) {
-                          this.savedSettings = data;
-                          this.loadPage();
-                        }
-                      });
-                  } else {
-                    //TODO: popup for user
-                    console.log("problem saving automation app");
-                  }
-                });
-            });
+            if (!this.watchers) {
+              this.$watch(`settings.${input.name}.value`, () => {
+                fetch(`/api/iaas/${this.iaaId}/cfg/settings`, {
+                  method: "PATCH",
+                  body: JSON.stringify(this.settings),
+                })
+                  .then((response) => response.json())
+                  .then((data) => {
+                    if (data.success) {
+                      fetch(`/api/iaas/${this.iaaId}/cfg/settings`)
+                        .then((response) => response.json())
+                        .then((data) => {
+                          if (typeof data !== "undefined" && data != null) {
+                            this.savedSettings = data;
+                            this.loadPage();
+                          }
+                        });
+                    } else {
+                      //TODO: popup for user
+                      console.log("problem saving automation app");
+                    }
+                  });
+              });
+            }
           }
         }
       }
+      this.watchers = true;
     },
     loadInformation: function () {
       fetch("/api/device-id-map")

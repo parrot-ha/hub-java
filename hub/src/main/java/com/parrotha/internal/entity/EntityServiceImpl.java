@@ -550,6 +550,9 @@ public class EntityServiceImpl implements EntityService {
             return null;
         }
         DeviceHandler deviceHandler = deviceService.getDeviceHandler(deviceHandlerId);
+        if (deviceHandler == null) {
+            throw new IllegalArgumentException("Device handler does not exist: " + deviceHandlerId);
+        }
 
         Class<Script> s = deviceHandlerScripts.get(deviceHandlerId);
         if (s == null) {

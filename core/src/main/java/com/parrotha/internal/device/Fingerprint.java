@@ -21,6 +21,8 @@ package com.parrotha.internal.device;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -60,20 +62,46 @@ public class Fingerprint {
 
     @Override
     public boolean equals(Object obj) {
-        if (obj == null) return false;
-        if (obj == this) return true;
+        if (obj == null) {
+            return false;
+        }
+        if (obj == this) {
+            return true;
+        }
         if (obj instanceof Fingerprint) {
-            if (!StringUtils.equals(this.profileId, ((Fingerprint) obj).getProfileId())) return false;
-            if (!StringUtils.equals(this.endpointId, ((Fingerprint) obj).getEndpointId())) return false;
-            if (!StringUtils.equals(this.inClusters, ((Fingerprint) obj).getInClusters())) return false;
-            if (!StringUtils.equals(this.outClusters, ((Fingerprint) obj).getOutClusters())) return false;
-            if (!StringUtils.equals(this.model, ((Fingerprint) obj).getModel())) return false;
-            if (!StringUtils.equals(this.manufacturer, ((Fingerprint) obj).getManufacturer())) return false;
-            if (!StringUtils.equals(this.application, ((Fingerprint) obj).getApplication())) return false;
-            if (!StringUtils.equals(this.deviceJoinName, ((Fingerprint) obj).getDeviceJoinName())) return false;
-            if (!StringUtils.equals(this.mfr, ((Fingerprint) obj).getMfr())) return false;
-            if (!StringUtils.equals(this.prod, ((Fingerprint) obj).getProd())) return false;
-            if (!StringUtils.equals(this.intg, ((Fingerprint) obj).getIntg())) return false;
+            if (!StringUtils.equals(this.profileId, ((Fingerprint) obj).getProfileId())) {
+                return false;
+            }
+            if (!StringUtils.equals(this.endpointId, ((Fingerprint) obj).getEndpointId())) {
+                return false;
+            }
+            if (!StringUtils.equals(this.inClusters, ((Fingerprint) obj).getInClusters())) {
+                return false;
+            }
+            if (!StringUtils.equals(this.outClusters, ((Fingerprint) obj).getOutClusters())) {
+                return false;
+            }
+            if (!StringUtils.equals(this.model, ((Fingerprint) obj).getModel())) {
+                return false;
+            }
+            if (!StringUtils.equals(this.manufacturer, ((Fingerprint) obj).getManufacturer())) {
+                return false;
+            }
+            if (!StringUtils.equals(this.application, ((Fingerprint) obj).getApplication())) {
+                return false;
+            }
+            if (!StringUtils.equals(this.deviceJoinName, ((Fingerprint) obj).getDeviceJoinName())) {
+                return false;
+            }
+            if (!StringUtils.equals(this.mfr, ((Fingerprint) obj).getMfr())) {
+                return false;
+            }
+            if (!StringUtils.equals(this.prod, ((Fingerprint) obj).getProd())) {
+                return false;
+            }
+            if (!StringUtils.equals(this.intg, ((Fingerprint) obj).getIntg())) {
+                return false;
+            }
         }
         return true;
     }
@@ -104,7 +132,7 @@ public class Fingerprint {
     }
 
     public String getSortedInClusters() {
-        if(inClusters != null && sortedInClusters == null) {
+        if (inClusters != null && sortedInClusters == null) {
             sortedInClusters = Arrays.stream(inClusters.split(",")).sorted().collect(Collectors.joining(","));
         }
         return sortedInClusters;
@@ -119,7 +147,7 @@ public class Fingerprint {
     }
 
     public String getSortedOutClusters() {
-        if(outClusters != null && sortedOutClusters == null) {
+        if (outClusters != null && sortedOutClusters == null) {
             sortedOutClusters = Arrays.stream(outClusters.split(",")).sorted().collect(Collectors.joining(","));
         }
         return sortedOutClusters;
@@ -200,5 +228,17 @@ public class Fingerprint {
                 ", prod: '" + prod + '\'' +
                 ", intg: '" + intg + '\'' +
                 ')';
+    }
+
+    public static boolean listsAreEqual(List<Fingerprint> leftList, List<Fingerprint> rightList) {
+        if (leftList != null) {
+            if (rightList == null) {
+                return false;
+            } else {
+                return new HashSet<>(leftList).containsAll(rightList) && new HashSet<>(rightList).containsAll(leftList);
+            }
+        } else {
+            return rightList == null;
+        }
     }
 }

@@ -72,6 +72,7 @@ import java.io.InputStream;
 import java.io.Reader;
 import java.io.StringReader;
 import java.io.StringWriter;
+import java.lang.reflect.InvocationTargetException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Map;
@@ -104,8 +105,7 @@ public class ParrotHubHTTPBuilder {
     protected Object defaultContentType = ContentType.ANY;
     protected Object defaultRequestContentType = null;
     protected boolean autoAcceptHeader = true;
-    protected final Map<Object, Closure> defaultResponseHandlers =
-            new StringHashMap<>(buildDefaultResponseHandlers());
+    protected final Map<Object, Closure> defaultResponseHandlers = new StringHashMap<>(buildDefaultResponseHandlers());
 
     protected final Map<Object, Object> defaultRequestHeaders = new StringHashMap<>();
 
@@ -139,8 +139,7 @@ public class ParrotHubHTTPBuilder {
      * @see #defaultSuccessHandler(HttpResponseDecorator, Object)
      * @see #defaultFailureHandler(HttpResponseDecorator, Object)
      */
-    public Object get(Map<String, ?> args)
-            throws ClientProtocolException, IOException, URISyntaxException {
+    public Object get(Map<String, ?> args) throws ClientProtocolException, IOException, URISyntaxException {
         return this.get(args, null);
     }
 
@@ -161,16 +160,14 @@ public class ParrotHubHTTPBuilder {
      * @throws URISyntaxException      if a uri argument is given which does not
      *                                 represent a valid URI
      */
-    public Object get(Map<String, ?> args, Closure responseClosure)
-            throws ClientProtocolException, IOException, URISyntaxException {
-        ParrotHubHTTPBuilder.RequestConfigDelegate delegate = new ParrotHubHTTPBuilder.RequestConfigDelegate(new HttpGet(),
-                this.defaultContentType,
-                this.defaultRequestHeaders,
-                this.defaultResponseHandlers);
+    public Object get(Map<String, ?> args, Closure responseClosure) throws ClientProtocolException, IOException, URISyntaxException {
+        ParrotHubHTTPBuilder.RequestConfigDelegate delegate = new ParrotHubHTTPBuilder.RequestConfigDelegate(new HttpGet(), this.defaultContentType,
+                this.defaultRequestHeaders, this.defaultResponseHandlers);
 
         delegate.setPropertiesFromMap(args);
-        if (responseClosure != null) delegate.getResponse().put(
-                Status.SUCCESS, responseClosure);
+        if (responseClosure != null) {
+            delegate.getResponse().put(Status.SUCCESS, responseClosure);
+        }
         return this.doRequest(delegate);
     }
 
@@ -194,8 +191,7 @@ public class ParrotHubHTTPBuilder {
      * @see #defaultSuccessHandler(HttpResponseDecorator, Object)
      * @see #defaultFailureHandler(HttpResponseDecorator, Object)
      */
-    public Object post(Map<String, ?> args)
-            throws ClientProtocolException, URISyntaxException, IOException {
+    public Object post(Map<String, ?> args) throws ClientProtocolException, URISyntaxException, IOException {
         return this.post(args, null);
     }
 
@@ -222,12 +218,9 @@ public class ParrotHubHTTPBuilder {
      * @throws URISyntaxException      if a uri argument is given which does not
      *                                 represent a valid URI
      */
-    public Object post(Map<String, ?> args, Closure responseClosure)
-            throws URISyntaxException, ClientProtocolException, IOException {
-        ParrotHubHTTPBuilder.RequestConfigDelegate delegate = new ParrotHubHTTPBuilder.RequestConfigDelegate(new HttpPost(),
-                this.defaultContentType,
-                this.defaultRequestHeaders,
-                this.defaultResponseHandlers);
+    public Object post(Map<String, ?> args, Closure responseClosure) throws URISyntaxException, ClientProtocolException, IOException {
+        ParrotHubHTTPBuilder.RequestConfigDelegate delegate = new ParrotHubHTTPBuilder.RequestConfigDelegate(new HttpPost(), this.defaultContentType,
+                this.defaultRequestHeaders, this.defaultResponseHandlers);
 
         /* by default assume the request body will be URLEncoded, but allow
            the 'requestContentType' named argument to override this if it is
@@ -235,8 +228,33 @@ public class ParrotHubHTTPBuilder {
         delegate.setRequestContentType(ContentType.URLENC.toString());
         delegate.setPropertiesFromMap(args);
 
-        if (responseClosure != null) delegate.getResponse().put(
-                Status.SUCCESS.toString(), responseClosure);
+        if (responseClosure != null) {
+            delegate.getResponse().put(Status.SUCCESS.toString(), responseClosure);
+        }
+
+        return this.doRequest(delegate);
+    }
+
+    public Object request(Method method, Map<String, ?> args, Closure responseClosure)
+            throws URISyntaxException, IOException {
+
+        RequestConfigDelegate delegate = null;
+        try {
+            delegate = new RequestConfigDelegate(
+                    method.getRequestType().getDeclaredConstructor().newInstance(), this.defaultContentType, this.defaultRequestHeaders,
+                    this.defaultResponseHandlers);
+        } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
+            throw new RuntimeException(e);
+        }
+                    /* by default assume the request body will be URLEncoded, but allow
+           the 'requestContentType' named argument to override this if it is
+           given */
+        delegate.setRequestContentType(ContentType.URLENC.toString());
+        delegate.setPropertiesFromMap(args);
+
+        if (responseClosure != null) {
+            delegate.getResponse().put(Status.SUCCESS.toString(), responseClosure);
+        }
 
         return this.doRequest(delegate);
     }
@@ -244,8 +262,7 @@ public class ParrotHubHTTPBuilder {
     /**
      * All <code>request</code> methods delegate to this method.
      */
-    protected Object doRequest(final ParrotHubHTTPBuilder.RequestConfigDelegate delegate)
-            throws ClientProtocolException, IOException {
+    protected Object doRequest(final ParrotHubHTTPBuilder.RequestConfigDelegate delegate) throws ClientProtocolException, IOException {
         delegate.encodeBody();
         final HttpRequestBase reqMethod = delegate.getRequest();
 
@@ -253,14 +270,16 @@ public class ParrotHubHTTPBuilder {
 
         if (this.autoAcceptHeader) {
             String acceptContentTypes = contentType.toString();
-            if (contentType instanceof ContentType)
+            if (contentType instanceof ContentType) {
                 acceptContentTypes = ((ContentType) contentType).getAcceptHeader();
+            }
             reqMethod.setHeader("Accept", acceptContentTypes);
         }
 
         reqMethod.setURI(delegate.getUri().toURI());
-        if (reqMethod.getURI() == null)
+        if (reqMethod.getURI() == null) {
             throw new IllegalStateException("Request URI cannot be null");
+        }
 
         log.debug(reqMethod.getMethod() + " " + reqMethod.getURI());
 
@@ -268,16 +287,19 @@ public class ParrotHubHTTPBuilder {
         Map<?, ?> headers = delegate.getHeaders();
         for (Object key : headers.keySet()) {
             Object val = headers.get(key);
-            if (key == null) continue;
-            if (val == null) reqMethod.removeHeaders(key.toString());
-            else reqMethod.setHeader(key.toString(), val.toString());
+            if (key == null) {
+                continue;
+            }
+            if (val == null) {
+                reqMethod.removeHeaders(key.toString());
+            } else {
+                reqMethod.setHeader(key.toString(), val.toString());
+            }
         }
 
         ResponseHandler<Object> responseHandler = new ResponseHandler<Object>() {
-            public Object handleResponse(HttpResponse response)
-                    throws ClientProtocolException, IOException {
-                HttpResponseDecorator resp = new HttpResponseDecorator(
-                        response, delegate.getContext(), null);
+            public Object handleResponse(HttpResponse response) throws ClientProtocolException, IOException {
+                HttpResponseDecorator resp = new HttpResponseDecorator(response, delegate.getContext(), null);
                 try {
                     int status = resp.getStatusLine().getStatusCode();
                     Closure responseClosure = delegate.findResponseHandler(status);
@@ -291,9 +313,11 @@ public class ParrotHubHTTPBuilder {
                         case 2: // parse the response entity if the response handler expects it:
                             HttpEntity entity = resp.getEntity();
                             try {
-                                if (entity == null || entity.getContentLength() == 0)
+                                if (entity == null || entity.getContentLength() == 0) {
                                     closureArgs = new Object[]{resp, null};
-                                else closureArgs = new Object[]{resp, parseResponse(resp, contentType)};
+                                } else {
+                                    closureArgs = new Object[]{resp, parseResponse(resp, contentType)};
+                                }
                             } catch (Exception ex) {
                                 Header h = entity.getContentType();
                                 String respContentType = h != null ? h.getValue() : null;
@@ -302,8 +326,7 @@ public class ParrotHubHTTPBuilder {
                             }
                             break;
                         default:
-                            throw new IllegalArgumentException(
-                                    "Response closure must accept one or two parameters");
+                            throw new IllegalArgumentException("Response closure must accept one or two parameters");
                     }
 
                     Object returnVal = responseClosure.call(closureArgs);
@@ -312,7 +335,9 @@ public class ParrotHubHTTPBuilder {
                     return returnVal;
                 } finally {
                     HttpEntity entity = resp.getEntity();
-                    if (entity != null) EntityUtils.consume(entity);
+                    if (entity != null) {
+                        EntityUtils.consume(entity);
+                    }
                 }
             }
         };
@@ -334,8 +359,7 @@ public class ParrotHubHTTPBuilder {
      * response does not contain any content (e.g. in response to a HEAD request).
      * @throws HttpResponseException if there is a error parsing the response
      */
-    protected Object parseResponse(HttpResponse resp, Object contentType)
-            throws HttpResponseException {
+    protected Object parseResponse(HttpResponse resp, Object contentType) throws HttpResponseException {
         // For HEAD or OPTIONS requests, there should be no response entity.
         if (resp.getEntity() == null) {
             log.debug("Response contains no entity.  Parsed data is null.");
@@ -345,8 +369,9 @@ public class ParrotHubHTTPBuilder {
         String responseContentType = contentType.toString();
         // if the given content-type is ANY ("*/*") then use the response content-type
         try {
-            if (ContentType.ANY.toString().equals(responseContentType))
+            if (ContentType.ANY.toString().equals(responseContentType)) {
                 responseContentType = ParserRegistry.getContentType(resp);
+            }
         } catch (RuntimeException ex) {
             log.warn("Could not parse content-type: " + ex.getMessage());
             /* if for whatever reason we can't determine the content-type, but
@@ -358,13 +383,16 @@ public class ParrotHubHTTPBuilder {
 
         Object parsedData = null;
         Closure parser = parsers.getAt(responseContentType);
-        if (parser == null) log.warn("No parser found for content-type: "
-                + responseContentType);
-        else {
+        if (parser == null) {
+            log.warn("No parser found for content-type: " + responseContentType);
+        } else {
             log.debug("Parsing response as: " + responseContentType);
             parsedData = parser.call(resp);
-            if (parsedData == null) log.warn("Parser returned null!");
-            else log.debug("Parsed data to instance of: " + parsedData.getClass());
+            if (parsedData == null) {
+                log.warn("Parser returned null!");
+            } else {
+                log.debug("Parsed data to instance of: " + parsedData.getClass());
+            }
         }
         return parsedData;
     }
@@ -380,10 +408,8 @@ public class ParrotHubHTTPBuilder {
      */
     protected Map<Object, Closure> buildDefaultResponseHandlers() {
         Map<Object, Closure> map = new StringHashMap<Closure>();
-        map.put(Status.SUCCESS,
-                new MethodClosure(this, "defaultSuccessHandler"));
-        map.put(Status.FAILURE,
-                new MethodClosure(this, "defaultFailureHandler"));
+        map.put(Status.SUCCESS, new MethodClosure(this, "defaultSuccessHandler"));
+        map.put(Status.FAILURE, new MethodClosure(this, "defaultFailureHandler"));
 
         return map;
     }
@@ -417,8 +443,7 @@ public class ParrotHubHTTPBuilder {
      * @throws ResponseParseException if there is an error buffering a streaming
      *                                response.
      */
-    protected Object defaultSuccessHandler(HttpResponseDecorator resp, Object parsedData)
-            throws ResponseParseException {
+    protected Object defaultSuccessHandler(HttpResponseDecorator resp, Object parsedData) throws ResponseParseException {
         try {
             //If response is streaming, buffer it in a byte array:
             if (parsedData instanceof InputStream) {
@@ -431,9 +456,9 @@ public class ParrotHubHTTPBuilder {
                 ((Reader) parsedData).transferTo(buffer);
                 //DefaultGroovyMethods.leftShift( buffer, (Reader)parsedData );
                 parsedData = new StringReader(buffer.toString());
-            } else if (parsedData instanceof Closeable)
-                log.warn("Parsed data is streaming, but will be accessible after " +
-                        "the network connection is closed.  Use at your own risk!");
+            } else if (parsedData instanceof Closeable) {
+                log.warn("Parsed data is streaming, but will be accessible after " + "the network connection is closed.  Use at your own risk!");
+            }
             resp.setData(parsedData);
             return resp;
             //return parsedData;
@@ -501,19 +526,22 @@ public class ParrotHubHTTPBuilder {
         private HttpContextDecorator context = new HttpContextDecorator();
         private Object body;
 
-        public RequestConfigDelegate(HttpRequestBase request, Object contentType,
-                                     Map<?, ?> defaultRequestHeaders,
+        public RequestConfigDelegate(HttpRequestBase request, Object contentType, Map<?, ?> defaultRequestHeaders,
                                      Map<?, Closure> defaultResponseHandlers) {
-            if (request == null) throw new IllegalArgumentException(
-                    "Internal error - HttpRequest instance cannot be null");
+            if (request == null) {
+                throw new IllegalArgumentException("Internal error - HttpRequest instance cannot be null");
+            }
             this.request = request;
             this.headers.putAll(defaultRequestHeaders);
             this.contentType = contentType;
-            if (defaultRequestContentType != null)
+            if (defaultRequestContentType != null) {
                 this.requestContentType = defaultRequestContentType.toString();
+            }
             this.responseHandlers.putAll(defaultResponseHandlers);
             URI uri = request.getURI();
-            if (uri != null) this.uri = new URIBuilder(uri);
+            if (uri != null) {
+                this.uri = new URIBuilder(uri);
+            }
         }
 
         /**
@@ -571,8 +599,11 @@ public class ParrotHubHTTPBuilder {
          *           and <code>Accept</code> request headers.
          */
         protected void setContentType(Object ct) {
-            if (ct == null) this.contentType = defaultContentType;
-            else this.contentType = ct;
+            if (ct == null) {
+                this.contentType = defaultContentType;
+            } else {
+                this.contentType = ct;
+            }
         }
 
         /**
@@ -581,8 +612,11 @@ public class ParrotHubHTTPBuilder {
          * @return either a {@link ContentType} value or String like <code>text/plain</code>
          */
         protected Object getRequestContentType() {
-            if (this.requestContentType != null) return this.requestContentType;
-            else return this.getContentType();
+            if (this.requestContentType != null) {
+                return this.requestContentType;
+            } else {
+                return this.getContentType();
+            }
         }
 
         /**
@@ -629,13 +663,16 @@ public class ParrotHubHTTPBuilder {
          */
         @SuppressWarnings("unchecked")
         protected void setPropertiesFromMap(Map<String, ?> args) throws URISyntaxException {
-            if (args == null) return;
-            if (args.containsKey("url")) throw new IllegalArgumentException(
-                    "The 'url' parameter is deprecated; use 'uri' instead");
+            if (args == null) {
+                return;
+            }
+            if (args.containsKey("url")) {
+                throw new IllegalArgumentException("The 'url' parameter is deprecated; use 'uri' instead");
+            }
             Object uri = args.remove("uri");
-
-            if (uri == null) throw new IllegalStateException(
-                    "Default URI is null, and no 'uri' parameter was given");
+            if (uri == null) {
+                throw new IllegalStateException("Default URI is null, and no 'uri' parameter was given");
+            }
             this.uri = new URIBuilder(convertToURI(uri));
 
             Map query = (Map) args.remove("params");
@@ -644,28 +681,44 @@ public class ParrotHubHTTPBuilder {
                 this.uri.setQuery(query);
             }
             String queryString = (String) args.remove("queryString");
-            if (queryString != null) this.uri.setRawQuery(queryString);
+            if (queryString != null) {
+                this.uri.setRawQuery(queryString);
+            }
 
             query = (Map) args.remove("query");
-            if (query != null) this.uri.addQueryParams(query);
+            if (query != null) {
+                this.uri.addQueryParams(query);
+            }
             Map headers = (Map) args.remove("headers");
-            if (headers != null) this.getHeaders().putAll(headers);
+            if (headers != null) {
+                this.getHeaders().putAll(headers);
+            }
 
             Object path = args.remove("path");
-            if (path != null) this.uri.setPath(path.toString());
+            if (path != null) {
+                this.uri.setPath(path.toString());
+            }
 
             Object contentType = args.remove("contentType");
-            if (contentType != null) this.setContentType(contentType);
+            if (contentType != null) {
+                this.setContentType(contentType);
+            }
 
             contentType = args.remove("requestContentType");
-            if (contentType != null) this.setRequestContentType(contentType);
+            if (contentType != null) {
+                this.setRequestContentType(contentType);
+            }
 
             Object body = args.remove("body");
-            if (body != null) this.setBody(body);
+            if (body != null) {
+                this.setBody(body);
+            }
 
             if (args.size() > 0) {
                 String invalidArgs = "";
-                for (String k : args.keySet()) invalidArgs += k + ",";
+                for (String k : args.keySet()) {
+                    invalidArgs += k + ",";
+                }
                 throw new IllegalArgumentException("Unexpected keyword args: " + invalidArgs);
             }
         }
@@ -704,20 +757,20 @@ public class ParrotHubHTTPBuilder {
             if (body == null) {
                 return;
             }
-            if (!(request instanceof HttpEntityEnclosingRequest))
-                throw new IllegalArgumentException(
-                        "Cannot set a request body for a " + request.getMethod() + " method");
+            if (!(request instanceof HttpEntityEnclosingRequest)) {
+                throw new IllegalArgumentException("Cannot set a request body for a " + request.getMethod() + " method");
+            }
 
             Closure encoder = encoders.getAt(this.getRequestContentType());
 
             // Either content type or encoder is empty.
-            if (encoder == null)
-                throw new IllegalArgumentException(
-                        "No encoder found for request content type " + getRequestContentType());
+            if (encoder == null) {
+                throw new IllegalArgumentException("No encoder found for request content type " + getRequestContentType());
+            }
 
-            HttpEntity entity = encoder.getMaximumNumberOfParameters() == 2
-                    ? (HttpEntity) encoder.call(new Object[]{body, this.getRequestContentType()})
-                    : (HttpEntity) encoder.call(body);
+            HttpEntity entity =
+                    encoder.getMaximumNumberOfParameters() == 2 ? (HttpEntity) encoder.call(new Object[]{body, this.getRequestContentType()}) :
+                            (HttpEntity) encoder.call(body);
 
             ((HttpEntityEnclosingRequest) this.request).setEntity(entity);
         }
@@ -732,8 +785,9 @@ public class ParrotHubHTTPBuilder {
          */
         protected Closure findResponseHandler(int statusCode) {
             Closure handler = this.getResponse().get(Integer.toString(statusCode));
-            if (handler == null) handler =
-                    this.getResponse().get(Status.find(statusCode).toString());
+            if (handler == null) {
+                handler = this.getResponse().get(Status.find(statusCode).toString());
+            }
             return handler;
         }
 
