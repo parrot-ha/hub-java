@@ -133,7 +133,7 @@ public abstract class EntityScriptDelegateCommon {
                 logger.warn("Exception with http request", e);
                 //TODO: add to AsyncResponse
             }
-            if (httpResponse != null) {
+            if (httpResponse != null && callbackMethod != null) {
                 if (data != null) {
                     runEntityMethod(callbackMethod, new AsyncResponseImpl(httpResponse, body), data);
                 } else {
