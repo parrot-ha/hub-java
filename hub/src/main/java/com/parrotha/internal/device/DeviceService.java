@@ -381,6 +381,10 @@ public class DeviceService implements ExtensionStateListener {
             return deviceToRemoveFuture;
         }
         Device device = deviceDataStore.getDeviceById(id);
+        if(device == null) {
+            // device is already removed.
+            return CompletableFuture.completedFuture(true);
+        }
         String integrationId = device.getIntegration().getId();
         String deviceNetworkId = device.getDeviceNetworkId();
 
