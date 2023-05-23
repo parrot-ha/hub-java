@@ -19,6 +19,7 @@
 package com.parrotha.entity;
 
 import com.parrotha.exception.NotYetImplementedException;
+import groovy.json.JsonSlurper;
 import groovy.xml.slurpersupport.GPathResult;
 import org.apache.http.client.methods.CloseableHttpResponse;
 
@@ -28,6 +29,7 @@ import java.util.Map;
 public class AsyncResponseImpl implements AsyncResponse {
     private CloseableHttpResponse closeableHttpResponse;
     private String body;
+    private Object jsonData;
 
     public AsyncResponseImpl(CloseableHttpResponse closeableHttpResponse, String body) {
         this.closeableHttpResponse = closeableHttpResponse;
@@ -71,8 +73,14 @@ public class AsyncResponseImpl implements AsyncResponse {
 
     @Override
     public Object getJson() {
-        //TODO: implement
-        throw new NotYetImplementedException();
+        int status = getStatus();
+        if(status < 200 || status > 299) {
+            throw new IllegalStateException("Error response from http call");
+        }
+        if(jsonData == null) {
+            this.jsonData = new JsonSlurper().parseText(this.body);
+        }
+        return this.jsonData;
     }
 
     @Override

@@ -160,14 +160,16 @@ public class ParrotHttpRequest {
         if (path != null) {
             pathStrBuilder.append(path);
         }
-        if (pathStrBuilder.charAt(0) != '/') {
+        if (path != null && pathStrBuilder.charAt(0) != '/') {
             pathStrBuilder.insert(0, '/');
         }
         if (queryStr != null) {
             pathStrBuilder.append(queryStr);
         }
 
-        uri = uri.resolve(pathStrBuilder.toString());
+        if(pathStrBuilder.length() > 0) {
+            uri = uri.resolve(pathStrBuilder.toString());
+        }
 
         String requestContentType = "application/json";
         Object contentTypeObj = paramsCopy.remove("requestContentType");
