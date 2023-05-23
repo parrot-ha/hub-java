@@ -61,7 +61,7 @@ public abstract class EntityScriptDelegateCommon {
     /**
      * From docs.smartthings.com/en/latest/ref-docs/smartapp-ref.html#parsejson
      */
-    public Object parseJson(String stringToParse) {
+    public static Object parseJson(String stringToParse) {
         return new JsonSlurper().parseText(stringToParse);
     }
 
