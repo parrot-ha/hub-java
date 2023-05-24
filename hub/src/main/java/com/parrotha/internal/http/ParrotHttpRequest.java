@@ -123,7 +123,6 @@ public class ParrotHttpRequest {
         httpRequestBuilder.header("Accept", contentType);
         httpRequestBuilder.header("Content-Type", requestContentType);
 
-
         HttpRequest httpRequest = httpRequestBuilder.build();
 
         HttpClient httpClient = HttpClient.newHttpClient();
@@ -168,6 +167,9 @@ public class ParrotHttpRequest {
         }
 
         if(pathStrBuilder.length() > 0) {
+            if(uri.getPath().length() > 0) {
+                pathStrBuilder.insert(0, uri.getPath());
+            }
             uri = uri.resolve(pathStrBuilder.toString());
         }
 

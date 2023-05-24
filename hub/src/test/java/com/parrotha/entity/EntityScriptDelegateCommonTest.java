@@ -105,7 +105,7 @@ public class EntityScriptDelegateCommonTest {
                 .asyncHttpRequest(ArgumentMatchers.eq("GET"), ArgumentMatchers.eq("testMethod"), ArgumentMatchers.any(Map.class),
                         ArgumentMatchers.isNull());
 
-        mockEntityScriptDelegate.asynchttpGet("testMethod", Map.of("uri", "http://localhost:7070/json"));
+        mockEntityScriptDelegate.asynchttpGet("testMethod", Map.of("uri", "http://localhost:7070", "path", "json"));
 
         verify(mockEntityScriptDelegate, timeout(5000).times(1)).runEntityMethod(ArgumentMatchers.eq("testMethod"),
                 asyncResponseArgumentCaptor.capture());
