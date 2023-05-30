@@ -229,16 +229,4 @@ public class Fingerprint {
                 ", intg: '" + intg + '\'' +
                 ')';
     }
-
-    public static boolean listsAreEqual(List<Fingerprint> leftList, List<Fingerprint> rightList) {
-        if (leftList != null) {
-            if (rightList == null) {
-                return false;
-            } else {
-                return new HashSet<>(leftList).containsAll(rightList) && new HashSet<>(rightList).containsAll(leftList);
-            }
-        } else {
-            return rightList == null;
-        }
-    }
 }

@@ -18,7 +18,6 @@
  */
 package com.parrotha.internal.device;
 
-import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 
@@ -83,17 +82,5 @@ public class Attribute {
     @Override
     public int hashCode() {
         return Objects.hash(name, dataType, possibleValues);
-    }
-
-    public static boolean listsAreEqual(List<Attribute> leftList, List<Attribute> rightList) {
-        if (leftList != null) {
-            if (rightList == null) {
-                return false;
-            } else {
-                return new HashSet<>(leftList).containsAll(rightList) && new HashSet<>(rightList).containsAll(leftList);
-            }
-        } else {
-            return rightList == null;
-        }
     }
 }

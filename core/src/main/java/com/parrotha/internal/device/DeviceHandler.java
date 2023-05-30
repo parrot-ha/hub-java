@@ -133,16 +133,15 @@ public class DeviceHandler {
             return false;
         }
 
-        if (!Command.listsAreEqual(commandList, dh.getCommandList())) {
+        if (!listsAreEqual(commandList, dh.getCommandList())) {
             return false;
         }
 
-
-        if (!Attribute.listsAreEqual(attributeList, dh.getAttributeList())) {
+        if (!listsAreEqual(attributeList, dh.getAttributeList())) {
             return false;
         }
 
-        if (!Fingerprint.listsAreEqual(fingerprints, dh.getFingerprints())) {
+        if (!listsAreEqual(fingerprints, dh.getFingerprints())) {
             return false;
         }
 
@@ -154,7 +153,7 @@ public class DeviceHandler {
         }
     }
 
-    private boolean listsAreEqual(List<String> a, List<String> b) {
+    private <T> boolean listsAreEqual(List<T> a, List<T> b) {
         if (a != null) {
             if (b == null) {
                 return false;
@@ -162,23 +161,8 @@ public class DeviceHandler {
                 return false;
             }
         } else if (b != null) {
-            // dh.commandlist is not null but commandlist is null, they are not equal
+            // b is not null but a is null, they are not equal
             return false;
-        }
-        return true;
-    }
-
-    private static boolean compareList(List l1, List l2) {
-        if ((l1 != null && l2 == null) || (l1 == null && l2 != null)) {
-            return false;
-        }
-        if (l1 != null && l2 != null) {
-            if (l1.size() != l2.size()) {
-                return false;
-            }
-            if (!l1.containsAll(l2) || !l2.containsAll(l1)) {
-                return false;
-            }
         }
         return true;
     }
