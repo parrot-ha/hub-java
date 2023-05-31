@@ -326,5 +326,35 @@ public class ZigBeeTest {
         assertEquals(4, cmds.size());
         assertEquals("zdo bind 0x1234 0x01 0x01 0x0405 {0123456789} {}", cmds.get(0));
         assertEquals("ph cr 0x1234 0x01 0x0405 0x0000 0x29 0x003C 0x0E10 {C800} {}", cmds.get(2));
+
+        cmds = zigbee.configureReporting(0x0201, 0x0023, 0x30, 0,    600,   null,   Map.of("mfgCode","1039"), 500);
+        System.out.println(cmds);
+        assertEquals("zdo bind 0x1234 0x01 0x01 0x0201 {0123456789} {}", cmds.get(0));
+        assertEquals("ph cr 0x1234 0x01 0x0201 0x0023 0x30 0x0000 0x0258 {} {1039}", cmds.get(2));
+
+        assertEquals(4, cmds.size());
+    }
+
+    @Test
+    public void testBatteryConfig() {
+        DeviceWrapper deviceWrapperMock = Mockito.mock(DeviceWrapper.class);
+        when(deviceWrapperMock.getDeviceNetworkId()).thenReturn("1234");
+        when(deviceWrapperMock.getEndpointId()).thenReturn(1);
+        when(deviceWrapperMock.getZigbeeId()).thenReturn("0123456789");
+
+        ZigBeeImpl zigbee = new ZigBeeImpl(deviceWrapperMock);
+        List<String> cmds = zigbee.batteryConfig();
+        assertNotNull(cmds);
+        assertEquals(4, cmds.size());
+        assertEquals("zdo bind 0x1234 0x01 0x01 1 {0123456789} {}", cmds.get(0));
+        assertEquals("ph cr 0x1234 0x01 0x0001 0x0020 0x20 0x001E 0x5460 {01}", cmds.get(2));
+        assertEquals("delay 2000", cmds.get(1));
+
+        cmds = zigbee.batteryConfig(200);
+        assertNotNull(cmds);
+        assertEquals(4, cmds.size());
+        assertEquals("zdo bind 0x1234 0x01 0x01 1 {0123456789} {}", cmds.get(0));
+        assertEquals("ph cr 0x1234 0x01 0x0001 0x0020 0x20 0x001E 0x5460 {01}", cmds.get(2));
+        assertEquals("delay 200", cmds.get(1));
     }
 }

@@ -36,4 +36,14 @@ public class ZigBeeMessageTransformerTest {
         assertTrue(zclCommand.isManufacturerSpecific());
         assertEquals(4660, zclCommand.getManufacturerCode());
     }
+
+    @Test
+    public void testManufacturerSpecificConfigureReportingCommand() {
+        ZigBeeCommand zigBeeCommand = ZigBeeMessageTransformer.createCommand("ph cr 0x1234 0x01 0x0201 0x0023 0x30 0x0000 0x0258 {} {1039}", null);
+        assertNotNull(zigBeeCommand);
+        assertTrue(zigBeeCommand instanceof ZclCommand);
+        ZclCommand zclCommand = (ZclCommand) zigBeeCommand;
+        assertTrue(zclCommand.isManufacturerSpecific());
+        assertEquals(0x1039, zclCommand.getManufacturerCode());
+    }
 }
