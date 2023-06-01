@@ -20,9 +20,7 @@ package com.parrotha.internal.app;
 
 import com.parrotha.api.Response;
 import com.parrotha.exception.AutomationAppInUseException;
-import com.parrotha.exception.DeviceHandlerInUseException;
 import com.parrotha.internal.BaseApiHandler;
-import com.parrotha.internal.device.Device;
 import com.parrotha.internal.entity.EntityService;
 import com.parrotha.internal.hub.ScheduleService;
 import groovy.json.JsonBuilder;
@@ -53,8 +51,7 @@ public class AutomationAppApiHandler extends BaseApiHandler {
     EntityService entityService;
     ScheduleService scheduleService;
 
-    public AutomationAppApiHandler(AutomationAppService automationAppService, EntityService entityService,
-                                   ScheduleService scheduleService) {
+    public AutomationAppApiHandler(AutomationAppService automationAppService, EntityService entityService, ScheduleService scheduleService) {
         this.automationAppService = automationAppService;
         this.entityService = entityService;
         this.scheduleService = scheduleService;
@@ -77,8 +74,34 @@ public class AutomationAppApiHandler extends BaseApiHandler {
                 }
             }
 
-            Response response = entityService
-                    .processInstalledAutomationAppWebRequest(installedAutomationAppId, "GET", path, null, params, null);
+            Response response = entityService.processInstalledAutomationAppWebRequest(installedAutomationAppId, "GET", path, null, params, null);
+            if (response != null) {
+                ctx.status(response.getStatus());
+                ctx.contentType(response.getContentType());
+                ctx.result(response.getData());
+            } else {
+                buildStandardJsonResponse(ctx, true);
+            }
+
+        }, roles(ANYONE, ADMIN));
+
+        app.post("/api/automationapps/installations/:id/*", ctx -> {
+            String installedAutomationAppId = ctx.pathParam("id");
+            String path = "/" + ctx.splat(0);
+
+            Map<String, List<String>> queryParamMap = ctx.queryParamMap();
+            Map<String, Object> params = new HashMap();
+            for (String key : queryParamMap.keySet()) {
+                List<String> queryParams = queryParamMap.get(key);
+                if (queryParams.size() == 1) {
+                    params.put(key, queryParams.get(0));
+                } else {
+                    params.put(key, queryParams);
+                }
+            }
+            String body = ctx.body();
+
+            Response response = entityService.processInstalledAutomationAppWebRequest(installedAutomationAppId, "POST", path, body, params, null);
             if (response != null) {
                 ctx.status(response.getStatus());
                 ctx.contentType(response.getContentType());
@@ -227,8 +250,7 @@ public class AutomationAppApiHandler extends BaseApiHandler {
             Map<String, Object> model = new HashMap<>();
             model.put("id", installedAutomationApp.getId());
             model.put("label", installedAutomationApp.getLabel());
-            AutomationApp automationApp = automationAppService
-                    .getAutomationAppById(installedAutomationApp.getAutomationAppId());
+            AutomationApp automationApp = automationAppService.getAutomationAppById(installedAutomationApp.getAutomationAppId());
             model.put("name", automationApp.getName());
             model.put("namespace", automationApp.getNamespace());
             model.put("automationAppId", automationApp.getName());
@@ -254,8 +276,7 @@ public class AutomationAppApiHandler extends BaseApiHandler {
                         if (installedAutomationAppMap.containsKey("label")) {
                             installedAutomationApp.setLabel((String) installedAutomationAppMap.get("label"));
                         }
-                        installedAutomationAppSaved = automationAppService
-                                .updateInstalledAutomationApp(installedAutomationApp);
+                        installedAutomationAppSaved = automationAppService.updateInstalledAutomationApp(installedAutomationApp);
 
                         //TODO: run updated method
                     }
@@ -375,8 +396,7 @@ public class AutomationAppApiHandler extends BaseApiHandler {
             List<InstalledAutomationAppSetting> settings = installedAutomationApp.getSettings();
             Map<String, Map> settingsMap;
             if (settings != null) {
-                settingsMap = settings.stream().
-                        collect(Collectors.toMap(data -> data.getName(), data -> data.toMap(true)));
+                settingsMap = settings.stream().collect(Collectors.toMap(data -> data.getName(), data -> data.toMap(true)));
             } else {
                 settingsMap = new HashMap<>();
             }
@@ -403,8 +423,7 @@ public class AutomationAppApiHandler extends BaseApiHandler {
             List<Map> iaaListData = new ArrayList<>();
             boolean includeChildren = "true".equals(ctx.queryParam("includeChildren"));
 
-            Collection<InstalledAutomationApp> installedAutomationApps = automationAppService
-                    .getAllInstalledAutomationApps();
+            Collection<InstalledAutomationApp> installedAutomationApps = automationAppService.getAllInstalledAutomationApps();
 
             for (InstalledAutomationApp iaa : installedAutomationApps) {
                 if (iaa.getParentInstalledAutomationAppId() == null || includeChildren) {

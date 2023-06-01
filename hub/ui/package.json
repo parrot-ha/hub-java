@@ -9,22 +9,22 @@
     "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs --fix --ignore-path .gitignore"
   },
   "dependencies": {
-    "ace-builds": "^1.14.0",
+    "ace-builds": "^1.19.0",
     "bootstrap": "^5.2.3",
-    "bootstrap-icons": "^1.10.3",
+    "bootstrap-icons": "^1.10.5",
     "leaflet": "^1.9.3",
     "path-to-regexp": "^6.2.1",
-    "pinia": "^2.0.28",
-    "vue": "^3.2.45",
+    "pinia": "^2.0.36",
+    "vue": "^3.2.47",
     "vue-router": "^4.1.6"
   },
   "devDependencies": {
-    "@rushstack/eslint-patch": "^1.1.4",
-    "@vitejs/plugin-vue": "^4.0.0",
-    "@vue/eslint-config-prettier": "^7.0.0",
-    "eslint": "^8.22.0",
-    "eslint-plugin-vue": "^9.3.0",
-    "prettier": "^2.7.1",
-    "vite": "^4.0.0"
+    "@rushstack/eslint-patch": "^1.2.0",
+    "@vitejs/plugin-vue": "^4.2.1",
+    "@vue/eslint-config-prettier": "^7.1.0",
+    "eslint": "^8.40.0",
+    "eslint-plugin-vue": "^9.11.1",
+    "prettier": "^2.8.8",
+    "vite": "^4.3.5"
   }
 }

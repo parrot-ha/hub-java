@@ -506,6 +506,11 @@ public class IntegrationService implements ExtensionStateListener, IntegrationEv
                     String deviceName = deviceHandlerInfo[1];
                     String deviceId = deviceService.addDevice(integrationEvent.getIntegrationId(), deviceHandlerId, deviceName,
                             deviceAddedEvent.getDeviceNetworkId(), deviceAddedEvent.getData(), deviceAddedEvent.getAdditionalParameters());
+                    List<String> capabilityList = deviceService.getDeviceHandler(deviceService.getDeviceById(deviceId).getDeviceHandlerId())
+                            .getCapabilityList();
+                    if (capabilityList != null && capabilityList.contains("Configuration")) {
+                        entityService.runDeviceMethod(deviceId, "configure");
+                    }
                     entityService.runDeviceMethod(deviceId, "installed");
                 }
             }

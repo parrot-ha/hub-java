@@ -39,6 +39,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 
 public class ZigBeeMessageTransformer {
     private static final Logger logger = LoggerFactory.getLogger(ZigBeeHandler.class);
@@ -245,22 +246,31 @@ public class ZigBeeMessageTransformer {
             }
 
             record.setTimeoutPeriod(0);
+            Integer mfgCode = extractManufacturerCode(msg);
+            List<AttributeReportingConfigurationRecord> records = Collections.singletonList(record);
 
-            final ConfigureReportingCommand command = new ConfigureReportingCommand(Collections.singletonList(record));
-            command.setClusterId(cluster);
+            // use ZclCommand instead of ConfigureReportingCommand so we can set manufacturer code
+            ZclCommand zclCommand = new ZclCommand() {
+                {
+                    commandId = WriteAttributesCommand.COMMAND_ID;
+                    genericCommand = true;
+                    commandDirection = ZclCommandDirection.CLIENT_TO_SERVER;
+                    clusterId = cluster;
 
-            command.setDestinationAddress(new ZigBeeEndpointAddress(networkAddress, endpoint));
+                    if (mfgCode != null) {
+                        setManufacturerCode(mfgCode);
+                    }
 
-            //networkManager.getNode(networkAddress).getEndpoint(endpoint).getInputCluster(cluster).setReporting(attributeId, minInterval, maxInterval);
+                    destinationAddress = new ZigBeeEndpointAddress(networkAddress, endpoint);
+                }
 
-            //TODO: how to handle manufacturer specific?
-            //if (isManufacturerSpecific()) {
-            //    command.setManufacturerCode(getManufacturerCode());
-            //} else if (attribute.isManufacturerSpecific()) {
-            //    command.setManufacturerCode(attribute.getManufacturerCode());
-            //}
+                @Override
+                public void serialize(ZclFieldSerializer serializer) {
+                    serializer.serialize(records, ZclDataType.N_X_ATTRIBUTE_REPORTING_CONFIGURATION_RECORD);
+                }
+            };
 
-            return command;
+            return zclCommand;
 
         } else if (msg.startsWith("send ") || msg.startsWith("raw ")) {
             logger.warn("Need to handle raw / send zigbee message: " + msg);

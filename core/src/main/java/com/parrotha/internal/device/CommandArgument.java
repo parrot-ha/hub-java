@@ -18,6 +18,8 @@
  */
 package com.parrotha.internal.device;
 
+import java.util.Objects;
+
 public class CommandArgument {
     private String name;
     private boolean required;
@@ -25,7 +27,7 @@ public class CommandArgument {
 
     public CommandArgument() {
     }
-    
+
     public CommandArgument(String name) {
         this.name = name;
         this.dataType = "STRING";
@@ -66,5 +68,22 @@ public class CommandArgument {
 
     public void setDataType(String dataType) {
         this.dataType = dataType;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        CommandArgument that = (CommandArgument) o;
+        return required == that.required && Objects.equals(name, that.name) && Objects.equals(dataType, that.dataType);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(name, required, dataType);
     }
 }

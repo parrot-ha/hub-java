@@ -5,8 +5,8 @@
       class="form-check-input"
       type="checkbox"
       role="switch"
-      :value="modelValue"
-      @input="$emit('update:modelValue', $event.target.value)"
+      :checked="checked"
+      @input="$emit('update:checked', $event.target.checked)"
     />
     <label class="form-check-label">{{ body.title }}</label>
   </div>
@@ -15,7 +15,8 @@
 <script>
 export default {
   name: "AppBoolInput",
-  props: ["modelValue", "body"],
+  props: ["checked", "body"],
+  emits: ["update:checked"],
   data() {
     return {};
   },

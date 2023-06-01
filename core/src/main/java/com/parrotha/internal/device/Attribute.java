@@ -68,8 +68,12 @@ public class Attribute {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
         Attribute attribute = (Attribute) o;
         return Objects.equals(name, attribute.name) &&
                 Objects.equals(dataType, attribute.dataType) && Objects.equals(possibleValues, attribute.possibleValues);

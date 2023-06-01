@@ -22,6 +22,7 @@ import groovy.lang.GString;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -124,74 +125,44 @@ public class DeviceHandler {
             return false;
         }
 
-        if (tags != null) {
-            if (!tags.equals(dh.getTags())) {
-                return false;
-            }
-        } else if (dh.getTags() != null) {
-            // dh.tags is not null but tags is null, they are not equal
+        if (!listsAreEqual(tags, dh.getTags())) {
             return false;
         }
 
-        if (capabilityList != null) {
-            if (!capabilityList.equals(dh.getCapabilityList())) {
-                return false;
-            }
-        } else if (dh.getCapabilityList() != null) {
-            // dh.capabilityList is not null but capabilityList is null, they are not equal
+        if (!listsAreEqual(capabilityList, dh.getCapabilityList())) {
             return false;
         }
 
-        if (commandList != null) {
-            if (!commandList.equals(dh.getCommandList())) {
-                return false;
-            }
-        } else if (dh.getCommandList() != null) {
-            // dh.commandlist is not null but commandlist is null, they are not equal
+        if (!listsAreEqual(commandList, dh.getCommandList())) {
             return false;
         }
 
-        if (attributeList != null) {
-            if (!attributeList.equals(dh.getAttributeList())) {
-                return false;
-            }
-        } else if (dh.getAttributeList() != null) {
-            // dh.attributeList is not null but attributeList is null, they are not equal
+        if (!listsAreEqual(attributeList, dh.getAttributeList())) {
             return false;
         }
 
-        if (fingerprints != null) {
-            if (!fingerprints.equals(dh.getFingerprints())) {
-                return false;
-            }
-        } else if (dh.getFingerprints() != null) {
-            // dh.fingerprints is not null but fingerprints is null, they are not equal
+        if (!listsAreEqual(fingerprints, dh.getFingerprints())) {
             return false;
         }
 
+        // dh.type is not null but type is null, they are not equal
         if (type != null) {
-            if (!type.equals(dh.getType())) {
-                return false;
-            }
-        } else if (dh.getType() != null) {
-            // dh.type is not null but type is null, they are not equal
-            return false;
+            return type.equals(dh.getType());
+        } else {
+            return dh.getType() == null;
         }
-
-        return true;
     }
 
-    private static boolean compareList(List l1, List l2) {
-        if ((l1 != null && l2 == null) || (l1 == null && l2 != null)) {
+    private <T> boolean listsAreEqual(List<T> a, List<T> b) {
+        if (a != null) {
+            if (b == null) {
+                return false;
+            } else if (!new HashSet<>(a).containsAll(b) || !new HashSet<>(b).containsAll(a)) {
+                return false;
+            }
+        } else if (b != null) {
+            // b is not null but a is null, they are not equal
             return false;
-        }
-        if (l1 != null && l2 != null) {
-            if (l1.size() != l2.size()) {
-                return false;
-            }
-            if (!l1.containsAll(l2) || !l2.containsAll(l1)) {
-                return false;
-            }
         }
         return true;
     }

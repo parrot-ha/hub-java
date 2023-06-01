@@ -93,8 +93,7 @@ public class ZigBeeImpl implements ZigBee {
             // 29 = Signed 16 bit integer
             // 21 = Unsigned 16-bit integer
             //TODO: figure out all encodings that need to be flipped
-            if ("21".equals(descriptionMap.get("encoding")) ||
-                    "29".equals(descriptionMap.get("encoding"))) {
+            if ("21".equals(descriptionMap.get("encoding")) || "29".equals(descriptionMap.get("encoding"))) {
                 descriptionMap.put("value", HexUtils.reverseHexString((String) descriptionMap.get("value")));
             }
 
@@ -149,14 +148,12 @@ public class ZigBeeImpl implements ZigBee {
         if (description.startsWith("read attr - ")) {
             Map parsedDescription = parseDescriptionAsMap(description);
 
-            if ((Integer) parsedDescription.get("clusterInt") == 8 &&
-                    (Integer) parsedDescription.get("attrInt") == 0 &&
+            if ((Integer) parsedDescription.get("clusterInt") == 8 && (Integer) parsedDescription.get("attrInt") == 0 &&
                     HexUtils.hexStringToInt((String) parsedDescription.get("encoding")) == 0x20) {
                 int value = (int) Math.round(HexUtils.hexStringToInt((String) parsedDescription.get("value")) / 2.55);
                 event.put("name", "level");
                 event.put("value", value);
-            } else if ((Integer) parsedDescription.get("clusterInt") == 6 &&
-                    (Integer) parsedDescription.get("attrInt") == 0 &&
+            } else if ((Integer) parsedDescription.get("clusterInt") == 6 && (Integer) parsedDescription.get("attrInt") == 0 &&
                     HexUtils.hexStringToInt((String) parsedDescription.get("encoding")) == 0x10) {
                 int value = HexUtils.hexStringToInt((String) parsedDescription.get("value"));
                 if (value == 0) {
@@ -219,8 +216,7 @@ public class ZigBeeImpl implements ZigBee {
             arrayList.add(String.format("ph cmd 0x%s 0x%02X 0x%04X 0x%02X {%s} {%04X}", device.getDeviceNetworkId(), endpointId, cluster, command,
                     payload != null ? payload : "", mfgCode));
         } else if (StringUtils.isNotEmpty(payload)) {
-            arrayList.add(
-                    String.format("ph cmd 0x%s 0x%02X 0x%04X 0x%02X {%s}", device.getDeviceNetworkId(), endpointId, cluster, command, payload));
+            arrayList.add(String.format("ph cmd 0x%s 0x%02X 0x%04X 0x%02X {%s}", device.getDeviceNetworkId(), endpointId, cluster, command, payload));
         } else {
             arrayList.add(String.format("ph cmd 0x%s 0x%02X 0x%04X 0x%02X {}", device.getDeviceNetworkId(), endpointId, cluster, command));
         }
@@ -361,6 +357,27 @@ public class ZigBeeImpl implements ZigBee {
         return arrayList;
     }
 
+    public List<String> batteryConfig() {
+        return batteryConfig(DEFAULT_DELAY);
+    }
+
+    public List<String> batteryConfig(Object delay) {
+        int delayInt = ObjectUtils.objectToInt(delay);
+        ArrayList<String> arrayList = new ArrayList<>();
+        arrayList.add(
+                String.format("zdo bind 0x%s 0x%02X 0x01 1 {%s} {}", device.getDeviceNetworkId(), device.getEndpointId(), device.getZigbeeId()));
+        if (delayInt > 0) {
+            arrayList.add("delay " + delayInt);
+        }
+        arrayList.add(String.format("ph cr 0x%s 0x%02X 0x0001 0x0020 0x20 0x001E 0x5460 {01}", device.getDeviceNetworkId(), device.getEndpointId()));
+
+        if (delayInt > 0) {
+            arrayList.add("delay " + delayInt);
+        }
+
+        return arrayList;
+    }
+
     //[st rattr 0xFC6E 0x01 0x0008 0x0000, delay 2000]
     public List<String> levelRefresh() {
         return levelRefresh(DEFAULT_DELAY);
@@ -421,31 +438,21 @@ public class ZigBeeImpl implements ZigBee {
             List attributeIdList = (List) attributeId;
             List<String> readAttributeList = new ArrayList();
             for (Object attributeListItem : attributeIdList) {
-                readAttributeList.addAll(readAttribute(ObjectUtils.objectToInt(cluster),
-                        ObjectUtils.objectToInt(attributeListItem),
-                        null,
-                        DEFAULT_DELAY));
+                readAttributeList.addAll(
+                        readAttribute(ObjectUtils.objectToInt(cluster), ObjectUtils.objectToInt(attributeListItem), null, DEFAULT_DELAY));
             }
             return readAttributeList;
         } else {
-            return readAttribute(ObjectUtils.objectToInt(cluster),
-                    ObjectUtils.objectToInt(attributeId),
-                    null,
-                    DEFAULT_DELAY);
+            return readAttribute(ObjectUtils.objectToInt(cluster), ObjectUtils.objectToInt(attributeId), null, DEFAULT_DELAY);
         }
     }
 
     public List<String> readAttribute(Object cluster, Object attributeId, Map additionalParams) {
-        return readAttribute(ObjectUtils.objectToInt(cluster),
-                ObjectUtils.objectToInt(attributeId),
-                additionalParams,
-                DEFAULT_DELAY);
+        return readAttribute(ObjectUtils.objectToInt(cluster), ObjectUtils.objectToInt(attributeId), additionalParams, DEFAULT_DELAY);
     }
 
     public List<String> readAttribute(Object cluster, Object attributeId, Map additionalParams, Object delay) {
-        return readAttribute(ObjectUtils.objectToInt(cluster),
-                ObjectUtils.objectToInt(attributeId),
-                additionalParams,
+        return readAttribute(ObjectUtils.objectToInt(cluster), ObjectUtils.objectToInt(attributeId), additionalParams,
                 ObjectUtils.objectToInt(delay));
     }
 
@@ -541,17 +548,22 @@ public class ZigBeeImpl implements ZigBee {
                                    Integer reportableChange, Map additionalParams, int delay) {
         int destEndpoint = 1;
         ArrayList<String> arrayList = new ArrayList<>();
-        arrayList.add(
-                String.format("zdo bind 0x%s 0x%02X 0x%02X 0x%04X {%s} {}", device.getDeviceNetworkId(), device.getEndpointId(), destEndpoint,
-                        clusterId, device.getZigbeeId()));
+        arrayList.add(String.format("zdo bind 0x%s 0x%02X 0x%02X 0x%04X {%s} {}", device.getDeviceNetworkId(), device.getEndpointId(), destEndpoint,
+                clusterId, device.getZigbeeId()));
         if (delay > 0) {
             arrayList.add("delay " + delay);
         }
-        if (reportableChange < 1) {
+        if (reportableChange != null && reportableChange < 1) {
             reportableChange = 1;
         }
-        arrayList.add(String.format("ph cr 0x%s 0x%02X 0x%04X 0x%04X 0x%02X 0x%04X 0x%04X {%s} {}", device.getDeviceNetworkId(), device.getEndpointId(),
-                clusterId, attributeId, dataType, minReportTime, maxReportTime, DataType.pack(reportableChange, dataType)));
+        String mfgCode = "";
+        if (additionalParams != null && additionalParams.get("mfgCode") != null) {
+            mfgCode = additionalParams.get("mfgCode").toString();
+        }
+        arrayList.add(
+                String.format("ph cr 0x%s 0x%02X 0x%04X 0x%04X 0x%02X 0x%04X 0x%04X {%s} {%s}", device.getDeviceNetworkId(), device.getEndpointId(),
+                        clusterId, attributeId, dataType, minReportTime, maxReportTime,
+                        reportableChange != null ? DataType.pack(reportableChange, dataType) : "", mfgCode));
 
         if (delay > 0) {
             arrayList.add("delay " + delay);

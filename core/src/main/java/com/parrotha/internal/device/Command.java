@@ -80,8 +80,7 @@ public class Command {
             return false;
         }
         Command command = (Command) o;
-        return Objects.equals(name, command.name) &&
-                Objects.equals(arguments, command.arguments);
+        return Objects.equals(name, command.name) && Objects.equals(arguments, command.arguments);
     }
 
     @Override
