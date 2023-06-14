@@ -20,6 +20,8 @@ package com.parrotha.device;
 
 import groovy.xml.XmlSlurper;
 import groovy.xml.slurpersupport.GPathResult;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.xml.sax.SAXException;
 
 import javax.xml.parsers.ParserConfigurationException;
@@ -33,6 +35,8 @@ public class HubResponse {
     private String hubId;
     private String body;
     private String callback;
+
+    private static final Logger logger = LoggerFactory.getLogger(HubResponse.class);
 
     public HubResponse() {
     }
@@ -58,16 +62,13 @@ public class HubResponse {
     }
 
     private GPathResult xml;
+
     public GPathResult getXml() {
-        if(xml == null && body != null) {
+        if (xml == null && body != null) {
             try {
                 this.xml = new XmlSlurper().parseText(body);
-            } catch (IOException ioException) {
-                ioException.printStackTrace();
-            } catch (SAXException e) {
-                e.printStackTrace();
-            } catch (ParserConfigurationException e) {
-                e.printStackTrace();
+            } catch (IOException | SAXException | ParserConfigurationException e) {
+                logger.warn("Exception in getXml()", e);
             }
         }
         return xml;

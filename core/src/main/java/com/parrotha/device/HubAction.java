@@ -22,6 +22,7 @@ import groovy.json.JsonBuilder;
 import groovy.lang.GString;
 import groovy.lang.MetaMethod;
 
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -65,6 +66,7 @@ public class HubAction {
     public HubAction(Map params, String dni) {
         this(params, dni, null);
     }
+
     public HubAction(Map params, String dni, Map options) {
         this.protocol = (Protocol) params.getOrDefault("protocol", Protocol.LAN);
         this.options = options;
@@ -76,16 +78,17 @@ public class HubAction {
         Map<String, Object> headers = new LinkedHashMap<>();
 
         String body = null;
+        Object bodyObject = params.get("body");
+        Object contentLengthHeaderValue = null;
         if (params.containsKey("headers") && params.get("headers") instanceof Map) {
-            Map<String, Object> paramsHeaders = (Map) params.get("headers");
+            Map<String, Object> paramsHeaders = new HashMap<>((Map) params.get("headers"));
 
             // remove content-length before we start adding headers so that we can add it in at the end.
-            Object contentLengthHeaderValue = paramsHeaders.remove("Content-Length");
+            contentLengthHeaderValue = paramsHeaders.remove("Content-Length");
 
             headers.put("Accept", Objects.requireNonNullElse(paramsHeaders.remove("Accept"), "*/*"));
             headers.put("User-Agent", Objects.requireNonNullElse(paramsHeaders.remove("User-Agent"), "Linux UPnP/1.0 ParrotHub"));
             headers.putAll(paramsHeaders);
-            Object bodyObject = paramsHeaders.get("body");
 
             if (!paramsHeaders.containsKey("Content-Type") && bodyObject != null) {
                 if (bodyObject instanceof Map) {
@@ -94,20 +97,27 @@ public class HubAction {
                     headers.put("Content-Type", "text/xml; charset=\"utf-8\"");
                 }
             }
-
-            if (bodyObject != null) {
-                if (bodyObject instanceof String || bodyObject instanceof GString) {
-                    body = bodyObject.toString();
-                } else if (((String) headers.get("Content-Type")).contains("json") && bodyObject instanceof Map || bodyObject instanceof List) {
-                    body = new JsonBuilder(params.get("body")).toString();
-                } else if (((String) headers.get("Content-Type")).contains("xml")) {
-                    //TODO: format xml
-                }
-                headers.put("Content-Length", Objects.requireNonNullElseGet(contentLengthHeaderValue, body::length));
-            }
         } else {
             headers.put("Accept", "*/*");
             headers.put("User-Agent", "Linux UPnP/1.0 ParrotHub");
+            if (bodyObject != null) {
+                if (bodyObject instanceof Map) {
+                    headers.put("Content-Type", "application/json");
+                } else {
+                    headers.put("Content-Type", "text/xml; charset=\"utf-8\"");
+                }
+            }
+        }
+
+        if (bodyObject != null) {
+            if (bodyObject instanceof String || bodyObject instanceof GString) {
+                body = bodyObject.toString();
+            } else if (((String) headers.get("Content-Type")).contains("json") && bodyObject instanceof Map || bodyObject instanceof List) {
+                body = new JsonBuilder(bodyObject).toString();
+            } else if (((String) headers.get("Content-Type")).contains("xml")) {
+                //TODO: format xml
+            }
+            headers.put("Content-Length", Objects.requireNonNullElseGet(contentLengthHeaderValue, body::length));
         }
 
         for (String key : headers.keySet()) {
