@@ -9,9 +9,9 @@
       <slot>Delete</slot>
     </button>
     <div
+      ref="areYoutSureModal"
       class="modal fade"
       tabindex="-1"
-      ref="areYoutSureModal"
       aria-hidden="true"
     >
       <div class="modal-dialog">
@@ -23,9 +23,9 @@
             <button
               type="button"
               class="btn-close"
-              @click="modal.hide()"
               aria-label="Close"
-            ></button>
+              @click="modal.hide()"
+            />
           </div>
           <div class="modal-body">
             {{ body }}
@@ -64,7 +64,6 @@ export default {
   data() {
     return {};
   },
-  methods: {},
   computed: {
     buttonClassComputed: function () {
       return this.buttonClass ? this.buttonClass : "btn-danger";
@@ -73,5 +72,6 @@ export default {
   mounted: function () {
     this.modal = new Modal(this.$refs.areYoutSureModal);
   },
+  methods: {},
 };
 </script>

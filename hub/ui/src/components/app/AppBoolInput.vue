@@ -1,13 +1,13 @@
 <template>
   <div class="form-check form-switch mb-3">
-    <br />
+    <br>
     <input
       class="form-check-input"
       type="checkbox"
       role="switch"
       :checked="checked"
       @input="$emit('update:checked', $event.target.checked)"
-    />
+    >
     <label class="form-check-label">{{ body.title }}</label>
   </div>
 </template>

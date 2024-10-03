@@ -3,10 +3,10 @@
     <div class="row">
       <div class="col">
         <div
+          v-if="alertMessage"
           ref="alertBox"
           class="alert alert-danger alert-dismissible"
           role="alert"
-          v-if="alertMessage"
         >
           {{ alertMessage }}
           <button
@@ -14,7 +14,7 @@
             class="btn-close"
             aria-label="Close"
             @click="alertMessage = null"
-          ></button>
+          />
         </div>
       </div>
     </div>
@@ -23,18 +23,18 @@
         <code-editor
           :source="deviceHandler.sourceCode"
           title="Edit"
-          buttonName="Save"
-          :savePending="updatePending"
-          :editorHeight="editorHeight"
-          @saveCodeButtonClicked="saveCode"
+          button-name="Save"
+          :save-pending="updatePending"
+          :editor-height="editorHeight"
+          @save-code-button-clicked="saveCode"
         >
           <are-you-sure-dialog
             title="Are you sure?"
             body="Are you sure you want to delete this device handler?"
             confirm-button="Delete"
-            :buttonDisabled="updatePending"
+            :button-disabled="updatePending"
             @confirm-action="deleteCode"
-          ></are-you-sure-dialog>
+          />
         </code-editor>
       </div>
     </div>
@@ -72,6 +72,29 @@ export default {
       this.debouncedResizeEditor();
     },
   },
+  created() {
+    window.addEventListener("resize", this.onResize);
+    this.debouncedResizeEditor = _debounce(this.resizeEditor, 250);
+  },
+  unmounted() {
+    window.removeEventListener("resize", this.onResize);
+  },
+  mounted: function () {
+    this.resizeEditor();
+    this.dhId = this.$route.params.id;
+
+    fetch(`/api/device-handlers/${this.dhId}/source`)
+      .then((response) => response.json())
+      .then((data) => {
+        if (typeof data !== "undefined" && data != null) {
+          this.deviceHandler = data;
+        }
+      });
+
+    this.$nextTick(() => {
+      this.debouncedResizeEditor();
+    });
+  },
   methods: {
     saveCode(updatedCode) {
       this.updatePending = true;
@@ -80,7 +103,8 @@ export default {
 
       fetch(`/api/device-handlers/${this.dhId}/source`, {
         method: "PUT",
-        body: JSON.stringify(this.deviceHandler),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sourceCode: updatedCode }),
       })
         .then(handleErrors)
         .then((response) => {
@@ -133,29 +157,6 @@ export default {
             : 0) + 153)
       }px`;
     },
-  },
-  created() {
-    window.addEventListener("resize", this.onResize);
-    this.debouncedResizeEditor = _debounce(this.resizeEditor, 250);
-  },
-  unmounted() {
-    window.removeEventListener("resize", this.onResize);
-  },
-  mounted: function () {
-    this.resizeEditor();
-    this.dhId = this.$route.params.id;
-
-    fetch(`/api/device-handlers/${this.dhId}/source`)
-      .then((response) => response.json())
-      .then((data) => {
-        if (typeof data !== "undefined" && data != null) {
-          this.deviceHandler = data;
-        }
-      });
-
-    this.$nextTick(() => {
-      this.debouncedResizeEditor();
-    });
   },
 };
 </script>

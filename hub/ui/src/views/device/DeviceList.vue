@@ -12,36 +12,48 @@
                 <router-link
                   class="btn btn-outline-secondary"
                   :to="{ name: 'DeviceAdd' }"
-                  >Add Device</router-link
                 >
+                  Add Device
+                </router-link>
               </div>
             </div>
             <div class="card-text">
               <table class="table">
                 <thead>
                   <tr>
-                    <th scope="col"></th>
-                    <th scope="col">Display Name</th>
-                    <th scope="col">Type</th>
-                    <th scope="col">Device Network ID</th>
+                    <th scope="col" />
+                    <th scope="col">
+                      Display Name
+                    </th>
+                    <th scope="col">
+                      Type
+                    </th>
+                    <th scope="col">
+                      Device Network ID
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
-                  <tr v-for="device in sortedDevices" :key="device.id">
+                  <tr
+                    v-for="device in sortedDevices"
+                    :key="device.id"
+                  >
                     <td>
                       <router-link
                         :to="{
                           name: 'DeviceConfig',
                           params: { id: device.id },
                         }"
-                        ><i class="bi bi-exclamation-circle"></i
-                      ></router-link>
+                      >
+                        <i class="bi bi-exclamation-circle" />
+                      </router-link>
                     </td>
                     <td>
                       <router-link
                         :to="{ name: 'device', params: { id: device.id } }"
-                        >{{ device.displayName }}</router-link
                       >
+                        {{ device.displayName }}
+                      </router-link>
                     </td>
                     <td>{{ device.type }}</td>
                     <td>{{ device.deviceNetworkId }}</td>

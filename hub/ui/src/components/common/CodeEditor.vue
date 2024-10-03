@@ -8,7 +8,10 @@
       </div>
       <div class="col-auto">
         <div class="d-flex gap-3">
-          <span v-show="savePending" class="spinner-border"></span>
+          <span
+            v-show="savePending"
+            class="spinner-border"
+          />
           <button
             class="btn btn-primary"
             :disabled="savePending"
@@ -16,21 +19,27 @@
           >
             Save
           </button>
-          <slot></slot>
+          <slot />
         </div>
       </div>
     </div>
-    <br />
+    <br>
 
-    <div class="editor-wrapper" :style="{ height: editorHeight }">
-      <div class="ace-editor" ref="ace"></div>
+    <div
+      class="editor-wrapper"
+      :style="{ height: editorHeight }"
+    >
+      <div
+        ref="ace"
+        class="ace-editor"
+      />
     </div>
   </div>
 </template>
 <script>
 import ace from "ace-builds";
 import "ace-builds/src-min-noconflict/theme-monokai";
-import "ace-builds/src-min-noconflict/mode-groovy";
+import "ace-builds/src-min-noconflict/mode-javascript";
 import "ace-builds/src-min-noconflict/ext-searchbox";
 
 export default {
@@ -57,11 +66,6 @@ export default {
       });
     },
   },
-  methods: {
-    saveCode() {
-      this.$emit("saveCodeButtonClicked", this.editor.getValue());
-    },
-  },
   mounted: function () {
     var vm = this;
     this.editor = ace.edit(this.$refs.ace, {
@@ -74,7 +78,7 @@ export default {
       showPrintMargin: false,
     });
     this.editor.renderer.setScrollMargin(0, 5, 0, 5);
-    this.editor.session.setMode("ace/mode/groovy");
+    this.editor.session.setMode("ace/mode/javascript");
     this.editor.setTheme("ace/theme/monokai");
     this.editor.commands.addCommand({
       name: "save",
@@ -82,6 +86,11 @@ export default {
       exec: vm.saveCode,
       readOnly: true,
     });
+  },
+  methods: {
+    saveCode() {
+      this.$emit("saveCodeButtonClicked", this.editor.getValue());
+    },
   },
 };
 </script>

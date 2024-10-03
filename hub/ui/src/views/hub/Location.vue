@@ -3,25 +3,31 @@
     <div class="row">
       <div class="col">
         <h1>Edit Location</h1>
-        <hr />
+        <hr>
         <form>
           <div class="mb-3">
-            <label for="nameInput" class="form-label">Name</label>
+            <label
+              for="nameInput"
+              class="form-label"
+            >Name</label>
             <input
-              type="text"
-              class="form-control"
               id="nameInput"
               v-model="location.name"
-            />
+              type="text"
+              class="form-control"
+            >
           </div>
 
           <div class="mb-3">
-            <label for="currentMode" class="form-label">Current Mode</label>
+            <label
+              for="currentMode"
+              class="form-label"
+            >Current Mode</label>
             <select
-              class="form-select"
-              aria-label="Current Mode"
               id="currentMode"
               v-model="location.currentMode.id"
+              class="form-select"
+              aria-label="Current Mode"
             >
               <option
                 v-for="mode in location.modes"
@@ -34,14 +40,15 @@
           </div>
 
           <div class="mb-3">
-            <label for="temperatureScale" class="form-label"
-              >Temperature Scale</label
-            >
+            <label
+              for="temperatureScale"
+              class="form-label"
+            >Temperature Scale</label>
             <select
-              class="form-select"
-              aria-label="Temperature Scale"
               id="temperatureScale"
               v-model="location.temperatureScale"
+              class="form-select"
+              aria-label="Temperature Scale"
             >
               <option>C</option>
               <option>F</option>
@@ -49,33 +56,42 @@
           </div>
 
           <div class="mb-3">
-            <label for="zipCode" class="form-label">ZIP Code</label>
+            <label
+              for="zipCode"
+              class="form-label"
+            >ZIP Code</label>
             <input
-              type="text"
-              class="form-control"
               id="zipCode"
               v-model="location.zipCode"
-            />
+              type="text"
+              class="form-control"
+            >
           </div>
 
           <div class="mb-3">
-            <label for="latitude" class="form-label">Latitude</label>
+            <label
+              for="latitude"
+              class="form-label"
+            >Latitude</label>
             <input
-              type="text"
-              class="form-control"
               id="latitude"
               v-model="location.latitude"
-            />
+              type="text"
+              class="form-control"
+            >
           </div>
 
           <div class="mb-3">
-            <label for="longitude" class="form-label">Longitude</label>
+            <label
+              for="longitude"
+              class="form-label"
+            >Longitude</label>
             <input
-              type="text"
-              class="form-control"
               id="longitude"
               v-model="location.longitude"
-            />
+              type="text"
+              class="form-control"
+            >
           </div>
 
           <div class="row g-2">
@@ -101,9 +117,11 @@
         </form>
       </div>
       <div class="col">
-        <div id="map" style="width: 100%; height: 580px"></div>
+        <div
+          id="map"
+          style="width: 100%; height: 580px"
+        />
       </div>
-      >
     </div>
   </div>
 </template>
@@ -125,10 +143,32 @@ export default {
       marker: null,
     };
   },
+  watch: {
+    "location.latitude": function () {
+      this.debouncedUpdateMap();
+    },
+    "location.longitude": function () {
+      this.debouncedUpdateMap();
+    },
+  },
+  created: function () {
+    this.debouncedUpdateMap = _debounce(this.updateMap, 500);
+  },
+  mounted: function () {
+    this.loadLocationData();
+    //fetch('/api/location')
+    //  .then(response => response.json())
+    //  .then(data => {
+    //    if (typeof data !== 'undefined' && data != null) {
+    //      this.location = data;
+    //    }
+    //  });
+  },
   methods: {
     saveLocation: function () {
       fetch("/api/location", {
         method: "PUT",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(this.location),
       })
         .then((response) => response.json())
@@ -154,7 +194,7 @@ export default {
       var vm = this;
       var latlng = L.latLng(
         vm.safeLatLng(vm.location.latitude),
-        vm.safeLatLng(vm.location.longitude)
+        vm.safeLatLng(vm.location.longitude),
       );
       vm.map = L.map("map").setView(latlng, 17);
       L.tileLayer("http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
@@ -193,27 +233,6 @@ export default {
         }
       }
     },
-  },
-  created: function () {
-    this.debouncedUpdateMap = _debounce(this.updateMap, 500);
-  },
-  watch: {
-    "location.latitude": function (val) {
-      this.debouncedUpdateMap();
-    },
-    "location.longitude": function (val) {
-      this.debouncedUpdateMap();
-    },
-  },
-  mounted: function () {
-    this.loadLocationData();
-    //fetch('/api/location')
-    //  .then(response => response.json())
-    //  .then(data => {
-    //    if (typeof data !== 'undefined' && data != null) {
-    //      this.location = data;
-    //    }
-    //  });
   },
 };
 </script>

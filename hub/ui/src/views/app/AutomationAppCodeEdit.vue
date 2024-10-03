@@ -3,10 +3,10 @@
     <div class="row">
       <div class="col">
         <div
+          v-if="alertMessage"
           ref="alertBox"
           class="alert alert-danger alert-dismissible"
           role="alert"
-          v-if="alertMessage"
         >
           {{ alertMessage }}
           <button
@@ -14,7 +14,7 @@
             class="btn-close"
             aria-label="Close"
             @click="alertMessage = null"
-          ></button>
+          />
         </div>
       </div>
     </div>
@@ -23,16 +23,16 @@
         <code-editor
           :source="automationApp.sourceCode"
           title="Edit"
-          :savePending="updatePending"
-          :editorHeight="editorHeight"
-          @saveCodeButtonClicked="saveCode"
+          :save-pending="updatePending"
+          :editor-height="editorHeight"
+          @save-code-button-clicked="saveCode"
         >
           <router-link
             class="btn btn-outline-primary"
             outlined
             :to="{
               name: 'AutomationAppSettings',
-              params: { id: aaId },
+              params: { id: saId },
             }"
             mx-2
           >
@@ -42,9 +42,9 @@
             title="Are you sure?"
             body="Are you sure you want to delete this automation app code?"
             confirm-button="Delete"
-            :buttonDisabled="updatePending"
+            :button-disabled="updatePending"
             @confirm-action="deleteCode"
-          ></are-you-sure-dialog>
+          />
         </code-editor>
       </div>
     </div>
@@ -72,7 +72,7 @@ export default {
     return {
       updatePending: false,
       alertMessage: null,
-      aaId: "0",
+      saId: "0",
       automationApp: { sourceCode: "" },
       editorHeight: "500px",
     };
@@ -82,15 +82,40 @@ export default {
       this.debouncedResizeEditor();
     },
   },
+  created() {
+    window.addEventListener("resize", this.onResize);
+    this.debouncedResizeEditor = _debounce(this.resizeEditor, 500);
+  },
+  unmounted() {
+    window.removeEventListener("resize", this.onResize);
+  },
+  mounted: function () {
+    this.resizeEditor();
+
+    this.saId = this.$route.params.id;
+
+    fetch(`/api/automation-apps/${this.saId}/source`)
+      .then((response) => response.json())
+      .then((data) => {
+        if (typeof data !== "undefined" && data != null) {
+          this.automationApp = data;
+        }
+      });
+
+    this.$nextTick(() => {
+      this.debouncedResizeEditor();
+    });
+  },
   methods: {
     saveCode(updatedCode) {
       this.updatePending = true;
       this.alertMessage = null;
       this.automationApp.sourceCode = updatedCode;
 
-      fetch(`/api/automation-apps/${this.aaId}/source`, {
+      fetch(`/api/automation-apps/${this.saId}/source`, {
         method: "PUT",
-        body: JSON.stringify(this.automationApp),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sourceCode: updatedCode }),
       })
         .then(handleErrors)
         .then((response) => {
@@ -111,7 +136,7 @@ export default {
       this.updatePending = true;
       this.alertMessage = null;
 
-      fetch(`/api/automation-apps/${this.aaId}`, {
+      fetch(`/api/automation-apps/${this.saId}`, {
         method: "DELETE",
       })
         .then(handleErrors)
@@ -143,30 +168,6 @@ export default {
             : 0) + 153)
       }px`;
     },
-  },
-  created() {
-    window.addEventListener("resize", this.onResize);
-    this.debouncedResizeEditor = _debounce(this.resizeEditor, 500);
-  },
-  unmounted() {
-    window.removeEventListener("resize", this.onResize);
-  },
-  mounted: function () {
-    this.resizeEditor();
-
-    this.aaId = this.$route.params.id;
-
-    fetch(`/api/automation-apps/${this.aaId}/source`)
-      .then((response) => response.json())
-      .then((data) => {
-        if (typeof data !== "undefined" && data != null) {
-          this.automationApp = data;
-        }
-      });
-
-    this.$nextTick(() => {
-      this.debouncedResizeEditor();
-    });
   },
 };
 </script>

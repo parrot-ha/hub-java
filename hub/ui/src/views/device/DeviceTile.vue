@@ -1,81 +1,95 @@
 <template>
   <div class="container-fluid">
-
-      <div class="row">
-        <div class="col-12">
-          <div class="card">
-            <h5 class="card-title">Settings</h5>
-            <div class="card-text">
-              <form>
-                <v-text-field label="Name" v-model="device.name"></v-text-field>
-                <v-text-field
-                  label="Label"
-                  v-model="device.label"
-                ></v-text-field>
-                <v-text-field
-                  label="Device Network ID"
-                  v-model="device.deviceNetworkId"
-                ></v-text-field>
-                <v-select
-                  :items="deviceHandlers"
-                  :item-text="(item) => item.name + ' (' + item.namespace + ')'"
-                  item-value="id"
-                  label="Type"
-                  v-model="device.deviceHandlerId"
-                ></v-select>
-              </form>
-            </div>
-            <v-card-actions>
-              <v-btn color="primary" @click="saveDevice"> Save </v-btn>
-              <v-btn color="error" @click="deleteDevice">Delete</v-btn>
-            </v-card-actions>
+    <div class="row">
+      <div class="col-12">
+        <div class="card">
+          <h5 class="card-title">
+            Settings
+          </h5>
+          <div class="card-text">
+            <form>
+              <v-text-field
+                v-model="device.name"
+                label="Name"
+              />
+              <v-text-field
+                v-model="device.label"
+                label="Label"
+              />
+              <v-text-field
+                v-model="device.deviceNetworkId"
+                label="Device Network ID"
+              />
+              <v-select
+                v-model="device.deviceHandlerId"
+                :items="deviceHandlers"
+                :item-text="(item) => item.name + ' (' + item.namespace + ')'"
+                item-value="id"
+                label="Type"
+              />
+            </form>
           </div>
+          <v-card-actions>
+            <v-btn
+              color="primary"
+              @click="saveDevice"
+            >
+              Save
+            </v-btn>
+            <v-btn
+              color="error"
+              @click="deleteDevice"
+            >
+              Delete
+            </v-btn>
+          </v-card-actions>
         </div>
-        <div class="col-12">
-          <div class="card">
-            <h5 class="card-title">Information</h5>
-            <div class="card-text">
-              <v-simple-table>
-                <tbody>
-                  <tr>
-                    <td>Date Created</td>
-                    <td></td>
-                  </tr>
-                  <tr>
-                    <td>Last Updated</td>
-                    <td></td>
-                  </tr>
-                  <tr>
-                    <td>Data</td>
-                    <td></td>
-                  </tr>
-                  <tr>
-                    <td>Current States</td>
-                    <td></td>
-                  </tr>
-                  <tr>
-                    <td>Events</td>
-                    <td>
-                      <a :href="`/device/${device.id}/events`">List Events</a>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>In Use By</td>
-                    <td></td>
-                  </tr>
-                </tbody>
-              </v-simple-table>
-            </div>
-
+      </div>
+      <div class="col-12">
+        <div class="card">
+          <h5 class="card-title">
+            Information
+          </h5>
+          <div class="card-text">
+            <v-simple-table>
+              <tbody>
+                <tr>
+                  <td>Date Created</td>
+                  <td />
+                </tr>
+                <tr>
+                  <td>Last Updated</td>
+                  <td />
+                </tr>
+                <tr>
+                  <td>Data</td>
+                  <td />
+                </tr>
+                <tr>
+                  <td>Current States</td>
+                  <td />
+                </tr>
+                <tr>
+                  <td>Events</td>
+                  <td>
+                    <a :href="`/device/${device.id}/events`">List Events</a>
+                  </td>
+                </tr>
+                <tr>
+                  <td>In Use By</td>
+                  <td />
+                </tr>
+              </tbody>
+            </v-simple-table>
           </div>
         </div>
       </div>
-
+    </div>
   </div>
 </template>
 <script>
 export default {
-  name: "Device Show",
+  name: "DeviceShow",
   data() {
     return {
       device: {},

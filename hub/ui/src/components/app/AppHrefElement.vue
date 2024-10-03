@@ -1,7 +1,14 @@
 <template>
-  <div class="card" @click="hrefClicked">
-    <h5 class="card-title">{{ body.title }}</h5>
-    <div class="card-text">{{ body.description }}</div>
+  <div
+    class="card"
+    @click="hrefClicked"
+  >
+    <h5 class="card-title">
+      {{ body.title }}
+    </h5>
+    <div class="card-text">
+      {{ body.description }}
+    </div>
   </div>
 </template>
 

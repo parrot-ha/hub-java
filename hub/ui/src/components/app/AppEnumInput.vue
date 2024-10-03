@@ -5,10 +5,14 @@
       class="form-select"
       :aria-label="body.title"
       :value="modelValue"
-      @input="$emit('update:modelValue', $event.target.value)"
       :multiple="body.multiple"
+      @input="$emit('update:modelValue', $event.target.value)"
     >
-      <option v-for="item in itemList" :key="item.key" :value="item.key">
+      <option
+        v-for="item in itemList"
+        :key="item.key"
+        :value="item.key"
+      >
         {{ item.text }}
       </option>
     </select>
@@ -27,7 +31,7 @@ export default {
       var tempItemList = [];
       if (Array.isArray(this.options)) {
         this.options.forEach((element) =>
-          tempItemList.push({ key: element, text: element })
+          tempItemList.push({ key: element, text: element }),
         );
       } else {
         for (const key in this.options) {

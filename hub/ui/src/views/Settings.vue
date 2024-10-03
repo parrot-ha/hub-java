@@ -3,19 +3,26 @@
     <div class="row">
       <div class="col">
         <div class="card">
-          <h5 class="card-title"></h5>
+          <h5 class="card-title" />
           <div class="card-body">
             <div class="card-text">
               <div class="d-flex gap-3">
                 <router-link
                   class="btn btn-primary"
                   :to="{ name: 'LoggerConfig' }"
-                  >Logger Configuration</router-link
                 >
-                <button class="btn btn-primary" @click="reloadAutomationApps">
+                  Logger Configuration
+                </router-link>
+                <button
+                  class="btn btn-primary"
+                  @click="reloadAutomationApps"
+                >
                   Reload Automation Apps
                 </button>
-                <button class="btn btn-primary" @click="reloadDeviceHandlers">
+                <button
+                  class="btn btn-primary"
+                  @click="reloadDeviceHandlers"
+                >
                   Reload Device Handlers
                 </button>
               </div>
@@ -44,6 +51,7 @@ export default {
       var body = { action: "reload" };
       fetch("/api/settings/automation-apps", {
         method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       })
         .then(handleErrors)
@@ -61,6 +69,7 @@ export default {
       var body = { action: "reload" };
       fetch("/api/settings/device-handlers", {
         method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       })
         .then(handleErrors)

@@ -2,16 +2,18 @@
   <div class="container-fluid">
     <div class="row gy-3">
       <div
-        class="col-12"
         v-for="integrationType in integrationTypes"
         :key="integrationType.id"
+        class="col-12"
       >
         <div class="card">
           <div class="card-body">
-            <h5 class="card-title">{{ integrationType.name }}</h5>
+            <h5 class="card-title">
+              {{ integrationType.name }}
+            </h5>
             <div class="card-text">
               {{ integrationType.description }}
-              <br />
+              <br>
               <button
                 class="btn btn-primary"
                 color="primary"
@@ -41,10 +43,23 @@ export default {
       integrationTypes: [],
     };
   },
+  mounted: function () {
+    fetch("/api/integration_types")
+      .then((response) => response.json())
+      .then((data) => {
+        if (typeof data !== "undefined" && data != null) {
+          this.integrationTypes = data;
+        }
+      });
+  },
   methods: {
     addIntegration: function (integrationTypeId) {
       var body = { id: integrationTypeId };
-      fetch("/api/integrations", { method: "POST", body: JSON.stringify(body) })
+      fetch("/api/integrations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      })
         .then(handleErrors)
         .then((response) => {
           return response.json();
@@ -57,15 +72,6 @@ export default {
           console.log(error);
         });
     },
-  },
-  mounted: function () {
-    fetch("/api/integration_types")
-      .then((response) => response.json())
-      .then((data) => {
-        if (typeof data !== "undefined" && data != null) {
-          this.integrationTypes = data;
-        }
-      });
   },
 };
 </script>

@@ -12,8 +12,9 @@
                 <router-link
                   class="btn btn-outline-secondary"
                   :to="{ name: 'IntegrationAdd' }"
-                  >Add Integration</router-link
                 >
+                  Add Integration
+                </router-link>
               </div>
             </div>
 
@@ -21,22 +22,36 @@
               <table class="table">
                 <thead>
                   <tr>
-                    <th scope="col" style="width: 30%">Name</th>
-                    <th scope="col" style="width: 70%">Description</th>
+                    <th
+                      scope="col"
+                      style="width: 30%"
+                    >
+                      Name
+                    </th>
+                    <th
+                      scope="col"
+                      style="width: 70%"
+                    >
+                      Description
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
-                  <tr v-for="integration in integrations" :key="integration.id">
+                  <tr
+                    v-for="integration in integrations"
+                    :key="integration.id"
+                  >
                     <td>
                       <router-link
                         :to="{
                           name: 'Integration',
                           params: { id: integration.id },
                         }"
-                        >{{ integration.label }} ({{
-                          integration.name
-                        }})</router-link
                       >
+                        {{ integration.label }} ({{
+                          integration.name
+                        }})
+                      </router-link>
                     </td>
                     <td>{{ integration.description }}</td>
                   </tr>

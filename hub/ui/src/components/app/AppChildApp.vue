@@ -1,8 +1,18 @@
 <template>
   <div>
-    <div class="d-grid" v-if="body.multiple">
-      <div class="d-grid" v-for="childApp in childApps" :key="childApp.id">
-        <button class="btn btn-light" @click="onChildNav(childApp.id)">
+    <div
+      v-if="body.multiple"
+      class="d-grid"
+    >
+      <div
+        v-for="childApp in childApps"
+        :key="childApp.id"
+        class="d-grid"
+      >
+        <button
+          class="btn btn-light"
+          @click="onChildNav(childApp.id)"
+        >
           {{ childApp.displayName }}
         </button>
       </div>
@@ -13,7 +23,10 @@
         {{ body.title }}
       </button>
     </div>
-    <div class="d-grid" v-else>
+    <div
+      v-else
+      class="d-grid"
+    >
       <button
         class="btn btn-light"
         @click="onAddChild(body.namespace, body.appName)"
@@ -37,16 +50,16 @@ export default {
   props: ["body"],
   data() {
     return {
-      iaaId: "",
+      isaId: "",
       childApps: {},
     };
   },
   mounted: function () {
-    this.iaaId = this.$route.params.id;
+    this.isaId = this.$route.params.id;
 
     // get child apps
     fetch(
-      `/api/iaas/${this.iaaId}/child-apps?appName=${this.body.appName}&namespace=${this.body.namespace}`
+      `/api/iaas/${this.isaId}/child-apps?appName=${this.body.appName}&namespace=${this.body.namespace}`,
     )
       .then((response) => response.json())
       .then((data) => {
@@ -58,18 +71,22 @@ export default {
   methods: {
     onChildNav: function (childAppid) {
       this.$router.push({
-        name: "InstalledAutomationAppConfig",
+        name: "InstalledAppConfig",
         params: { id: childAppid },
       });
     },
     onAddChild: function (namespace, appName) {
       var body = {
-        id: this.iaaId,
+        id: this.isaId,
         type: "child",
         appName: appName,
         namespace: namespace,
       };
-      fetch("/api/iaas", { method: "POST", body: JSON.stringify(body) })
+      fetch("/api/iaas", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      })
         .then(handleErrors)
         .then((response) => {
           return response.json();
@@ -77,7 +94,7 @@ export default {
         .then((data) => {
           //this.$router.push(`/iaas/${data.id}/cfg`);
           this.$router.push({
-            name: "InstalledAutomationAppConfig",
+            name: "InstalledAppConfig",
             params: { id: data.id },
           });
         })

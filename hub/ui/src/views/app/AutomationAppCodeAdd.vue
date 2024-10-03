@@ -3,18 +3,18 @@
     <div class="row">
       <div class="col">
         <div
+          v-if="alertMessage"
           ref="alertBox"
           class="alert alert-danger alert-dismissible"
           role="alert"
-          v-if="alertMessage"
         >
-          {{ alertMessage }}
+          <pre>{{ alertMessage }}</pre>
           <button
             type="button"
             class="btn-close"
             aria-label="Close"
             @click="alertMessage = null"
-          ></button>
+          />
         </div>
       </div>
     </div>
@@ -23,10 +23,10 @@
         <code-editor
           :source="automationApp.sourceCode"
           title="Add"
-          :savePending="savePending"
-          :editorHeight="editorHeight"
-          @saveCodeButtonClicked="saveCode"
-        ></code-editor>
+          :save-pending="savePending"
+          :editor-height="editorHeight"
+          @save-code-button-clicked="saveCode"
+        />
       </div>
     </div>
   </div>
@@ -60,6 +60,19 @@ export default {
       this.debouncedResizeEditor();
     },
   },
+  created() {
+    window.addEventListener("resize", this.onResize);
+    this.debouncedResizeEditor = _debounce(this.resizeEditor, 500);
+  },
+  unmounted() {
+    window.removeEventListener("resize", this.onResize);
+  },
+  mounted: function () {
+    this.resizeEditor();
+    this.$nextTick(() => {
+      this.debouncedResizeEditor();
+    });
+  },
   methods: {
     saveCode(updatedCode) {
       this.savePending = true;
@@ -68,6 +81,7 @@ export default {
 
       fetch(`/api/automation-apps/source`, {
         method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(this.automationApp),
       })
         .then(handleErrors)
@@ -79,7 +93,7 @@ export default {
           if (!data.success) {
             this.alertMessage = data.message;
           } else {
-            this.$router.push(`/aa-code/${data.aaId}/edit`);
+            this.$router.push(`/aa-code/${data.id}/edit`);
           }
         })
         .catch((error) => {
@@ -99,19 +113,6 @@ export default {
             : 0) + 153)
       }px`;
     },
-  },
-  created() {
-    window.addEventListener("resize", this.onResize);
-    this.debouncedResizeEditor = _debounce(this.resizeEditor, 500);
-  },
-  unmounted() {
-    window.removeEventListener("resize", this.onResize);
-  },
-  mounted: function () {
-    this.resizeEditor();
-    this.$nextTick(() => {
-      this.debouncedResizeEditor();
-    });
   },
 };
 </script>

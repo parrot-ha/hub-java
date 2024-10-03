@@ -9,9 +9,9 @@
             >
               <h5>Loggers</h5>
               <div class="btn-toolbar mb-2 mb-md-0">
-                <logger-edit-modal @loggerSaved="loadLoggingConfig"
-                  >Add Logger</logger-edit-modal
-                >
+                <logger-edit-modal @logger-saved="loadLoggingConfig">
+                  Add Logger
+                </logger-edit-modal>
               </div>
             </div>
             <div class="card-text">
@@ -24,23 +24,27 @@
                     </tr>
                   </thead>
                   <tbody>
-                    <tr v-for="logger in loggers" :key="logger.name">
+                    <tr 
+                      v-for="logger in loggers" 
+                      :key="logger.name"
+                    >
                       <td>{{ logger.name }}</td>
                       <td>
                         <logger-edit-modal
-                          @loggerSaved="loadLoggingConfig"
                           :logger-name="logger.name"
                           :logger-level="logger.level"
-                          >{{ logger.level }}</logger-edit-modal
+                          @logger-saved="loadLoggingConfig"
                         >
+                          {{ logger.level }}
+                        </logger-edit-modal>
                       </td>
                     </tr>
                   </tbody>
                 </table>
 
                 <div
-                  class="modal fade"
                   id="addModal"
+                  class="modal fade"
                   tabindex="-1"
                   aria-labelledby="addModalLabel"
                   aria-hidden="true"
@@ -48,7 +52,10 @@
                   <div class="modal-dialog">
                     <div class="modal-content">
                       <div class="modal-header">
-                        <h1 class="modal-title fs-5" id="addModalLabel">
+                        <h1
+                          id="addModalLabel"
+                          class="modal-title fs-5"
+                        >
                           Add Logger
                         </h1>
                         <button
@@ -56,7 +63,7 @@
                           class="btn-close"
                           data-bs-dismiss="modal"
                           aria-label="Close"
-                        ></button>
+                        />
                       </div>
                       <div class="modal-body">
                         Are you sure you want to delete this integration?
@@ -101,6 +108,9 @@ export default {
       loggers: [],
     };
   },
+  mounted: function () {
+    this.loadLoggingConfig();
+  },
   methods: {
     loadLoggingConfig() {
       fetch("/api/settings/logging-config")
@@ -111,9 +121,6 @@ export default {
           }
         });
     },
-  },
-  mounted: function () {
-    this.loadLoggingConfig();
   },
 };
 </script>

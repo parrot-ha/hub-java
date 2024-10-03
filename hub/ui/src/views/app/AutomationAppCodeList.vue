@@ -8,8 +8,9 @@
         <router-link
           class="btn btn-outline-secondary"
           :to="{ name: 'AutomationAppCodeAdd' }"
-          >Add New</router-link
         >
+          Add New
+        </router-link>
       </div>
     </div>
 
@@ -21,17 +22,21 @@
         </tr>
       </thead>
       <tbody>
-        <tr v-for="aa in sortedCodeList" :key="aa.id">
+        <tr
+          v-for="sa in sortedCodeList"
+          :key="sa.id"
+        >
           <td>
             <router-link
               :to="{
                 name: 'AutomationAppCodeEdit',
-                params: { id: aa.id },
+                params: { id: sa.id },
               }"
-              >{{ aa.name }}</router-link
             >
+              {{ sa.name }}
+            </router-link>
           </td>
-          <td>{{ aa.namespace }}</td>
+          <td>{{ sa.namespace }}</td>
         </tr>
       </tbody>
     </table>

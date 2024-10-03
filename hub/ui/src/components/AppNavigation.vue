@@ -1,20 +1,55 @@
 <template>
-  <nav
-    id="sidebarMenu"
-    class="col-md-3 col-lg-2 d-md-block bg-light sidebar collapse"
+  <div
+    class="sidebar border border-right col-md-3 col-lg-2 p-0 bg-body-tertiary"
   >
-    <div class="position-sticky pt-3">
-      <ul class="nav flex-column">
-        <li class="nav-item" v-for="item in items" :key="item.title">
-          <router-link :to="item.href" class="nav-link"
-            ><span data-bs-target="#sidebarMenu" :data-bs-toggle="sidebarToggle"
-              ><i :class="item.icon"></i> {{ item.title }}</span
-            ></router-link
+    <div
+      id="sidebarMenu"
+      class="offcanvas-md offcanvas-end bg-body-tertiary"
+      tabindex="-1"
+      aria-labelledby="sidebarMenuLabel"
+    >
+      <div class="offcanvas-header">
+        <h5
+          id="sidebarMenuLabel"
+          class="offcanvas-title"
+        >
+          Parrot Hub
+        </h5>
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="offcanvas"
+          data-bs-target="#sidebarMenu"
+          aria-label="Close"
+        />
+      </div>
+      <nav
+        class="offcanvas-body d-md-flex flex-column p-0 pt-lg-3 overflow-y-auto"
+      >
+        <ul class="nav flex-column">
+          <li
+            v-for="item in items"
+            :key="item.title"
+            class="nav-item"
           >
-        </li>
-      </ul>
+            <router-link
+              :to="item.href"
+              class="nav-link p-1"
+            >
+              <button
+                type="button"
+                class="btn p-1"
+                data-bs-target="#sidebarMenu"
+                data-bs-dismiss="offcanvas"
+              >
+                <i :class="item.icon" /> {{ item.title }}
+              </button>
+            </router-link>
+          </li>
+        </ul>
+      </nav>
     </div>
-  </nav>
+  </div>
 </template>
 
 <script>
@@ -23,7 +58,6 @@ export default {
   data() {
     return {
       appTitle: "Parrot Hub",
-      sidebarToggle: "collapse",
       items: [
         { title: "Home", href: "/", icon: "bi bi-house" },
         {
@@ -61,25 +95,6 @@ export default {
         },
       ],
     };
-  },
-  mounted() {
-    this.onResize();
-    this.$nextTick(() => {
-      window.addEventListener("resize", this.onResize);
-    });
-  },
-
-  beforeUnmount() {
-    window.removeEventListener("resize", this.onResize);
-  },
-  methods: {
-    onResize() {
-      if (window.innerWidth < 768) {
-        this.sidebarToggle = "collapse";
-      } else {
-        this.sidebarToggle = "collapse.show";
-      }
-    },
   },
 };
 </script>

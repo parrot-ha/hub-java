@@ -7,19 +7,26 @@
       <div class="col-auto">
         <are-you-sure-dialog
           title="Are you sure?"
-          body="Are you sure you want to uninstall this Automation
+          body="Are you sure you want to uninstall this Smart
                     App?"
           confirm-button="Uninstall"
           @confirm-action="uninstallClick"
-          >Uninstall</are-you-sure-dialog
         >
+          Uninstall
+        </are-you-sure-dialog>
       </div>
     </div>
 
-    <div v-for="(section, i) in page.sections" :key="i">
-      <br />
+    <div
+      v-for="(section, i) in page.sections"
+      :key="i"
+    >
+      <br>
       <h3>{{ section.title }}</h3>
-      <div v-for="(body, j) in section.body" :key="j">
+      <div
+        v-for="(body, j) in section.body"
+        :key="j"
+      >
         <div
           v-if="body.element === 'input' && body.type.startsWith('capability')"
         >
@@ -29,83 +36,85 @@
             v-model="settings[body.name].value"
             :body="body"
             :devices="devices"
-          ></device-select>
+          />
         </div>
         <div v-if="body.type === 'app'">
-          <child-app v-bind:body="body"></child-app>
+          <child-app :body="body" />
         </div>
         <div v-if="body.type === 'enum'">
           <enum-input
             v-if="settings[body.name]"
-            v-bind:options="body.options"
-            v-bind:body="body"
             v-model="settings[body.name].value"
-          ></enum-input>
+            :options="body.options"
+            :body="body"
+          />
         </div>
         <div v-if="body.type === 'bool'">
           <bool-input
             v-if="settings[body.name]"
-            v-bind:body="body"
             v-model:checked="settings[body.name].value"
-          ></bool-input>
+            :body="body"
+          />
         </div>
         <div v-if="body.type === 'email'">
           <email-input
             v-if="settings[body.name]"
-            v-bind:body="body"
             v-model="settings[body.name].value"
-          ></email-input>
+            :body="body"
+          />
         </div>
         <div v-if="body.type === 'number'">
           <number-input
             v-if="settings[body.name]"
-            :body="body"
             v-model="settings[body.name].value"
-          ></number-input>
+            :body="body"
+          />
         </div>
         <div v-if="body.type === 'text' && body.element === 'input'">
           <text-input
             v-if="settings[body.name]"
-            v-bind:body="body"
             v-model="settings[body.name].value"
-          ></text-input>
+            :body="body"
+          />
         </div>
         <div v-if="body.type === 'password'">
           <password-input
             v-if="settings[body.name]"
-            v-bind:body="body"
             v-model="settings[body.name].value"
-          ></password-input>
+            :body="body"
+          />
         </div>
         <div v-if="body.type === 'time'">
           <time-input
             v-if="settings[body.name]"
-            v-bind:body="body"
             v-model="settings[body.name].value"
-          ></time-input>
+            :body="body"
+          />
         </div>
         <div v-if="body.type === 'paragraph'">
-          <paragraph-element v-bind:body="body"></paragraph-element>
+          <paragraph-element :body="body" />
         </div>
         <div v-if="body.element === 'href'">
           <href-element
-            v-bind:body="body"
-            v-on:hrefPage="hrefClick"
-          ></href-element>
+            :body="body"
+            @href-page="hrefClick"
+          />
         </div>
         <div v-if="body.type === 'text' && body.element === 'label'">
           ADD LABEL INPUT
         </div>
       </div>
     </div>
-    <br />
-    <div v-if="page.defaults">DEFAULTS GO HERE (MODE AND NAME)</div>
+    <br>
+    <div v-if="page.defaults">
+      DEFAULTS GO HERE (MODE AND NAME)
+    </div>
 
     <div class="row g-3">
       <div class="col-auto me-auto">
         <button
-          class="btn btn-primary"
           v-if="doneButtonVisible"
+          class="btn btn-primary"
           @click="doneClick"
         >
           Done
@@ -140,7 +149,7 @@ import ParagraphElement from "@/components/app/AppParagraphElement.vue";
 import AreYouSureDialog from "@/components/common/AreYouSureDialog.vue";
 
 export default {
-  name: "InstalledAutomationAppConfig",
+  name: "InstalledAppConfig",
   components: {
     BoolInput,
     ChildApp,
@@ -158,12 +167,12 @@ export default {
   data() {
     return {
       loading: true,
-      iaaId: "",
+      isaId: "",
       page: {},
       settings: {},
       savedSettings: {},
       previousSettings: {},
-      devices: {},
+      devices: [],
       breadcrumb: [],
       refreshFunction: null,
       watchers: false,
@@ -184,13 +193,22 @@ export default {
       this.processRoute();
     },
   },
+  mounted: function () {
+    this.processRoute();
+  },
+  beforeUnmount: function () {
+    if (this.refreshFunction != null) {
+      clearTimeout(this.refreshFunction);
+    }
+  },
   methods: {
     hrefClick: function (pageName) {
       this.nextPageNavigate(pageName);
     },
     nextPageNavigate: function (pageName) {
-      fetch(`/api/iaas/${this.iaaId}/cfg/settings`, {
+      fetch(`/api/iaas/${this.isaId}/cfg/settings`, {
         method: "PATCH",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(this.settings),
       })
         .then((response) => response.json())
@@ -200,7 +218,7 @@ export default {
             this.breadcrumb.push(pageName);
 
             var newPath = this.breadcrumb.join("/");
-            this.$router.push(`/iaas/${this.iaaId}/cfg/${newPath}`);
+            this.$router.push(`/iaas/${this.isaId}/cfg/${newPath}`);
             this.loadInformation();
           } else {
             console.log("problem saving automation app");
@@ -212,8 +230,9 @@ export default {
     },
     doneClick: function () {
       if (this.page.install == false) {
-        fetch(`/api/iaas/${this.iaaId}/cfg/settings`, {
+        fetch(`/api/iaas/${this.isaId}/cfg/settings`, {
           method: "PATCH",
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify(this.settings),
         })
           .then((response) => response.json())
@@ -222,7 +241,7 @@ export default {
               // need to go back a page.
               this.breadcrumb.pop();
               var newPath = this.breadcrumb.join("/");
-              this.$router.push(`/iaas/${this.iaaId}/cfg/${newPath}`);
+              this.$router.push(`/iaas/${this.isaId}/cfg/${newPath}`);
               this.loadInformation();
             } else {
               //TODO: popup for user
@@ -230,8 +249,9 @@ export default {
             }
           });
       } else {
-        fetch(`/api/iaas/${this.iaaId}/cfg/settings`, {
+        fetch(`/api/iaas/${this.isaId}/cfg/settings`, {
           method: "POST",
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify(this.settings),
         })
           .then((response) => response.json())
@@ -245,7 +265,7 @@ export default {
       }
     },
     uninstallClick: function () {
-      fetch(`/api/iaas/${this.iaaId}`, {
+      fetch(`/api/iaas/${this.isaId}`, {
         method: "DELETE",
       })
         .then((response) => response.json())
@@ -270,7 +290,7 @@ export default {
           ) {
             // the value changed on the hub and not on the ui.
             this.settings[ssKey] = JSON.parse(
-              JSON.stringify(this.savedSettings[ssKey])
+              JSON.stringify(this.savedSettings[ssKey]),
             );
           }
         }
@@ -284,8 +304,8 @@ export default {
               value: input.defaultValue
                 ? input.defaultValue
                 : input.multiple
-                ? []
-                : null,
+                  ? []
+                  : null,
               type: input.type,
               multiple: input.multiple,
             };
@@ -303,7 +323,7 @@ export default {
                   this.settings[input.name].value = [];
                 } else if (!Array.isArray(this.settings[input.name].value)) {
                   this.settings[input.name].value = Array.from(
-                    this.settings[input.name].value
+                    this.settings[input.name].value,
                   );
                 }
               }
@@ -314,14 +334,17 @@ export default {
           if (input.submitOnChange) {
             if (!this.watchers) {
               this.$watch(`settings.${input.name}.value`, () => {
-                fetch(`/api/iaas/${this.iaaId}/cfg/settings`, {
+                fetch(`/api/iaas/${this.isaId}/cfg/settings`, {
                   method: "PATCH",
+                  headers: { "Content-Type": "application/json" },
                   body: JSON.stringify(this.settings),
                 })
                   .then((response) => response.json())
                   .then((data) => {
                     if (data.success) {
-                      fetch(`/api/iaas/${this.iaaId}/cfg/settings`)
+                      fetch(
+                        `/api/iaas/${this.isaId}/cfg/settings`,
+                      )
                         .then((response) => response.json())
                         .then((data) => {
                           if (typeof data !== "undefined" && data != null) {
@@ -342,7 +365,7 @@ export default {
       this.watchers = true;
     },
     loadInformation: function () {
-      fetch("/api/device-id-map")
+      fetch("/api/devices?field=id&field=displayName")
         .then((response) => response.json())
         .then((data) => {
           if (typeof data !== "undefined" && data != null) {
@@ -350,7 +373,7 @@ export default {
           }
         });
 
-      fetch(`/api/iaas/${this.iaaId}/cfg/settings`)
+      fetch(`/api/iaas/${this.isaId}/cfg/settings`)
         .then((response) => response.json())
         .then((data) => {
           if (typeof data !== "undefined" && data != null) {
@@ -361,7 +384,7 @@ export default {
     },
     loadPage: function () {
       var vm = this;
-      var path = `/api/iaas/${this.iaaId}/cfg/page`;
+      var path = `/api/iaas/${this.isaId}/cfg/page`;
       if (this.breadcrumb.length > 0)
         path = path
           .concat("/")
@@ -389,7 +412,7 @@ export default {
               // we have a page, push to router and breadcrumb
               this.breadcrumb.push(this.page.name);
               var newPath = this.breadcrumb.join("/");
-              this.$router.push(`/iaas/${this.iaaId}/cfg/${newPath}`);
+              this.$router.push(`/iaas/${this.isaId}/cfg/${newPath}`);
             }
             if (
               this.refreshFunction == null &&
@@ -408,7 +431,7 @@ export default {
         });
     },
     processRoute: function () {
-      this.iaaId = this.$route.params.id;
+      this.isaId = this.$route.params.id;
       var keys = [];
       var re = pathToRegexp("/iaas/:id/cfg/(.*)", keys);
       var existingPath = re.exec(this.$route.path);
@@ -418,14 +441,6 @@ export default {
 
       this.loadInformation();
     },
-  },
-  mounted: function () {
-    this.processRoute();
-  },
-  beforeUnmount: function () {
-    if (this.refreshFunction != null) {
-      clearTimeout(this.refreshFunction);
-    }
   },
 };
 </script>

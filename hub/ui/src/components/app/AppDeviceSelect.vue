@@ -4,13 +4,22 @@
       <div class="card">
         <div class="card-body">
           <h5 class="card-title">
-            <a href="#" class="stretched-link" @click="deviceSelectClick"></a>
+            <a
+              href="#"
+              class="stretched-link"
+              @click="deviceSelectClick"
+            />
             {{ body.title }}
           </h5>
           <div class="card-text">
             <div v-if="modelValue">
-              <div v-for="settingVal in modelValue" :key="settingVal">
-                {{ devices[settingVal.trim()] }}
+              <div
+                v-for="settingVal in modelValue"
+                :key="settingVal"
+              >
+                {{
+                  devices.find((device) => device.id === settingVal).displayName
+                }}
               </div>
             </div>
             <div v-else>
@@ -24,12 +33,15 @@
       <div class="card">
         <div class="card-body">
           <h5 class="card-title">
-            <a href="#" class="stretched-link" @click="deviceSelectClick"></a
-            >{{ body.title }}
+            <a
+              href="#"
+              class="stretched-link"
+              @click="deviceSelectClick"
+            />{{ body.title }}
           </h5>
           <div class="card-text">
             <div v-if="modelValue">
-              {{ devices[modelValue.trim()] }}
+              {{ devices.filter((device) => device.id === modelValue.trim()) }}
             </div>
             <div v-else>
               <div>{{ body.description }}</div>
@@ -39,28 +51,40 @@
       </div>
     </div>
 
-    <div class="row" justify="center">
-      <div class="modal" tabindex="-1" ref="appDeviceSelectModal">
+    <div
+      class="row"
+      justify="center"
+    >
+      <div
+        ref="appDeviceSelectModal"
+        class="modal"
+        tabindex="-1"
+      >
         <div class="modal-dialog modal-fullscreen">
           <div class="modal-content">
             <div class="modal-header">
-              <h5 class="modal-title">Device List</h5>
+              <h5 class="modal-title">
+                Device List
+              </h5>
               <button
                 type="button"
                 class="btn-close"
                 data-bs-dismiss="modal"
                 aria-label="Close"
-              ></button>
+              />
             </div>
             <div class="modal-body">
-              <div v-for="deviceItem in sortedDeviceList" :key="deviceItem.id">
+              <div
+                v-for="deviceItem in sortedDeviceList"
+                :key="deviceItem.id"
+              >
                 <div class="form-check">
                   <input
                     v-model="selectedDevices"
                     class="form-check-input"
                     type="checkbox"
                     :value="deviceItem.id"
-                  />
+                  >
                   <label class="form-check-label">
                     {{ deviceItem.displayName }}
                   </label>
@@ -103,7 +127,7 @@ export default {
   data() {
     return {
       modal: null,
-      deviceList: {},
+      deviceList: [],
       selectedDevices: [],
       modalVisible: false,
     };
@@ -129,12 +153,15 @@ export default {
       }
     },
   },
+  mounted: function () {
+    this.modal = new Modal(this.$refs.appDeviceSelectModal);
+  },
   methods: {
     closeDialog: function () {
       this.$emit("input", this.value);
     },
     deviceSelectClick: function () {
-      fetch(`/api/devices?filter=${this.body.type}`)
+      fetch(`/api/devices?filter=${this.body.type}&field=id&field=displayName`)
         .then((response) => response.json())
         .then((data) => {
           if (typeof data !== "undefined" && data != null) {
@@ -144,9 +171,6 @@ export default {
       this.selectedDevices = this.modelValue;
       this.modal.show();
     },
-  },
-  mounted: function () {
-    this.modal = new Modal(this.$refs.appDeviceSelectModal);
   },
 };
 </script>

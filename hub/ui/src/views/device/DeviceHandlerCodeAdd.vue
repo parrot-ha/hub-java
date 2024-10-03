@@ -3,10 +3,10 @@
     <div class="row">
       <div class="col">
         <div
+          v-if="alertMessage"
           ref="alertBox"
           class="alert alert-danger alert-dismissible"
           role="alert"
-          v-if="alertMessage"
         >
           {{ alertMessage }}
           <button
@@ -14,7 +14,7 @@
             class="btn-close"
             aria-label="Close"
             @click="alertMessage = null"
-          ></button>
+          />
         </div>
       </div>
     </div>
@@ -23,11 +23,11 @@
         <code-editor
           :source="deviceHandler.sourceCode"
           title="Add"
-          buttonName="Save"
-          :savePending="savePending"
-          :editorHeight="editorHeight"
-          @saveCodeButtonClicked="saveCode"
-        ></code-editor>
+          button-name="Save"
+          :save-pending="savePending"
+          :editor-height="editorHeight"
+          @save-code-button-clicked="saveCode"
+        />
       </div>
     </div>
   </div>
@@ -61,6 +61,19 @@ export default {
       this.debouncedResizeEditor();
     },
   },
+  created() {
+    window.addEventListener("resize", this.onResize);
+    this.debouncedResizeEditor = _debounce(this.resizeEditor, 250);
+  },
+  unmounted() {
+    window.removeEventListener("resize", this.onResize);
+  },
+  mounted: function () {
+    this.resizeEditor();
+    this.$nextTick(() => {
+      this.resizeEditor();
+    });
+  },
   methods: {
     saveCode(updatedCode) {
       this.savePending = true;
@@ -69,6 +82,7 @@ export default {
 
       fetch(`/api/device-handlers/source`, {
         method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(this.deviceHandler),
       })
         .then(handleErrors)
@@ -100,19 +114,6 @@ export default {
             : 0) + 153)
       }px`;
     },
-  },
-  created() {
-    window.addEventListener("resize", this.onResize);
-    this.debouncedResizeEditor = _debounce(this.resizeEditor, 250);
-  },
-  unmounted() {
-    window.removeEventListener("resize", this.onResize);
-  },
-  mounted: function () {
-    this.resizeEditor();
-    this.$nextTick(() => {
-      this.resizeEditor();
-    });
   },
 };
 </script>

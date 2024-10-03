@@ -7,17 +7,23 @@
     >
       <slot>Add New</slot>
     </button>
-    <div class="modal fade" tabindex="-1" ref="extensionLocationEditModal">
+    <div
+      ref="extensionLocationEditModal"
+      class="modal fade"
+      tabindex="-1"
+    >
       <div class="modal-dialog">
         <div class="modal-content">
           <div class="modal-header">
-            <h1 class="modal-title fs-5">{{ isEdit ? "Edit" : "Add" }} Item</h1>
+            <h1 class="modal-title fs-5">
+              {{ isEdit ? "Edit" : "Add" }} Item
+            </h1>
             <button
               type="button"
               class="btn-close"
-              @click="modal.hide()"
               aria-label="Close"
-            ></button>
+              @click="modal.hide()"
+            />
           </div>
           <div class="modal-body">
             <div class="container">
@@ -26,10 +32,10 @@
                   <div class="mb-3">
                     <label class="form-label">Extension name</label>
                     <input
+                      v-model="localName"
                       type="text"
                       class="form-control"
-                      v-model="localName"
-                    />
+                    >
                   </div>
                 </div>
               </div>
@@ -38,9 +44,9 @@
                   <div class="mb-3">
                     <label class="form-label">Type</label>
                     <select
+                      v-model="localType"
                       class="form-select"
                       aria-label="Type"
-                      v-model="localType"
                     >
                       <option
                         v-for="locationsType in locationsTypes"
@@ -58,10 +64,10 @@
                   <div class="mb-3">
                     <label class="form-label">Location</label>
                     <input
+                      v-model="localLocation"
                       type="text"
                       class="form-control"
-                      v-model="localLocation"
-                    />
+                    >
                   </div>
                 </div>
               </div>
@@ -112,6 +118,14 @@ export default {
       locationsTypes: ["URL", "GithubRelease"],
     };
   },
+  computed: {
+    buttonClassComputed: function () {
+      return this.buttonClass ? this.buttonClass : "btn-outline-primary";
+    },
+  },
+  mounted: function () {
+    this.modal = new Modal(this.$refs.extensionLocationEditModal);
+  },
   methods: {
     locationsSave() {
       var url;
@@ -148,14 +162,6 @@ export default {
       this.localType = this.type;
       this.modal.show();
     },
-  },
-  computed: {
-    buttonClassComputed: function () {
-      return this.buttonClass ? this.buttonClass : "btn-outline-primary";
-    },
-  },
-  mounted: function () {
-    this.modal = new Modal(this.$refs.extensionLocationEditModal);
   },
 };
 </script>

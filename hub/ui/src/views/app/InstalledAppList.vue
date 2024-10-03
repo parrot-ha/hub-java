@@ -11,9 +11,10 @@
               <div class="btn-toolbar mb-2 mb-md-0">
                 <router-link
                   class="btn btn-outline-secondary"
-                  :to="{ name: 'InstalledAutomationAppAdd' }"
-                  >Add Automation App</router-link
+                  :to="{ name: 'InstalledAppAdd' }"
                 >
+                  Add Automation App
+                </router-link>
               </div>
             </div>
 
@@ -21,33 +22,39 @@
               <table class="table">
                 <thead>
                   <tr>
-                    <th scope="col"></th>
-                    <th scope="col">Label</th>
-                    <th scope="col">Type</th>
+                    <th scope="col" />
+                    <th scope="col">
+                      Label
+                    </th>
+                    <th scope="col">
+                      Type
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
                   <tr
-                    v-for="iaa in sortedInstalledAutomationApps"
+                    v-for="iaa in sortedInstalledApps"
                     :key="iaa.id"
                   >
                     <td>
                       <router-link
                         :to="{
-                          name: 'InstalledAutomationAppInfo',
+                          name: 'InstalledAppInfo',
                           params: { id: iaa.id },
                         }"
-                        ><i class="bi bi-exclamation-circle"></i
-                      ></router-link>
+                      >
+                        <i class="bi bi-exclamation-circle" />
+                      </router-link>
                     </td>
                     <td>
                       <router-link
                         :to="{
-                          name: 'InstalledAutomationAppConfig',
+                          name: 'InstalledAppConfig',
                           params: { id: iaa.id },
                         }"
-                        >{{ iaa.label }}</router-link
                       >
+                        {{ iaa.label }}
+                      </router-link>
                     </td>
                     <td>{{ iaa.type }}</td>
                   </tr>
@@ -62,29 +69,29 @@
 </template>
 <script>
 export default {
-  name: "InstalledAutomationAppList",
+  name: "InstalledAppList",
   data() {
     return {
-      installedAutomationApps: [],
+      installedApps: [],
     };
   },
   computed: {
-    sortedInstalledAutomationApps() {
-      let sortedInstalledAutomationApps = [
-        ...this.installedAutomationApps,
-      ].sort((a, b) => {
-        const nameA = a.label.toUpperCase();
-        const nameB = b.label.toUpperCase();
-        if (nameA < nameB) {
-          return -1;
-        }
-        if (nameA > nameB) {
-          return 1;
-        }
+    sortedInstalledApps() {
+      let sortedInstalledApps = [...this.installedApps].sort(
+        (a, b) => {
+          const nameA = a.label.toUpperCase();
+          const nameB = b.label.toUpperCase();
+          if (nameA < nameB) {
+            return -1;
+          }
+          if (nameA > nameB) {
+            return 1;
+          }
 
-        return 0;
-      });
-      return sortedInstalledAutomationApps;
+          return 0;
+        },
+      );
+      return sortedInstalledApps;
     },
   },
 
@@ -93,7 +100,7 @@ export default {
       .then((response) => response.json())
       .then((data) => {
         if (typeof data !== "undefined" && data != null) {
-          this.installedAutomationApps = data;
+          this.installedApps = data;
         }
       });
   },

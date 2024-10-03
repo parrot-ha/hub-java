@@ -21,10 +21,10 @@
 
             <div class="card-text">
               <div
-                class="alert alert-warning alert-dismissible fade show"
-                role="alert"
                 v-for="(value, key) in extensionStatus"
                 :key="key"
+                class="alert alert-warning alert-dismissible fade show"
+                role="alert"
               >
                 {{ value }}
                 <button
@@ -32,7 +32,7 @@
                   class="btn-close"
                   data-bs-dismiss="alert"
                   aria-label="Close"
-                ></button>
+                />
               </div>
               <ul class="nav nav-tabs">
                 <li class="nav-item">
@@ -41,8 +41,7 @@
                     :aria-current="tab == 'INT'"
                     href="#"
                     @click="tab = 'INT'"
-                    >Installed</a
-                  >
+                  >Installed</a>
                 </li>
                 <li class="nav-item">
                   <a
@@ -50,8 +49,7 @@
                     :aria-current="tab == 'AVL'"
                     href="#"
                     @click="tab = 'AVL'"
-                    >Available</a
-                  >
+                  >Available</a>
                 </li>
                 <li class="nav-item">
                   <a
@@ -59,20 +57,39 @@
                     :aria-current="tab == 'LOC'"
                     href="#"
                     @click="tab = 'LOC'"
-                    >Locations</a
-                  >
+                  >Locations</a>
                 </li>
               </ul>
-              <br />
+              <br>
               <div class="tab-content">
                 <div v-if="tab == 'INT'">
                   <table class="table">
                     <thead>
                       <tr>
-                        <th scope="col" style="width: 15%">Actions</th>
-                        <th scope="col" style="width: 20%">Name</th>
-                        <th scope="col" style="width: 55%">Description</th>
-                        <th scope="col" style="width: 10%">Version</th>
+                        <th
+                          scope="col"
+                          style="width: 15%"
+                        >
+                          Actions
+                        </th>
+                        <th
+                          scope="col"
+                          style="width: 20%"
+                        >
+                          Name
+                        </th>
+                        <th
+                          scope="col"
+                          style="width: 55%"
+                        >
+                          Description
+                        </th>
+                        <th
+                          scope="col"
+                          style="width: 10%"
+                        >
+                          Version
+                        </th>
                       </tr>
                     </thead>
                     <tbody>
@@ -89,19 +106,20 @@
                                 body="Are you sure you want to delete this extension?"
                                 confirm-button="Delete"
                                 @confirm-action="deleteExtension(extension.id)"
-                                ><i class="bi bi-trash"></i
-                              ></are-you-sure-dialog>
+                              >
+                                <i class="bi bi-trash" />
+                              </are-you-sure-dialog>
                               <button
                                 v-if="extension.updateAvailable"
                                 type="button"
                                 class="btn btn-sm btn-outline-primary css-tooltip"
-                                @click="updateExtension(extension.id)"
                                 :data-tooltip="
                                   'Update to version ' +
-                                  extension.updateInfo?.version
+                                    extension.updateInfo?.version
                                 "
+                                @click="updateExtension(extension.id)"
                               >
-                                <i class="bi bi-cloud-download"></i>
+                                <i class="bi bi-cloud-download" />
                               </button>
                             </div>
                           </div>
@@ -119,10 +137,30 @@
                   <table class="table">
                     <thead>
                       <tr>
-                        <th scope="col" style="width: 5%">Actions</th>
-                        <th scope="col" style="width: 20%">Name</th>
-                        <th scope="col" style="width: 65%">Description</th>
-                        <th scope="col" stype="width: 10%">Version</th>
+                        <th
+                          scope="col"
+                          style="width: 5%"
+                        >
+                          Actions
+                        </th>
+                        <th
+                          scope="col"
+                          style="width: 20%"
+                        >
+                          Name
+                        </th>
+                        <th
+                          scope="col"
+                          style="width: 65%"
+                        >
+                          Description
+                        </th>
+                        <th
+                          scope="col"
+                          stype="width: 10%"
+                        >
+                          Version
+                        </th>
                       </tr>
                     </thead>
                     <tbody>
@@ -136,7 +174,7 @@
                             class="btn btn-sm btn-outline-primary"
                             @click="downloadExtension(extension.id)"
                           >
-                            <i class="bi bi-cloud-download"></i>
+                            <i class="bi bi-cloud-download" />
                           </button>
                         </td>
                         <td>{{ extension.name }}</td>
@@ -148,11 +186,11 @@
                 </div>
                 <div v-else-if="tab == 'LOC'">
                   <div class="row g-3">
-                    <div class="col-auto me-auto"></div>
+                    <div class="col-auto me-auto" />
                     <div class="col-auto">
                       <extension-location-edit
                         @location-saved="locationsUpdated"
-                      ></extension-location-edit>
+                      />
                     </div>
                   </div>
                   <table class="table">
@@ -165,7 +203,10 @@
                       </tr>
                     </thead>
                     <tbody>
-                      <tr v-for="location in locations" :key="location.id">
+                      <tr
+                        v-for="location in locations"
+                        :key="location.id"
+                      >
                         <td>
                           {{ location.name }}
                         </td>
@@ -181,17 +222,19 @@
                               @confirm-action="
                                 deleteExtensionLocation(location.id)
                               "
-                              ><i class="bi bi-trash"></i
-                            ></are-you-sure-dialog>
+                            >
+                              <i class="bi bi-trash" />
+                            </are-you-sure-dialog>
                             <extension-location-edit
-                              button-class="btn-sm btn-outline-primary"
                               :id="location.id"
+                              button-class="btn-sm btn-outline-primary"
                               :name="location.name"
                               :type="location.type"
                               :location="location.location"
                               @location-saved="locationsUpdated"
-                              ><i class="bi bi-pencil"></i
-                            ></extension-location-edit>
+                            >
+                              <i class="bi bi-pencil" />
+                            </extension-location-edit>
                           </div>
                         </td>
                       </tr>
@@ -219,6 +262,10 @@ function handleErrors(response) {
 
 export default {
   name: "ExtensionList",
+  components: {
+    AreYouSureDialog,
+    ExtensionLocationEdit,
+  },
   data() {
     return {
       tab: "INT",
@@ -226,10 +273,6 @@ export default {
       locations: [],
       extensionStatus: {},
     };
-  },
-  components: {
-    AreYouSureDialog,
-    ExtensionLocationEdit,
   },
   computed: {
     installedExtensions: function () {
@@ -244,6 +287,10 @@ export default {
     },
   },
   watch: {},
+  mounted: function () {
+    this.loadExtensions(false);
+    this.loadExtensionLocations();
+  },
 
   methods: {
     loadExtensions: function (doRefresh) {
@@ -269,7 +316,7 @@ export default {
     updateExtension: function (extensionId) {
       var url = `/api/extensions/${extensionId}?action=update`;
       var extension = this.extensions?.filter(
-        (extension) => extension.id == extensionId
+        (extension) => extension.id == extensionId,
       );
       this.extensionStatus.extensionId =
         "Updating extension " + extension[0].name;
@@ -294,7 +341,7 @@ export default {
     downloadExtension: function (extensionId) {
       var url = `/api/extensions/${extensionId}?action=download`;
       var extension = this.extensions?.filter(
-        (extension) => extension.id == extensionId
+        (extension) => extension.id == extensionId,
       );
       this.extensionStatus.extensionId =
         "Installing extension " + extension[0].name;
@@ -346,10 +393,6 @@ export default {
         this.loadExtensions(false);
       });
     },
-  },
-  mounted: function () {
-    this.loadExtensions(false);
-    this.loadExtensionLocations();
   },
 };
 </script>

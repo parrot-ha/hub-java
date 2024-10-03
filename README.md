@@ -51,7 +51,7 @@ Click "Modify options" -> Add before launch task
 
 Before launch:
 1. Build
-2. Run Gradle task 'parrotha-hub.hub.main: npmBuildFronted'
+2. Run Gradle task 'parrotha-hub.hub.main: npmBuildFrontend'
 3. Run Gradle task 'parrotha-hub.hub.main: copyIntellijResources'
 
 ## Publish Jar Files

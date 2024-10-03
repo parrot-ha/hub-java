@@ -6,13 +6,15 @@
 
         <div class="card">
           <div class="card-body">
-            <h5 class="card-title">Information</h5>
+            <h5 class="card-title">
+              Information
+            </h5>
             <div class="card-text">
               <table class="table">
                 <tbody>
                   <tr
-                    v-for="(value, name, i) in integration.information"
-                    :key="i"
+                    v-for="(value, name, infCount) in integration.information"
+                    :key="infCount"
                   >
                     <td>{{ name }}</td>
                     <td>{{ value }}</td>
@@ -27,56 +29,82 @@
       <div class="col-12">
         <div class="card">
           <div class="card-body">
-            <h5 class="card-title">Settings</h5>
+            <h5 class="card-title">
+              Settings
+            </h5>
             <div class="card-text">
               <form>
                 <div class="mb-3">
-                  <label for="labelInput" class="form-label">Label</label>
+                  <label
+                    for="labelInput"
+                    class="form-label"
+                  >Label</label>
                   <input
-                    type="text"
                     id="labelInput"
-                    class="form-control"
                     v-model="integration.label"
-                  />
+                    type="text"
+                    class="form-control"
+                  >
                 </div>
-                <hr />
-                <div v-for="(section, i) in preferences.sections" :key="i">
-                  <div v-for="(body, j) in section.body" :key="j">
-                    <div v-if="body.type === 'text'" class="mb-3">
+                <hr>
+                <div
+                  v-for="(section, i) in preferences.sections"
+                  :key="i"
+                >
+                  <div
+                    v-for="(body, j) in section.body"
+                    :key="j"
+                  >
+                    <div
+                      v-if="body.type === 'text'"
+                      class="mb-3"
+                    >
                       <label class="form-label">{{ body.title }}</label>
                       <input
+                        v-model="settings[body.name].value"
                         type="text"
                         class="form-control"
-                        v-model="settings[body.name].value"
-                      />
+                      >
                     </div>
-                    <div v-else-if="body.type === 'enum'" class="mb-3">
+                    <div
+                      v-else-if="body.type === 'enum'"
+                      class="mb-3"
+                    >
                       <label class="form-label">{{ body.title }}</label>
                       <select
+                        v-model="settings[body.name].value"
                         class="form-select"
                         :aria-label="body.title"
-                        v-model="settings[body.name].value"
                         :multiple="body.multiple"
                       >
-                        <option v-for="(item, i) in body.options" :key="i">
+                        <option
+                          v-for="(item, optCount) in body.options"
+                          :key="optCount"
+                        >
                           {{ item }}
                         </option>
                       </select>
                     </div>
-                    <div v-else-if="body.type === 'bool'" class="mb-3">
+                    <div
+                      v-else-if="body.type === 'bool'"
+                      class="mb-3"
+                    >
                       <input
+                        v-model="settings[body.name].value"
                         class="form-check-input"
                         type="checkbox"
                         role="switch"
-                        v-model="settings[body.name].value"
-                      />
+                      >
                       <label class="form-check-label">{{ body.title }}</label>
                     </div>
                   </div>
                 </div>
               </form>
               <div class="d-flex gap-3">
-                <button class="btn btn-primary" @click="saveIntegration">
+                <button
+                  class="btn btn-primary"
+                  @click="saveIntegration"
+                >
                   Save
                 </button>
                 <button
@@ -89,8 +117,8 @@
                 </button>
               </div>
               <div
-                class="modal fade"
                 id="deleteModal"
+                class="modal fade"
                 tabindex="-1"
                 aria-labelledby="deleteModalLabel"
                 aria-hidden="true"
@@ -98,7 +126,10 @@
                 <div class="modal-dialog">
                   <div class="modal-content">
                     <div class="modal-header">
-                      <h1 class="modal-title fs-5" id="deleteModalLabel">
+                      <h1
+                        id="deleteModalLabel"
+                        class="modal-title fs-5"
+                      >
                         Are you sure?
                       </h1>
                       <button
@@ -106,7 +137,7 @@
                         class="btn-close"
                         data-bs-dismiss="modal"
                         aria-label="Close"
-                      ></button>
+                      />
                     </div>
                     <div class="modal-body">
                       Are you sure you want to delete this integration?
@@ -135,12 +166,21 @@
         </div>
       </div>
 
-      <div class="col-12" v-for="(section, i) in pageLayout" :key="i">
+      <div
+        v-for="(section, i) in pageLayout"
+        :key="i"
+        class="col-12"
+      >
         <div class="card">
           <div class="card-body">
-            <h5 class="card-title">{{ section.title }}</h5>
+            <h5 class="card-title">
+              {{ section.title }}
+            </h5>
             <div class="card-text">
-              <div v-for="(bodyItem, j) in section.body" :key="j">
+              <div
+                v-for="(bodyItem, j) in section.body"
+                :key="j"
+              >
                 <div v-if="bodyItem.type === 'table'">
                   <table>
                     <thead>
@@ -171,10 +211,10 @@
                 <div v-if="bodyItem.type === 'button'">
                   <button
                     :class="'btn btn-' + bodyItem.color"
+                    :disabled="pageData[bodyItem.disabled]"
                     @click="
                       handleButtonAction(bodyItem.action, bodyItem.response)
                     "
-                    :disabled="pageData[bodyItem.disabled]"
                   >
                     {{ bodyItem.title }}
                   </button>
@@ -185,12 +225,18 @@
         </div>
       </div>
 
-      <div class="col-12" v-if="featureExists('deviceScan')">
+      <div
+        v-if="featureExists('deviceScan')"
+        class="col-12"
+      >
         <div class="card">
           <div class="card-body">
             <div class="card-title">
               Device Scanning
-              <span v-show="scanDevicesRunning" class="spinner-border"></span>
+              <span
+                v-show="scanDevicesRunning"
+                class="spinner-border"
+              />
             </div>
             <div class="card-text">
               <div id="foundDeviceDiv">
@@ -217,12 +263,18 @@
         </div>
       </div>
 
-      <div class="col-12" v-if="featureExists('deviceExclude')">
+      <div
+        v-if="featureExists('deviceExclude')"
+        class="col-12"
+      >
         <div class="card">
           <div class="card-body">
             <div class="card-title">
               Device Exclude
-              <span v-show="excludeDevicesRunning" class="spinner-border"></span>
+              <span
+                v-show="excludeDevicesRunning"
+                class="spinner-border"
+              />
             </div>
             <div class="card-text">
               <div id="deviceExcludedDiv">
@@ -249,28 +301,37 @@
         </div>
       </div>
 
-      <div class="col-12" v-if="featureExists('reset')">
+      <div
+        v-if="featureExists('reset')"
+        class="col-12"
+      >
         <div class="card">
           <div class="card-body">
-            <h5 class="card-title">Reset</h5>
+            <h5 class="card-title">
+              Reset
+            </h5>
             <div class="card-text">
               <h5 style="color: red">
                 {{ getFeatureOption("reset", "resetWarning") }}
               </h5>
               <form>
                 <div class="mb-3">
-                  <label for="resetInput" class="form-label"
-                    >Type "reset" and click Reset button to reset</label
-                  >
+                  <label
+                    for="resetInput"
+                    class="form-label"
+                  >Type "reset" and click Reset button to reset</label>
                   <input
-                    type="text"
                     id="resetInput"
-                    class="form-control"
                     v-model="reset"
-                  />
+                    type="text"
+                    class="form-control"
+                  >
                 </div>
               </form>
-              <button class="btn btn-danger" @click="resetIntegration">
+              <button
+                class="btn btn-danger"
+                @click="resetIntegration"
+              >
                 Reset
               </button>
             </div>
@@ -308,14 +369,47 @@ export default {
       integrationDeleteDialog: false,
     };
   },
+  mounted: function () {
+    this.integrationId = this.$route.params.id;
+
+    fetch(`/api/integrations/${this.integrationId}`)
+      .then((response) => response.json())
+      .then((data) => {
+        if (typeof data !== "undefined" && data != null) {
+          this.integration = data;
+          if (this.settings == null) {
+            this.settings = {};
+          }
+        }
+      });
+
+    fetch(`/api/integrations/${this.integrationId}/settings`)
+      .then((response) => response.json())
+      .then((data) => {
+        if (typeof data !== "undefined" && data != null) {
+          this.settings = data;
+        }
+      })
+      .then(this.loadPreferencesLayout());
+
+    fetch(`/api/integrations/${this.integrationId}/page-data`)
+      .then((response) => response.json())
+      .then((data) => {
+        if (typeof data !== "undefined" && data != null) {
+          this.pageData = data;
+        }
+      })
+      .then(this.loadPageLayout());
+  },
   methods: {
     handleButtonAction: function (action, responseIndex) {
       console.log(
-        "handleButtonAction " + action + " response " + responseIndex
+        "handleButtonAction " + action + " response " + responseIndex,
       );
 
       fetch(`/api/integrations/${this.integrationId}/button-action`, {
         method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: action }),
       })
         .then((response) => response.json())
@@ -346,6 +440,7 @@ export default {
       updatedSettings.label = { value: this.integration.label };
       fetch(`/api/integrations/${this.integrationId}/settings`, {
         method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(updatedSettings),
       })
         .then(handleErrors)
@@ -393,6 +488,7 @@ export default {
       var body = { action: "getScanStatus" };
       fetch(`/api/integrations/${vm.integrationId}/features/deviceScan`, {
         method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       })
         .then((response) => response.json())
@@ -404,7 +500,7 @@ export default {
               function () {
                 this.checkStatus();
               }.bind(this),
-              2000
+              2000,
             );
           }
         });
@@ -414,6 +510,7 @@ export default {
       var body = { action: "startScan" };
       fetch(`/api/integrations/${vm.integrationId}/features/deviceScan`, {
         method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       })
         .then((response) => response.json())
@@ -424,7 +521,7 @@ export default {
             function () {
               this.checkStatus();
             }.bind(this),
-            2000
+            2000,
           );
         });
     },
@@ -433,6 +530,7 @@ export default {
       var body = { action: "stopScan" };
       fetch(`/api/integrations/${vm.integrationId}/features/deviceScan`, {
         method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       })
         .then((response) => response.json())
@@ -445,6 +543,7 @@ export default {
       var body = { action: "getExcludeStatus" };
       fetch(`/api/integrations/${vm.integrationId}/features/deviceExclude`, {
         method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       })
         .then((response) => response.json())
@@ -456,7 +555,7 @@ export default {
               function () {
                 this.checkExcludeStatus();
               }.bind(this),
-              2000
+              2000,
             );
           }
         });
@@ -466,6 +565,7 @@ export default {
       var body = { action: "startExclude" };
       fetch(`/api/integrations/${vm.integrationId}/features/deviceExclude`, {
         method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       })
         .then((response) => response.json())
@@ -476,7 +576,7 @@ export default {
             function () {
               this.checkExcludeStatus();
             }.bind(this),
-            2000
+            2000,
           );
         });
     },
@@ -485,6 +585,7 @@ export default {
       var body = { action: "stopExclude" };
       fetch(`/api/integrations/${vm.integrationId}/features/deviceExclude`, {
         method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       })
         .then((response) => response.json())
@@ -498,6 +599,7 @@ export default {
         var body = { action: "reset" };
         fetch(`/api/integrations/${vm.integrationId}/features/reset`, {
           method: "POST",
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify(body),
         })
           .then((response) => response.json())
@@ -540,7 +642,7 @@ export default {
                       !Array.isArray(this.settings[input.name].value)
                     ) {
                       this.settings[input.name].value = Array.from(
-                        this.settings[input.name].value
+                        this.settings[input.name].value,
                       );
                     }
                   }
@@ -558,38 +660,6 @@ export default {
           this.pageLayout = data;
         });
     },
-  },
-  mounted: function () {
-    this.integrationId = this.$route.params.id;
-
-    fetch(`/api/integrations/${this.integrationId}`)
-      .then((response) => response.json())
-      .then((data) => {
-        if (typeof data !== "undefined" && data != null) {
-          this.integration = data;
-          if (this.settings == null) {
-            this.settings = {};
-          }
-        }
-      });
-
-    fetch(`/api/integrations/${this.integrationId}/settings`)
-      .then((response) => response.json())
-      .then((data) => {
-        if (typeof data !== "undefined" && data != null) {
-          this.settings = data;
-        }
-      })
-      .then(this.loadPreferencesLayout());
-
-    fetch(`/api/integrations/${this.integrationId}/page-data`)
-      .then((response) => response.json())
-      .then((data) => {
-        if (typeof data !== "undefined" && data != null) {
-          this.pageData = data;
-        }
-      })
-      .then(this.loadPageLayout());
   },
 };
 </script>

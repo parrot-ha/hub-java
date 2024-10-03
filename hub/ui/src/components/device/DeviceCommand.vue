@@ -11,21 +11,24 @@
             {{ command.name }}
           </button>
         </div>
-        <span v-for="(arg, i) in command.arguments" :key="i">
+        <span
+          v-for="(arg, i) in command.arguments"
+          :key="i"
+        >
           <input
             v-if="arg.dataType.toUpperCase() == 'TIME'"
+            v-model="arg.value"
             type="time"
             class="form-control"
-            v-model="arg.value"
             :placeholder="arg.name"
-          />
+          >
           <input
             v-else
+            v-model="arg.value"
             type="text"
             class="form-control"
-            v-model="arg.value"
             :placeholder="arg.name"
-          />
+          >
         </span>
       </div>
     </div>
@@ -77,6 +80,7 @@ export default {
       if (setArgs.length > 0) {
         fetch(url, {
           method: "POST",
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify(setArgs),
         })
           .then(handleErrors)

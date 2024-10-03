@@ -6,20 +6,20 @@
       <div class="mb-3">
         <label class="form-label">Name</label>
         <input
+          v-model="automationApp.name"
           type="text"
           class="form-control"
-          v-model="automationApp.name"
           disabled
-        />
+        >
       </div>
       <div class="mb-3">
         <label class="form-label">Namespace</label>
         <input
+          v-model="automationApp.namespace"
           type="text"
           class="form-control"
-          v-model="automationApp.namespace"
           disabled
-        />
+        >
       </div>
     </form>
 
@@ -28,16 +28,18 @@
       Add setting definitions in the source code and then set the values here
     </div>
 
-    <br />
-    <h5 class="card-title">OAuth</h5>
+    <br>
+    <h5 class="card-title">
+      OAuth
+    </h5>
 
     <div v-if="!automationApp.oAuthEnabled">
-      <br />
+      <br>
       <button
         class="btn btn-primary"
         outlined
-        @click="automationApp.oAuthEnabled = true"
         mx-2
+        @click="automationApp.oAuthEnabled = true"
       >
         Enable OAuth in Automation App
       </button>
@@ -46,26 +48,31 @@
       <div class="mb-3">
         <label class="form-label">Client ID</label>
         <input
+          v-model="automationApp.oAuthClientId"
           type="text"
           class="form-control"
-          v-model="automationApp.oAuthClientId"
-          placeholder="Public client ID for accessing this SmartApp via its REST API"
+          placeholder="Public client ID for accessing this AutomationApp via its REST API"
           readonly
-        />
+        >
       </div>
       <div class="mb-3">
         <label class="form-label">Client Secret</label>
         <input
+          v-model="automationApp.oAuthClientSecret"
           type="text"
           class="form-control"
-          v-model="automationApp.oAuthClientSecret"
-          placeholder="Confidential secret key for accessing this SmartApp via its REST API"
+          placeholder="Confidential secret key for accessing this AutomationApp via its REST API"
           readonly
-        />
+        >
       </div>
     </div>
-    <br />
-    <button class="btn btn-primary" @click="updateAutomationApp">Update</button>
+    <br>
+    <button
+      class="btn btn-primary"
+      @click="updateAutomationApp"
+    >
+      Update
+    </button>
   </div>
 </template>
 <script>
@@ -73,15 +80,28 @@ export default {
   name: "AutomationAppSettings",
   data() {
     return {
-      aaId: "",
+      saId: "",
       automationApp: { oAuthEnabled: false },
     };
+  },
+
+  mounted: function () {
+    this.saId = this.$route.params.id;
+
+    fetch(`/api/automation-apps/${this.saId}`)
+      .then((response) => response.json())
+      .then((data) => {
+        if (typeof data !== "undefined" && data != null) {
+          this.automationApp = data;
+        }
+      });
   },
   methods: {
     updateAutomationApp: function () {
       var body = this.automationApp;
-      fetch(`/api/automation-apps/${this.aaId}`, {
+      fetch(`/api/automation-apps/${this.saId}`, {
         method: "PUT",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       })
         .then((response) => response.json())
@@ -93,18 +113,6 @@ export default {
           }
         });
     },
-  },
-
-  mounted: function () {
-    this.aaId = this.$route.params.id;
-
-    fetch(`/api/automation-apps/${this.aaId}`)
-      .then((response) => response.json())
-      .then((data) => {
-        if (typeof data !== "undefined" && data != null) {
-          this.automationApp = data;
-        }
-      });
   },
 };
 </script>

@@ -4,27 +4,35 @@
       <div class="col-12">
         <div class="card">
           <div class="card-body">
-            <h5 class="card-title">Information</h5>
+            <h5 class="card-title">
+              Information
+            </h5>
             <div class="card-text">
               <form>
                 <div class="mb-3">
-                  <label for="idInput" class="form-label">ID</label>
+                  <label
+                    for="idInput"
+                    class="form-label"
+                  >ID</label>
                   <input
-                    type="text"
                     id="idInput"
+                    v-model="installedApp.id"
+                    type="text"
                     class="form-control"
-                    v-model="installedAutomationApp.id"
                     readonly
-                  />
+                  >
                 </div>
                 <div class="mb-3">
-                  <label for="labelInput" class="form-label">Label</label>
+                  <label
+                    for="labelInput"
+                    class="form-label"
+                  >Label</label>
                   <input
-                    type="text"
                     id="labelInput"
+                    v-model="installedApp.label"
+                    type="text"
                     class="form-control"
-                    v-model="installedAutomationApp.label"
-                  />
+                  >
                 </div>
               </form>
             </div>
@@ -32,7 +40,7 @@
             <button
               type="button"
               class="btn btn-primary"
-              @click="saveInstalledAutomationApp"
+              @click="saveInstalledApp"
             >
               Save
             </button>
@@ -42,7 +50,9 @@
       <div class="col-12">
         <div class="card">
           <div class="card-body">
-            <h5 class="card-title">Settings</h5>
+            <h5 class="card-title">
+              Settings
+            </h5>
             <div class="card-text">
               <table class="table">
                 <thead>
@@ -55,7 +65,7 @@
                 </thead>
                 <tbody>
                   <tr
-                    v-for="setting in installedAutomationApp.settings"
+                    v-for="setting in installedApp.settings"
                     :key="setting.id"
                   >
                     <td>{{ setting.name }}</td>
@@ -72,7 +82,9 @@
       <div class="col-12">
         <div class="card">
           <div class="card-body">
-            <h5 class="card-title">Scheduled Jobs</h5>
+            <h5 class="card-title">
+              Scheduled Jobs
+            </h5>
             <div class="card-text">
               <table class="table">
                 <thead>
@@ -82,7 +94,10 @@
                   </tr>
                 </thead>
                 <tbody>
-                  <tr v-for="(schedule, i) in schedules" :key="i">
+                  <tr
+                    v-for="(schedule, i) in schedules"
+                    :key="i"
+                  >
                     <td>{{ schedule.handlerMethod }}</td>
                     <td>{{ schedule.schedule }}</td>
                   </tr>
@@ -115,8 +130,8 @@
           </div>
         </div>
         <div
-          class="modal fade"
           id="uninstallModal"
+          class="modal fade"
           tabindex="-1"
           aria-labelledby="uninstallModalLabel"
           aria-hidden="true"
@@ -124,7 +139,10 @@
           <div class="modal-dialog">
             <div class="modal-content">
               <div class="modal-header">
-                <h1 class="modal-title fs-5" id="uninstallModalLabel">
+                <h1
+                  id="uninstallModalLabel"
+                  class="modal-title fs-5"
+                >
                   Are you sure?
                 </h1>
                 <button
@@ -132,7 +150,7 @@
                   class="btn-close"
                   data-bs-dismiss="modal"
                   aria-label="Close"
-                ></button>
+                />
               </div>
               <div class="modal-body">
                 Are you sure you want to uninstall this Automation App?
@@ -148,7 +166,7 @@
                 <button
                   type="button"
                   class="btn btn-danger"
-                  @click="iaaUninstallDialog"
+                  @click="isaUninstallDialog"
                 >
                   Delete
                 </button>
@@ -169,20 +187,40 @@ function handleErrors(response) {
 }
 
 export default {
-  name: "InstalledAutomationAppInfo",
+  name: "InstalledAppInfo",
   data() {
     return {
-      iaaId: "",
-      installedAutomationApp: {},
-      iaaUninstallDialog: false,
+      isaId: "",
+      installedApp: {},
+      isaUninstallDialog: false,
       schedules: {},
     };
   },
+  mounted: function () {
+    this.isaId = this.$route.params.id;
+
+    fetch(`/api/iaas/${this.isaId}`)
+      .then((response) => response.json())
+      .then((data) => {
+        if (typeof data !== "undefined" && data != null) {
+          this.installedApp = data;
+        }
+      });
+
+    fetch(`/api/iaas/${this.isaId}/schedules`)
+      .then((response) => response.json())
+      .then((data) => {
+        if (typeof data !== "undefined" && data != null) {
+          this.schedules = data;
+        }
+      });
+  },
   methods: {
-    saveInstalledAutomationApp: function () {
-      var body = this.installedAutomationApp;
-      fetch(`/api/iaas/${this.iaaId}`, {
+    saveInstalledApp: function () {
+      var body = this.installedApp;
+      fetch(`/api/iaas/${this.isaId}`, {
         method: "PUT",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       })
         .then((response) => response.json())
@@ -195,16 +233,16 @@ export default {
         });
     },
     runUpdatedMethod: function () {
-      var url = `/api/iaas/${this.iaaId}/methods/updated`;
+      var url = `/api/iaas/${this.isaId}/methods/updated`;
       fetch(url, {
         method: "POST",
         body: null,
       })
         .then(handleErrors)
-        .then((response) => {});
+        .then(() => {});
     },
     uninstallClick: function () {
-      fetch(`/api/iaas/${this.iaaId}`, {
+      fetch(`/api/iaas/${this.isaId}`, {
         method: "DELETE",
       })
         .then((response) => response.json())
@@ -216,25 +254,6 @@ export default {
           }
         });
     },
-  },
-  mounted: function () {
-    this.iaaId = this.$route.params.id;
-
-    fetch(`/api/iaas/${this.iaaId}`)
-      .then((response) => response.json())
-      .then((data) => {
-        if (typeof data !== "undefined" && data != null) {
-          this.installedAutomationApp = data;
-        }
-      });
-
-    fetch(`/api/iaas/${this.iaaId}/schedules`)
-      .then((response) => response.json())
-      .then((data) => {
-        if (typeof data !== "undefined" && data != null) {
-          this.schedules = data;
-        }
-      });
   },
 };
 </script>

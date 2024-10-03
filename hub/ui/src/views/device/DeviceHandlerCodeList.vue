@@ -8,8 +8,9 @@
         <router-link
           class="btn btn-outline-secondary"
           :to="{ name: 'DeviceHandlerCodeAdd' }"
-          >Add New</router-link
         >
+          Add New
+        </router-link>
       </div>
     </div>
 
@@ -21,15 +22,19 @@
         </tr>
       </thead>
       <tbody>
-        <tr v-for="dh in sortedCodeList" :key="dh.id">
+        <tr
+          v-for="dh in sortedCodeList"
+          :key="dh.id"
+        >
           <td>
             <router-link
               :to="{
                 name: 'DeviceHandlerCodeEdit',
                 params: { id: dh.id },
               }"
-              >{{ dh.name }}</router-link
             >
+              {{ dh.name }}
+            </router-link>
           </td>
           <td>{{ dh.namespace }}</td>
         </tr>
